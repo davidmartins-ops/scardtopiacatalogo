@@ -46,7 +46,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background" />
         <div className="relative z-10 flex items-end justify-between h-full px-6 pb-6 max-w-7xl mx-auto">
           <div>
-            <img src={logo} alt="Spencer's Cardtopia" className="h-14 sm:h-16" />
+            <img src={logo} alt="Spencer's Cardtopia" className="h-20 sm:h-24" />
             <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
           </div>
           <div className="flex items-center gap-3">
