@@ -2,6 +2,7 @@ import { Loader2 } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import heroBanner from "@/assets/hero-banner.jpg";
+import logo from "@/assets/logo.png";
 
 const Login = () => {
   const handleGoogleLogin = async () => {
