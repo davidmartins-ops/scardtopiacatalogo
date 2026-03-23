@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const DESCRIPTIONS = ["Foil", "Non-Foil", "Rainbow Foil"] as const;
-const CATEGORIES = ["D&D", "Fallout", "Avatar", "The Last of Us"] as const;
+
 
 const AddItemDialog = () => {
   const [open, setOpen] = useState(false);
@@ -35,7 +35,7 @@ const AddItemDialog = () => {
     description: "Foil" as string,
     price: "",
     quantity: "1",
-    category: "D&D" as string,
+    category: "",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -43,14 +43,14 @@ const AddItemDialog = () => {
   };
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "D&D" });
+    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.id.trim() || !form.name.trim() || !form.price.trim()) {
-      toast.error("Preencha os campos obrigatórios (ID, Nome e Preço).");
+    if (!form.id.trim() || !form.name.trim() || !form.price.trim() || !form.category.trim()) {
+      toast.error("Preencha os campos obrigatórios (ID, Nome, Preço e Categoria).");
       return;
     }
 
@@ -120,16 +120,14 @@ const AddItemDialog = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
-              <Select value={form.category} onValueChange={(v) => handleChange("category", v)}>
-                <SelectTrigger className="bg-muted border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="category"
+                placeholder="Ex: D&D, Fallout, Avatar..."
+                value={form.category}
+                onChange={(e) => handleChange("category", e.target.value)}
+                maxLength={50}
+                className="bg-muted border-border"
+              />
             </div>
           </div>
 
