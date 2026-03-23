@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const DESCRIPTIONS = ["Foil", "Non-Foil", "Rainbow Foil"] as const;
-const CATEGORIES = ["D&D", "Fallout", "Avatar", "The Last of Us"] as const;
+
 
 const AddItemDialog = () => {
   const [open, setOpen] = useState(false);
