@@ -120,16 +120,14 @@ const AddItemDialog = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
-              <Select value={form.category} onValueChange={(v) => handleChange("category", v)}>
-                <SelectTrigger className="bg-muted border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="category"
+                placeholder="Ex: D&D, Fallout, Avatar..."
+                value={form.category}
+                onChange={(e) => handleChange("category", e.target.value)}
+                maxLength={50}
+                className="bg-muted border-border"
+              />
             </div>
           </div>
 
