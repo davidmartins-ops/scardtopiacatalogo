@@ -1,19 +1,37 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
-import { inventoryData } from "@/data/inventory";
+import { useInventory } from "@/hooks/use-inventory";
 import StatCard from "@/components/StatCard";
 import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
 
 const Index = () => {
+  const { data: inventoryData = [], isLoading, error } = useInventory();
+
   const stats = useMemo(() => {
     const totalItems = inventoryData.reduce((s, i) => s + i.quantity, 0);
     const totalValue = inventoryData.reduce((s, i) => s + i.price * i.quantity, 0);
     const uniqueProducts = inventoryData.length;
     const foilCount = inventoryData.filter((i) => i.description === "Foil").reduce((s, i) => s + i.quantity, 0);
     return { totalItems, totalValue, uniqueProducts, foilCount };
-  }, []);
+  }, [inventoryData]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-destructive font-body">Erro ao carregar inventário.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background font-body">
