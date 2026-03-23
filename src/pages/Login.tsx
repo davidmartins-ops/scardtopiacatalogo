@@ -54,6 +54,13 @@ const Login = () => {
             </svg>
             Entrar com Google
           </Button>
+
+          <Link
+            to="/catalogo"
+            className="block text-center text-sm text-primary hover:underline font-body"
+          >
+            Ver catálogo de drops →
+          </Link>
         </div>
       </div>
     </div>
