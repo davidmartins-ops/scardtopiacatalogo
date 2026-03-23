@@ -35,7 +35,7 @@ const AddItemDialog = () => {
     description: "Foil" as string,
     price: "",
     quantity: "1",
-    category: "D&D" as string,
+    category: "",
   });
 
   const handleChange = (field: string, value: string) => {
