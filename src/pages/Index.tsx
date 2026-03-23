@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut } from "lucide-react";
+import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
 import { useAuth } from "@/hooks/use-auth";
@@ -45,9 +46,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background" />
         <div className="relative z-10 flex items-end justify-between h-full px-6 pb-6 max-w-7xl mx-auto">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-              Spencer's <span className="text-primary">Cardtopia</span>
-            </h1>
+            <img src={logo} alt="Spencer's Cardtopia" className="h-14 sm:h-16" />
             <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
           </div>
           <div className="flex items-center gap-3">
