@@ -1,7 +1,9 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles, Loader2 } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 import StatCard from "@/components/StatCard";
 import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
