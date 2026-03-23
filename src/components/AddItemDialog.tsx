@@ -49,8 +49,8 @@ const AddItemDialog = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.id.trim() || !form.name.trim() || !form.price.trim()) {
-      toast.error("Preencha os campos obrigatórios (ID, Nome e Preço).");
+    if (!form.id.trim() || !form.name.trim() || !form.price.trim() || !form.category.trim()) {
+      toast.error("Preencha os campos obrigatórios (ID, Nome, Preço e Categoria).");
       return;
     }
 
