@@ -155,10 +155,13 @@ const Catalogo = () => {
                           {config?.label ?? item.description}
                         </Badge>
                       </div>
-                      <div className="mt-4 flex items-center gap-2">
+                      <div className="mt-4 flex items-center justify-between">
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
                           <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                           Disponível
+                        </span>
+                        <span className="text-sm font-semibold text-primary">
+                          R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
