@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle } from "lucide-react";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
 import { useInventory } from "@/hooks/use-inventory";
@@ -173,16 +173,27 @@ const Catalogo = () => {
         )}
       </div>
 
-      {/* WhatsApp FAB */}
-      <a
-        href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis."
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-background shadow-lg hover:brightness-110 transition-all"
-      >
-        <MessageCircle className="h-5 w-5" />
-        Pedir via WhatsApp
-      </a>
+      {/* Social FABs */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        <a
+          href="https://www.instagram.com/scardtopia/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-medium text-accent-foreground shadow-lg hover:brightness-110 transition-all"
+        >
+          <Instagram className="h-5 w-5" />
+          Instagram
+        </a>
+        <a
+          href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-background shadow-lg hover:brightness-110 transition-all"
+        >
+          <MessageCircle className="h-5 w-5" />
+          Pedir via WhatsApp
+        </a>
+      </div>
     </div>
   );
 };
