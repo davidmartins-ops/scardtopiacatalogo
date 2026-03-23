@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut } from "lucide-react";
+import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
 import { useAuth } from "@/hooks/use-auth";
