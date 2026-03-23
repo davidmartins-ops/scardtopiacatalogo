@@ -5,6 +5,7 @@ import { useInventory } from "@/hooks/use-inventory";
 import StatCard from "@/components/StatCard";
 import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
+import AddItemDialog from "@/components/AddItemDialog";
 
 const Index = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
