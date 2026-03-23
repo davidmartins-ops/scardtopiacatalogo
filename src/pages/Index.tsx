@@ -24,7 +24,7 @@ const Index = () => {
         <div className="relative z-10 flex items-end h-full px-6 pb-6 max-w-7xl mx-auto">
           <div>
             <h1 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-              Secret Lair <span className="text-primary">Vault</span>
+              Spencer's <span className="text-primary">Cardtopia</span>
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
           </div>
