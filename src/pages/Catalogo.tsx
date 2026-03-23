@@ -172,6 +172,17 @@ const Catalogo = () => {
           ))
         )}
       </div>
+
+      {/* WhatsApp FAB */}
+      <a
+        href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-background shadow-lg hover:brightness-110 transition-all"
+      >
+        <MessageCircle className="h-5 w-5" />
+        Pedir via WhatsApp
+      </a>
     </div>
   );
 };
