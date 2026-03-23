@@ -1,13 +1,16 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles, Loader2 } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 import StatCard from "@/components/StatCard";
 import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
 import AddItemDialog from "@/components/AddItemDialog";
 
 const Index = () => {
+  const { signOut } = useAuth();
   const { data: inventoryData = [], isLoading, error } = useInventory();
 
   const stats = useMemo(() => {
@@ -47,7 +50,18 @@ const Index = () => {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
           </div>
-          <AddItemDialog />
+          <div className="flex items-center gap-3">
+            <AddItemDialog />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={signOut}
+              className="border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+              title="Sair"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
