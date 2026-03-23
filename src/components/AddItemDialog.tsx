@@ -43,7 +43,7 @@ const AddItemDialog = () => {
   };
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "D&D" });
+    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
