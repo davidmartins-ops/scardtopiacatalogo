@@ -10,6 +10,7 @@ import CategoryChart from "@/components/CategoryChart";
 import AddItemDialog from "@/components/AddItemDialog";
 
 const Index = () => {
+  const { signOut } = useAuth();
   const { data: inventoryData = [], isLoading, error } = useInventory();
 
   const stats = useMemo(() => {
