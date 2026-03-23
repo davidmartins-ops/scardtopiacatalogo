@@ -62,6 +62,7 @@ const Index = () => {
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-6 pb-12">
