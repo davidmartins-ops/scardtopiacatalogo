@@ -2,6 +2,7 @@ import { Loader2 } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import heroBanner from "@/assets/hero-banner.jpg";
+import logo from "@/assets/logo.png";
 
 const Login = () => {
   const handleGoogleLogin = async () => {
@@ -21,10 +22,8 @@ const Login = () => {
       <div className="relative z-10 w-full max-w-sm mx-auto px-6">
         <div className="rounded-lg border border-border bg-card p-8 space-y-6">
           <div className="text-center">
-            <h1 className="text-2xl font-display font-bold text-foreground">
-              Spencer's <span className="text-primary">Cardtopia</span>
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground font-body">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-24 mx-auto" />
+            <p className="mt-3 text-sm text-muted-foreground font-body">
               Faça login para gerenciar o inventário
             </p>
           </div>
