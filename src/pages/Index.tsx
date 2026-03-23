@@ -26,7 +26,7 @@ const Index = () => {
             <h1 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
               Secret Lair <span className="text-primary">Vault</span>
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">Gestão de estoque • Coleção completa</p>
+            <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
           </div>
         </div>
       </div>
@@ -34,28 +34,14 @@ const Index = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-6 pb-12">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Produtos Únicos"
-            value={String(stats.uniqueProducts)}
-            icon={Package}
-          />
-          <StatCard
-            title="Total em Estoque"
-            value={String(stats.totalItems)}
-            subtitle="unidades"
-            icon={Layers}
-          />
+          <StatCard title="Produtos Únicos" value={String(stats.uniqueProducts)} icon={Package} />
+          <StatCard title="Total em Estoque" value={String(stats.totalItems)} subtitle="unidades" icon={Layers} />
           <StatCard
             title="Valor Total"
             value={`R$ ${stats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
             icon={DollarSign}
           />
-          <StatCard
-            title="Itens Foil"
-            value={String(stats.foilCount)}
-            subtitle="unidades"
-            icon={Sparkles}
-          />
+          <StatCard title="Itens Foil" value={String(stats.foilCount)} subtitle="unidades" icon={Sparkles} />
         </div>
 
         {/* Chart + Table */}
