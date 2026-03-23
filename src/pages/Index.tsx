@@ -40,13 +40,14 @@ const Index = () => {
       <div className="relative h-48 sm:h-56 overflow-hidden">
         <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background" />
-        <div className="relative z-10 flex items-end h-full px-6 pb-6 max-w-7xl mx-auto">
+        <div className="relative z-10 flex items-end justify-between h-full px-6 pb-6 max-w-7xl mx-auto">
           <div>
             <h1 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
               Spencer's <span className="text-primary">Cardtopia</span>
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
           </div>
+          <AddItemDialog />
         </div>
       </div>
 
