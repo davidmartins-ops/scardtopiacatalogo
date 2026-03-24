@@ -16,11 +16,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      <img
-        src={loginBg}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <img src={loginBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-black/50" />
 
       {/* Top bar with login button */}
@@ -56,7 +52,7 @@ const Login = () => {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
         <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 mb-8 drop-shadow-2xl" />
         <p className="text-white/80 text-center text-sm sm:text-base font-body mb-10 max-w-md">
-          Sua loja de cards e colecionáveis
+          Sua loja de Secret Lair!
         </p>
 
         <Link to="/catalogo">
