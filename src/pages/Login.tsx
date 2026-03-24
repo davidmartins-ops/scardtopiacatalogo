@@ -50,7 +50,7 @@ const Login = () => {
 
       {/* Center content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
-        <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 mb-8 drop-shadow-2xl" />
+        <img src={logo} alt="Spencer's Cardtopia" className="h-44 sm:h-60 mb-8 drop-shadow-2xl" />
         <p className="text-white/80 text-center text-sm sm:text-base font-body mb-10 max-w-md">
           Sua loja de Secret Lair!
         </p>
