@@ -42,20 +42,21 @@ const Index = () => {
     <div className="min-h-screen bg-background font-body">
       {/* Hero */}
       <div className="relative h-48 sm:h-56 overflow-hidden">
-        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background" />
+        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/50 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex items-end justify-between h-full px-6 pb-6 max-w-7xl mx-auto">
-          <div>
-            <img src={logo} alt="Spencer's Cardtopia" className="h-40 sm:h-48" />
-            <p className="mt-1 text-sm text-muted-foreground">DROPS</p>
+          <div className="animate-fade-in">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-36 sm:h-44 drop-shadow-2xl" />
+            <p className="mt-1 text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium">Painel de Gerenciamento</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <AddItemDialog />
             <Button
               variant="outline"
               size="icon"
               onClick={signOut}
-              className="border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+              className="glass-card hover:border-destructive/40 hover:text-destructive hover:shadow-lg hover:shadow-destructive/10 transition-all duration-300"
               title="Sair"
             >
               <LogOut className="h-4 w-4" />
@@ -67,18 +68,26 @@ const Index = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-6 pb-12">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Produtos Únicos" value={String(stats.uniqueProducts)} icon={Package} />
-          <StatCard title="Total em Estoque" value={String(stats.totalItems)} subtitle="unidades" icon={Layers} />
-          <StatCard
-            title="Valor Total"
-            value={`R$ ${stats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-            icon={DollarSign}
-          />
-          <StatCard title="Itens Foil" value={String(stats.foilCount)} subtitle="unidades" icon={Sparkles} />
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
+            <StatCard title="Produtos Únicos" value={String(stats.uniqueProducts)} icon={Package} />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
+            <StatCard title="Total em Estoque" value={String(stats.totalItems)} subtitle="unidades" icon={Layers} />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.3s', opacity: 0 }}>
+            <StatCard
+              title="Valor Total"
+              value={`R$ ${stats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+              icon={DollarSign}
+            />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0 }}>
+            <StatCard title="Itens Foil" value={String(stats.foilCount)} subtitle="unidades" icon={Sparkles} />
+          </div>
         </div>
 
         {/* Chart + Table */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: '0.5s', opacity: 0 }}>
           <div className="lg:col-span-1">
             <CategoryChart data={inventoryData} />
           </div>
