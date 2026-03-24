@@ -145,7 +145,7 @@ const InventoryTable = ({ data }: Props) => {
 
   return (
     <>
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-border">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
