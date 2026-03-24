@@ -68,27 +68,29 @@ const Catalogo = () => {
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Hero */}
-      <div className="relative h-56 sm:h-64 overflow-hidden">
-        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
-        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-6">
-          <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36" />
-          <p className="mt-2 text-sm text-muted-foreground tracking-widest uppercase">
-            Catálogo de Drops Disponíveis
+      <div className="relative h-64 sm:h-72 overflow-hidden">
+        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
+        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8">
+          <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in" />
+          <div className="premium-divider max-w-[120px] mt-3 mb-2" />
+          <p className="text-sm text-muted-foreground tracking-[0.25em] uppercase font-medium animate-fade-in" style={{ animationDelay: '0.15s' }}>
+            Catálogo de Drops
           </p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-6 pb-12">
         {/* Search & Filters */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+        <div className="glass-card p-4 space-y-4 animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome, categoria ou tipo..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-muted/50 border-border"
+              className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
             />
           </div>
 
@@ -96,7 +98,7 @@ const Catalogo = () => {
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Badge
               variant={activeCategory === null ? "default" : "outline"}
-              className="cursor-pointer transition-colors"
+              className="cursor-pointer transition-all duration-200 hover:scale-105"
               onClick={() => setActiveCategory(null)}
             >
               Todos
@@ -105,7 +107,7 @@ const Catalogo = () => {
               <Badge
                 key={cat}
                 variant={activeCategory === cat ? "default" : "outline"}
-                className="cursor-pointer transition-colors"
+                className="cursor-pointer transition-all duration-200 hover:scale-105"
                 onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
               >
                 {cat}
@@ -126,26 +128,35 @@ const Catalogo = () => {
             <p className="text-muted-foreground">Nenhum item encontrado.</p>
           </div>
         ) : (
-          groupedItems.map(([category, items]) => (
-            <div key={category} className="space-y-3">
-              <h2 className="font-display text-xl font-semibold text-foreground border-b border-border pb-2">
-                {category}
-              </h2>
+          groupedItems.map(([category, items], groupIdx) => (
+            <div key={category} className="space-y-3 animate-fade-in-up" style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}>
+              <div className="flex items-center gap-3">
+                <h2 className="font-display text-xl font-semibold text-foreground">
+                  {category}
+                </h2>
+                <div className="flex-1 premium-divider" />
+                <span className="text-xs text-muted-foreground font-body">{items.length} itens</span>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map((item) => {
+                {items.map((item, i) => {
                   const config = descriptionConfig[item.description];
                   const Icon = config?.icon ?? Circle;
                   return (
                     <div
                       key={item.id}
-                      className="group rounded-lg border border-border bg-card p-5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+                      className="group glass-card glow-hover p-5 animate-scale-in"
+                      style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}
                     >
-                      <div className="flex items-start justify-between gap-3">
+                      {/* Foil shimmer overlay */}
+                      <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                      <div className="relative flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-body font-medium text-foreground leading-snug">
+                          <h3 className="font-body font-medium text-foreground leading-snug group-hover:text-primary transition-colors duration-300">
                             {item.name}
                           </h3>
-                          <p className="text-xs text-muted-foreground mt-1">{item.id}</p>
+                          <p className="text-xs text-muted-foreground mt-1 font-mono">{item.id}</p>
                         </div>
                         <Badge
                           variant="outline"
@@ -155,12 +166,12 @@ const Catalogo = () => {
                           {config?.label ?? item.description}
                         </Badge>
                       </div>
-                      <div className="mt-4 flex items-center justify-between">
+                      <div className="relative mt-4 flex items-center justify-between">
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
                           <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                           Disponível
                         </span>
-                        <span className="text-sm font-semibold text-primary">
+                        <span className="text-base font-bold text-gradient font-display">
                           R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -179,16 +190,16 @@ const Catalogo = () => {
           href="https://www.instagram.com/scardtopia/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-medium text-accent-foreground shadow-lg hover:brightness-110 transition-all"
+          className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300"
         >
-          <Instagram className="h-5 w-5" />
+          <Instagram className="h-5 w-5 text-accent" />
           Instagram
         </a>
         <a
           href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis."
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-background shadow-lg hover:brightness-110 transition-all"
+          className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-background shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300"
         >
           <MessageCircle className="h-5 w-5" />
           Pedir via WhatsApp

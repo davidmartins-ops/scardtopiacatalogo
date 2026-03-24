@@ -24,8 +24,9 @@ const CategoryChart = ({ data }: { data: InventoryItem[] }) => {
   }, [data]);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
+    <div className="glass-card p-6">
       <h3 className="font-display font-semibold text-foreground mb-4">Valor por Categoria</h3>
+      <div className="premium-divider mb-4" />
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
           <XAxis
@@ -46,13 +47,14 @@ const CategoryChart = ({ data }: { data: InventoryItem[] }) => {
           <Tooltip
             contentStyle={{
               background: "hsl(240, 10%, 12%)",
-              border: "1px solid hsl(240, 8%, 20%)",
-              borderRadius: "8px",
+              border: "1px solid hsl(240, 8%, 25%)",
+              borderRadius: "12px",
               fontFamily: "Inter",
+              backdropFilter: "blur(12px)",
             }}
             formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Valor Total"]}
           />
-          <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
+          <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={24}>
             {chartData.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
