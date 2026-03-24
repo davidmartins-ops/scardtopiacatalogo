@@ -1,12 +1,6 @@
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
 
 @layer base {
   :root {
@@ -56,6 +50,12 @@ All colors MUST be HSL.
 
     --font-display: 'Cinzel', serif;
     --font-body: 'Inter', sans-serif;
+
+    /* Premium tokens */
+    --glass-bg: 240 10% 12% / 0.6;
+    --glass-border: 240 8% 30%;
+    --glow-primary: 45 80% 55%;
+    --glow-accent: 270 50% 45%;
   }
 }
 
@@ -66,5 +66,58 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Glassmorphism card */
+  .glass-card {
+    @apply relative overflow-hidden rounded-xl border backdrop-blur-xl;
+    background: hsl(var(--glass-bg));
+    border-color: hsl(var(--glass-border));
+  }
+
+  .glass-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-[0.03];
+    background: linear-gradient(135deg, white 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* Premium glow on hover */
+  .glow-hover {
+    @apply transition-all duration-500;
+  }
+  .glow-hover:hover {
+    box-shadow:
+      0 0 20px -5px hsl(var(--glow-primary) / 0.15),
+      0 10px 40px -10px hsl(var(--glow-primary) / 0.1);
+    border-color: hsl(var(--glow-primary) / 0.3);
+  }
+
+  /* Foil shimmer effect */
+  .foil-shimmer {
+    background: linear-gradient(
+      120deg,
+      transparent 20%,
+      hsl(var(--primary) / 0.08) 40%,
+      hsl(var(--primary) / 0.15) 50%,
+      hsl(var(--primary) / 0.08) 60%,
+      transparent 80%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  /* Premium gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7));
+  }
+
+  /* Premium separator */
+  .premium-divider {
+    @apply h-px w-full;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
   }
 }
