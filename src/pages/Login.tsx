@@ -49,7 +49,7 @@ const Login = () => {
       </div>
 
       {/* Center content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-[15vh] px-6">
         <img
           src={logo}
           alt="Spencer's Cardtopia"
