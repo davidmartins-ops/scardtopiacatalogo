@@ -5,6 +5,7 @@ export interface InventoryItem {
   price: number;
   quantity: number;
   category: string;
+  image: string;
 }
 
 export const inventoryData: InventoryItem[] = [
