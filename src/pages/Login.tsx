@@ -6,11 +6,19 @@ import logo from "@/assets/logo.png";
 
 const Login = () => {
   const handleGoogleLogin = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) {
-      console.error("Login error:", error);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result?.error) {
+        console.error("Login error:", result.error);
+        const { toast } = await import("sonner");
+        toast.error("Erro ao fazer login. Tente novamente.");
+      }
+    } catch (err) {
+      console.error("Login exception:", err);
+      const { toast } = await import("sonner");
+      toast.error("Erro ao fazer login. Tente novamente.");
     }
   };
 
