@@ -141,49 +141,60 @@ const Catalogo = () => {
                 {items.map((item, i) => {
                   const config = descriptionConfig[item.description];
                   const Icon = config?.icon ?? Circle;
+
                   return (
                     <div
                       key={item.id}
-                      className="group glass-card glow-hover p-5 animate-scale-in"
+                      className="group glass-card glow-hover overflow-hidden animate-scale-in"
                       style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}
                     >
                       {/* Foil shimmer overlay */}
                       <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                      <div className="relative mb-4 overflow-hidden rounded-lg bg-muted/20">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-48 flex items-center justify-center text-sm text-muted-foreground">
-                            Imagem não disponível
-                          </div>
-                        )}
+                      {/* Imagem do produto */}
+                      <div className="relative z-10 px-4 pt-4">
+                        <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-44 sm:h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-44 sm:h-48 flex items-center justify-center text-sm text-muted-foreground bg-muted/10">
+                              Imagem não disponível
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="relative flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-body font-medium text-foreground leading-snug group-hover:text-primary transition-colors duration-300">
-                            {item.name}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mt-1 font-mono">{item.id}</p>
+                      {/* Conteúdo do card */}
+                      <div className="relative z-10 p-4 pt-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-body font-medium text-foreground leading-snug group-hover:text-primary transition-colors duration-300">
+                              {item.name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1 font-mono">{item.id}</p>
+                          </div>
+
+                          <Badge variant="outline" className={`shrink-0 gap-1 text-xs ${config?.className ?? ""}`}>
+                            <Icon className="h-3 w-3" />
+                            {config?.label ?? item.description}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className={`shrink-0 gap-1 text-xs ${config?.className ?? ""}`}>
-                          <Icon className="h-3 w-3" />
-                          {config?.label ?? item.description}
-                        </Badge>
-                      </div>
-                      <div className="relative mt-4 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
-                          <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                          Disponível
-                        </span>
-                        <span className="text-base font-bold text-gradient font-display">
-                          R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </span>
+
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+                            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                            Disponível
+                          </span>
+
+                          <span className="text-base font-bold text-gradient font-display">
+                            R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
