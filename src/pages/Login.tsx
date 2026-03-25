@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -5,15 +6,38 @@ import loginBg from "@/assets/login-bg.png";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
+  const hasAutoStartedOAuth = useRef(false);
+
   const handleGoogleLogin = async () => {
     try {
+      let isInIframe = false;
+      try {
+        isInIframe = window.self !== window.top;
+      } catch {
+        isInIframe = true;
+      }
+
+      if (isInIframe) {
+        const url = new URL(window.location.href);
+        url.pathname = "/login";
+        url.searchParams.set("oauth", "google");
+
+        const openedWindow = window.open(url.toString(), "_blank", "noopener,noreferrer");
+        if (!openedWindow) {
+          const { toast } = await import("sonner");
+          toast.error("Seu navegador bloqueou a janela de login. Permita popups e tente novamente.");
+        }
+        return;
+      }
+
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
+
       if (result?.error) {
         console.error("Login error:", result.error);
         const { toast } = await import("sonner");
-        toast.error("Erro ao fazer login. Tente novamente.");
+        toast.error(result.error.message || "Erro ao fazer login. Tente novamente.");
       }
     } catch (err) {
       console.error("Login exception:", err);
@@ -21,6 +45,14 @@ const Login = () => {
       toast.error("Erro ao fazer login. Tente novamente.");
     }
   };
+
+  useEffect(() => {
+    const shouldAutoLogin = new URLSearchParams(window.location.search).get("oauth") === "google";
+    if (!shouldAutoLogin || hasAutoStartedOAuth.current) return;
+
+    hasAutoStartedOAuth.current = true;
+    void handleGoogleLogin();
+  }, [handleGoogleLogin]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
