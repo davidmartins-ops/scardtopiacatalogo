@@ -11,7 +11,7 @@ export interface InventoryItem {
 export const inventoryData: InventoryItem[] = [
   {
     id: "SLDPS03",
-    image: item.image,
+    image: "https://bwwqejdpgzhvrnyknfle.supabase.co/storage/v1/object/public/products/KIT_DANDAN.jpg",
     name: "Secret Lair x The Last of Us - Parte I",
     description: "Foil",
     price: 490,
