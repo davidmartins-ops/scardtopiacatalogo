@@ -18,15 +18,9 @@ const Catalogo = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const availableItems = useMemo(
-    () => inventoryData.filter((item) => item.quantity > 0),
-    [inventoryData]
-  );
+  const availableItems = useMemo(() => inventoryData.filter((item) => item.quantity > 0), [inventoryData]);
 
-  const categories = useMemo(
-    () => [...new Set(availableItems.map((i) => i.category))].sort(),
-    [availableItems]
-  );
+  const categories = useMemo(() => [...new Set(availableItems.map((i) => i.category))].sort(), [availableItems]);
 
   const filteredItems = useMemo(() => {
     return availableItems.filter((item) => {
@@ -75,7 +69,10 @@ const Catalogo = () => {
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8">
           <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in" />
           <div className="premium-divider max-w-[120px] mt-3 mb-2" />
-          <p className="text-sm text-muted-foreground tracking-[0.25em] uppercase font-medium animate-fade-in" style={{ animationDelay: '0.15s' }}>
+          <p
+            className="text-sm text-muted-foreground tracking-[0.25em] uppercase font-medium animate-fade-in"
+            style={{ animationDelay: "0.15s" }}
+          >
             Catálogo de Drops
           </p>
         </div>
@@ -83,7 +80,7 @@ const Catalogo = () => {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-6 pb-12">
         {/* Search & Filters */}
-        <div className="glass-card p-4 space-y-4 animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
+        <div className="glass-card p-4 space-y-4 animate-fade-in-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -129,11 +126,13 @@ const Catalogo = () => {
           </div>
         ) : (
           groupedItems.map(([category, items], groupIdx) => (
-            <div key={category} className="space-y-3 animate-fade-in-up" style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}>
+            <div
+              key={category}
+              className="space-y-3 animate-fade-in-up"
+              style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}
+            >
               <div className="flex items-center gap-3">
-                <h2 className="font-display text-xl font-semibold text-foreground">
-                  {category}
-                </h2>
+                <h2 className="font-display text-xl font-semibold text-foreground">{category}</h2>
                 <div className="flex-1 premium-divider" />
                 <span className="text-xs text-muted-foreground font-body">{items.length} itens</span>
               </div>
@@ -151,6 +150,20 @@ const Catalogo = () => {
                       {/* Foil shimmer overlay */}
                       <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
+                      <div className="relative mb-4 overflow-hidden rounded-lg bg-muted/20">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-48 flex items-center justify-center text-sm text-muted-foreground">
+                            Imagem não disponível
+                          </div>
+                        )}
+                      </div>
+
                       <div className="relative flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-body font-medium text-foreground leading-snug group-hover:text-primary transition-colors duration-300">
@@ -158,10 +171,7 @@ const Catalogo = () => {
                           </h3>
                           <p className="text-xs text-muted-foreground mt-1 font-mono">{item.id}</p>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={`shrink-0 gap-1 text-xs ${config?.className ?? ""}`}
-                        >
+                        <Badge variant="outline" className={`shrink-0 gap-1 text-xs ${config?.className ?? ""}`}>
                           <Icon className="h-3 w-3" />
                           {config?.label ?? item.description}
                         </Badge>
