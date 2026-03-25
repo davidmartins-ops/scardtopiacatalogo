@@ -1,45 +1,53 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import loginBg from "@/assets/login-bg.png";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+
   const handleGoogleLogin = async () => {
+    if (loading) return;
+
     try {
+      setLoading(true);
       console.log("Iniciando login com Google...");
 
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/`,
       });
 
-      console.log("Resultado do OAuth:", result);
+      console.log("Resposta do OAuth:", result);
 
       if (result?.error) {
-        console.error("Login error:", result.error);
-        const { toast } = await import("sonner");
+        console.error("Erro no login:", result.error);
         toast.error("Erro ao fazer login. Tente novamente.");
       }
     } catch (err) {
-      console.error("Login exception:", err);
-      const { toast } = await import("sonner");
+      console.error("Exceção no login:", err);
       toast.error("Erro ao fazer login. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       <img src={loginBg} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-background/90" />
 
-      {/* Decorative glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
-      {/* Top bar */}
       <div className="relative z-10 flex justify-end p-4 sm:p-6 animate-fade-in">
         <Button
+          type="button"
           onClick={handleGoogleLogin}
+          disabled={loading}
           variant="outline"
-          className="gap-2 font-body glass-card px-5 py-2 text-foreground hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300"
+          className="gap-2 font-body glass-card px-5 py-2 text-foreground hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 disabled:opacity-60"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path
@@ -59,11 +67,10 @@ const Login = () => {
               fill="#EA4335"
             />
           </svg>
-          <span className="text-sm font-medium">Login</span>
+          <span className="text-sm font-medium">{loading ? "Entrando..." : "Login"}</span>
         </Button>
       </div>
 
-      {/* Center content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 -mt-16">
         <img
           src={logo}
@@ -91,7 +98,6 @@ const Login = () => {
         </Link>
       </div>
 
-      {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none z-[5]" />
     </div>
   );
