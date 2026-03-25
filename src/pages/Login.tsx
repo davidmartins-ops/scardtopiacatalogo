@@ -36,8 +36,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      <img src={loginBg} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-background/90" />
+      <img src={loginBg} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" pointer-events-none />
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-background/90"
+        pointer-events-none
+      />
 
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
