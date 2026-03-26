@@ -37,6 +37,7 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          discount: number
           id: string
           name: string
           price: number
@@ -47,6 +48,7 @@ export type Database = {
           category: string
           created_at?: string
           description: string
+          discount?: number
           id: string
           name: string
           price?: number
@@ -57,6 +59,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
+          discount?: number
           id?: string
           name?: string
           price?: number
