@@ -8,7 +8,7 @@ export const useInventory = () => {
     queryFn: async (): Promise<InventoryItem[]> => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, name, description, price, quantity, category, discount");
+        .select("id, name, description, price, quantity, category, discount, image_url");
 
       if (error) throw error;
 
@@ -20,6 +20,7 @@ export const useInventory = () => {
         quantity: item.quantity,
         category: item.category,
         discount: Number(item.discount ?? 0),
+        image_url: item.image_url ?? null,
       }));
     },
   });
