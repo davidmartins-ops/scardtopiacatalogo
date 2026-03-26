@@ -39,6 +39,7 @@ export type Database = {
           description: string
           discount: number
           id: string
+          image_url: string | null
           name: string
           price: number
           quantity: number
@@ -50,6 +51,7 @@ export type Database = {
           description: string
           discount?: number
           id: string
+          image_url?: string | null
           name: string
           price?: number
           quantity?: number
@@ -61,6 +63,7 @@ export type Database = {
           description?: string
           discount?: number
           id?: string
+          image_url?: string | null
           name?: string
           price?: number
           quantity?: number
