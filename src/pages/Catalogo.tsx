@@ -131,8 +131,8 @@ const Catalogo = () => {
 
                       <div className="relative z-10 px-4 pt-4">
                         <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-44 sm:h-48 object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-44 sm:h-48 object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                           ) : (
                             <div className="w-full h-44 sm:h-48 flex items-center justify-center text-sm text-muted-foreground bg-muted/10">
                               Imagem não disponível

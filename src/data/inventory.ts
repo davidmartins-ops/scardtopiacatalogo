@@ -6,9 +6,8 @@ export interface InventoryItem {
   quantity: number;
   category: string;
   image?: string;
+  image_url?: string | null;
   discount?: number;
 }
 
-// Static data is no longer used — inventory is fetched from the database.
-// This file only exports the InventoryItem type.
 export const inventoryData: InventoryItem[] = [];
