@@ -20,7 +20,7 @@ const Login = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 30000);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
