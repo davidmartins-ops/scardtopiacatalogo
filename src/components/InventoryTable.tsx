@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ const InventoryTable = ({ data }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortAsc, setSortAsc] = useState(true);
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
@@ -37,17 +38,19 @@ const InventoryTable = ({ data }: Props) => {
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
   const [discountValue, setDiscountValue] = useState("");
 
-  // Image management
   const [imageDialogItem, setImageDialogItem] = useState<InventoryItem | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
 
+  const categories = useMemo(() => [...new Set(data.map((i) => i.category))].sort(), [data]);
+
   const filtered = useMemo(() => {
     let items = data.filter(
       (item) =>
         (filterType === "all" || item.description === filterType) &&
+        (filterCategory === "all" || item.category === filterCategory) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.id.toLowerCase().includes(search.toLowerCase()))
     );
@@ -58,7 +61,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
@@ -129,13 +132,10 @@ const InventoryTable = ({ data }: Props) => {
 
     setUploadingImage(true);
     try {
-      // Delete old image if exists
       if (imageDialogItem.image_url) await deleteProductImage(imageDialogItem.image_url);
-
       const url = await uploadProductImage(file);
       const { error } = await supabase.from("inventory").update({ image_url: url }).eq("id", imageDialogItem.id);
       if (error) throw error;
-
       toast.success("Imagem atualizada!");
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       setImageDialogItem({ ...imageDialogItem, image_url: url });
@@ -165,44 +165,59 @@ const InventoryTable = ({ data }: Props) => {
   };
 
   const SortHeader = ({ label, k }: { label: string; k: SortKey }) => (
-    <th className="px-4 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort(k)}>
+    <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort(k)}>
       <span className="inline-flex items-center gap-1">{label}<ArrowUpDown className={`h-3 w-3 ${sortKey === k ? "text-primary" : ""}`} /></span>
     </th>
   );
 
-  const filters = ["all", "Foil", "Non-Foil", "Rainbow Foil"];
+  const typeFilters = ["all", "Foil", "Non-Foil", "Rainbow Foil"];
 
   return (
     <>
       <div className="glass-card overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-border">
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-muted border-border font-body" />
+        <div className="flex flex-col gap-3 p-4 border-b border-border">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-muted border-border font-body" />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              {typeFilters.map((f) => (
+                <button key={f} onClick={() => setFilterType(f)} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterType === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                  {f === "all" ? "Todos" : f}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            {filters.map((f) => (
-              <button key={f} onClick={() => setFilterType(f)} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterType === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                {f === "all" ? "Todos" : f}
+          {/* Category filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            <button onClick={() => setFilterCategory("all")} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterCategory === "all" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+              Todas Categorias
+            </button>
+            {categories.map((cat) => (
+              <button key={cat} onClick={() => setFilterCategory(filterCategory === cat ? "all" : cat)} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterCategory === cat ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                {cat}
               </button>
             ))}
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full font-body">
+          <table className="w-full font-body text-sm">
             <thead className="bg-muted/50">
               <tr>
                 <SortHeader label="ID" k="id" />
-                <th className="px-4 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Img</th>
+                <th className="px-3 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Img</th>
                 <SortHeader label="Nome" k="name" />
-                <th className="px-4 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Tipo</th>
+                <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Tipo</th>
+                <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Categoria</th>
                 <SortHeader label="Preço" k="price" />
-                <th className="px-4 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Desconto</th>
+                <th className="px-3 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Desc.</th>
                 <SortHeader label="Qtd" k="quantity" />
-                <th className="px-4 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Valor Final</th>
-                <th className="px-4 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Ações</th>
+                <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Valor Final</th>
+                <th className="px-3 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -211,10 +226,8 @@ const InventoryTable = ({ data }: Props) => {
                 const finalPrice = item.price * (1 - discount / 100);
                 return (
                   <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 text-sm font-mono text-primary">{item.id}</td>
-
-                    {/* Image thumbnail */}
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2.5 font-mono text-primary text-xs">{item.id}</td>
+                    <td className="px-3 py-2.5 text-center">
                       {item.image_url ? (
                         <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover mx-auto border border-border/40" />
                       ) : (
@@ -224,28 +237,31 @@ const InventoryTable = ({ data }: Props) => {
 
                     {editingId === item.id ? (
                       <>
-                        <td className="px-4 py-2">
+                        <td className="px-3 py-2">
                           <Input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="h-8 text-sm bg-muted border-border" />
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5">
                           <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-3 py-2">
+                          <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-28" />
+                        </td>
+                        <td className="px-3 py-2">
                           <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-sm bg-muted border-border w-24" />
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-3 py-2">
                           <div className="flex items-center gap-1 justify-center">
-                            <Input type="number" min="0" max="100" step="1" value={editForm.discount} onChange={(e) => setEditForm((p) => ({ ...p, discount: e.target.value }))} className="h-8 text-sm bg-muted border-border w-16 text-center" />
+                            <Input type="number" min="0" max="100" step="1" value={editForm.discount} onChange={(e) => setEditForm((p) => ({ ...p, discount: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14 text-center" />
                             <span className="text-xs text-muted-foreground">%</span>
                           </div>
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-3 py-2">
                           <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-16" />
                         </td>
-                        <td className="px-4 py-3 text-sm font-semibold tabular-nums text-primary">
+                        <td className="px-3 py-2.5 font-semibold tabular-nums text-primary">
                           R$ {(parseFloat(editForm.price || "0") * (1 - parseFloat(editForm.discount || "0") / 100) * parseInt(editForm.quantity || "0", 10)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5">
                           <div className="flex items-center justify-center gap-1">
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-success hover:text-success hover:bg-success/10" onClick={() => saveEdit(item.id)} disabled={saving}>
                               <Check className="h-4 w-4" />
@@ -258,14 +274,15 @@ const InventoryTable = ({ data }: Props) => {
                       </>
                     ) : (
                       <>
-                        <td className="px-4 py-3 text-sm max-w-xs">{item.name}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5 max-w-xs">{item.name}</td>
+                        <td className="px-3 py-2.5">
                           <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-sm tabular-nums">
+                        <td className="px-3 py-2.5 text-xs text-muted-foreground">{item.category}</td>
+                        <td className="px-3 py-2.5 tabular-nums">
                           R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-3 py-2.5 text-center">
                           {discountEditId === item.id ? (
                             <div className="flex items-center gap-1 justify-center">
                               <Input type="number" min="0" max="100" step="1" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="h-7 text-xs bg-muted border-border w-14 text-center" autoFocus onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") setDiscountEditId(null); }} />
@@ -283,12 +300,12 @@ const InventoryTable = ({ data }: Props) => {
                             </button>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-center tabular-nums">{item.quantity}</td>
-                        <td className="px-4 py-3 text-sm font-semibold tabular-nums text-primary">
+                        <td className="px-3 py-2.5 text-center tabular-nums">{item.quantity}</td>
+                        <td className="px-3 py-2.5 font-semibold tabular-nums text-primary">
                           {discount > 0 && <span className="text-xs text-muted-foreground line-through mr-1">R$ {(item.price * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
                           R$ {(finalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5">
                           <div className="flex items-center justify-center gap-1">
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/10" onClick={() => setImageDialogItem(item)} title="Gerenciar imagem">
                               <ImagePlus className="h-3.5 w-3.5" />
@@ -327,24 +344,25 @@ const InventoryTable = ({ data }: Props) => {
                 <img src={imageDialogItem.image_url} alt={imageDialogItem.name} className="w-full h-48 object-cover" />
               </div>
             ) : (
-              <div className="w-full h-36 rounded-xl border-2 border-dashed border-border bg-muted/10 flex items-center justify-center text-muted-foreground text-sm">
-                Sem imagem
+              <div className="rounded-xl border border-dashed border-border bg-muted/10 h-48 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Sem imagem</p>
               </div>
             )}
 
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+
             <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 gap-2 text-sm" onClick={() => imageInputRef.current?.click()} disabled={uploadingImage}>
+              <Button variant="outline" className="flex-1 gap-2 font-body" onClick={() => imageInputRef.current?.click()} disabled={uploadingImage}>
                 <ImagePlus className="h-4 w-4" />
-                {uploadingImage ? "Enviando..." : imageDialogItem?.image_url ? "Trocar Imagem" : "Adicionar Imagem"}
+                {imageDialogItem?.image_url ? "Trocar" : "Adicionar"}
               </Button>
               {imageDialogItem?.image_url && (
-                <Button variant="outline" className="gap-2 text-sm text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleImageRemove} disabled={uploadingImage}>
+                <Button variant="outline" className="gap-2 font-body text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleImageRemove} disabled={uploadingImage}>
                   <Trash2 className="h-4 w-4" />
                   Remover
                 </Button>
               )}
             </div>
-            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
           </div>
         </DialogContent>
       </Dialog>
@@ -353,15 +371,15 @@ const InventoryTable = ({ data }: Props) => {
       <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-foreground">Excluir Item</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-foreground">Excluir item?</AlertDialogTitle>
             <AlertDialogDescription className="font-body">
-              Tem certeza que deseja excluir <strong className="text-foreground">{deleteItem?.name}</strong> ({deleteItem?.id})? Esta ação não pode ser desfeita.
+              <strong>{deleteItem?.name}</strong> será removido permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="font-body">Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" disabled={saving}>
-              {saving ? "Excluindo..." : "Excluir"}
+            <AlertDialogAction onClick={confirmDelete} disabled={saving} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body">
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
