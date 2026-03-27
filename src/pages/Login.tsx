@@ -1,24 +1,36 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-bg.png";
 import logo from "@/assets/logo.png";
 import bannerDeadpool from "@/assets/banner-deadpool.jpg";
+import bannerDandan from "@/assets/banner-dandan.jpg";
+
+const banners = [
+  { src: bannerDeadpool, alt: "Secret Lair x Deadpool", label: "🔥 Novidade", title: "Secret Lair x Deadpool" },
+  { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "✨ Kit Exclusivo", title: "Secret Lair x Dandân Deck" },
+];
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleGoogleLogin = async () => {
     if (loading) return;
-
     try {
       setLoading(true);
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/`,
       });
-
       if (result?.error) {
         toast.error("Erro ao fazer login. Tente novamente.");
       }
@@ -85,26 +97,39 @@ const Login = () => {
           </Button>
         </Link>
 
-        {/* Banner promocional */}
+        {/* Banner carousel */}
         <div
           className="mt-12 w-full max-w-sm sm:max-w-md animate-fade-in-up"
           style={{ animationDelay: "0.6s", opacity: 0 }}
         >
           <Link to="/catalogo" className="block group">
             <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.02]">
-              <img
-                src={bannerDeadpool}
-                alt="Secret Lair x Deadpool — Novidade!"
-                className="w-full h-auto object-cover"
-              />
+              {banners.map((banner, idx) => (
+                <img
+                  key={idx}
+                  src={banner.src}
+                  alt={banner.alt}
+                  className={`w-full h-auto object-cover transition-opacity duration-1000 ${idx === currentBanner ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+                />
+              ))}
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
                 <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold font-body uppercase tracking-wider mb-2">
-                  🔥 Novidade
+                  {banners[currentBanner].label}
                 </span>
                 <p className="text-sm font-body font-medium text-foreground drop-shadow-lg">
-                  Secret Lair x Deadpool
+                  {banners[currentBanner].title}
                 </p>
+              </div>
+              {/* Dots */}
+              <div className="absolute bottom-2 right-3 flex gap-1.5">
+                {banners.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => { e.preventDefault(); setCurrentBanner(idx); }}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentBanner ? "w-4 bg-primary" : "w-1.5 bg-foreground/30"}`}
+                  />
+                ))}
               </div>
               <div className="absolute inset-0 foil-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             </div>

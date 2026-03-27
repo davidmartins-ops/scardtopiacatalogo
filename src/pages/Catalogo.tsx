@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
@@ -18,11 +19,11 @@ const Catalogo = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const availableItems = useMemo(() => inventoryData.filter((item) => item.quantity > 0), [inventoryData]);
-  const categories = useMemo(() => [...new Set(availableItems.map((i) => i.category))].sort(), [availableItems]);
+  // Show all items (including out of stock)
+  const categories = useMemo(() => [...new Set(inventoryData.map((i) => i.category))].sort(), [inventoryData]);
 
   const filteredItems = useMemo(() => {
-    return availableItems.filter((item) => {
+    return inventoryData.filter((item) => {
       const matchesSearch =
         !search ||
         item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -31,7 +32,7 @@ const Catalogo = () => {
       const matchesCategory = !activeCategory || item.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [availableItems, search, activeCategory]);
+  }, [inventoryData, search, activeCategory]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof filteredItems> = {};
@@ -66,7 +67,9 @@ const Catalogo = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8">
-          <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in" />
+          <Link to="/login">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in cursor-pointer hover:scale-105 transition-transform duration-300" />
+          </Link>
           <div className="premium-divider max-w-[120px] mt-3 mb-2" />
           <p className="text-sm text-muted-foreground tracking-[0.25em] uppercase font-medium animate-fade-in" style={{ animationDelay: "0.15s" }}>
             Catálogo de Drops
@@ -101,7 +104,7 @@ const Catalogo = () => {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          {filteredItems.length} {filteredItems.length === 1 ? "item disponível" : "itens disponíveis"}
+          {filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados
         </p>
 
         {groupedItems.length === 0 ? (
@@ -124,18 +127,26 @@ const Catalogo = () => {
                   const Icon = config?.icon ?? Circle;
                   const discount = item.discount ?? 0;
                   const finalPrice = item.price * (1 - discount / 100);
+                  const isOutOfStock = item.quantity <= 0;
 
                   return (
-                    <div key={item.id} className="group glass-card glow-hover overflow-hidden animate-scale-in" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
+                    <div key={item.id} className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-60" : ""}`} style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
                       <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                       <div className="relative z-10 px-4 pt-4">
-                        <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20">
+                        <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative">
                           {item.image_url ? (
-                            <img src={item.image_url} alt={item.name} className="w-full h-44 sm:h-48 object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                            <img src={item.image_url} alt={item.name} className={`w-full h-44 sm:h-48 object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? "grayscale" : ""}`} loading="lazy" />
                           ) : (
                             <div className="w-full h-44 sm:h-48 flex items-center justify-center text-sm text-muted-foreground bg-muted/10">
                               Imagem não disponível
+                            </div>
+                          )}
+                          {isOutOfStock && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+                              <Badge className="bg-destructive/90 text-destructive-foreground text-sm font-bold px-4 py-1.5 shadow-lg">
+                                ESGOTADO
+                              </Badge>
                             </div>
                           )}
                         </div>
@@ -156,10 +167,17 @@ const Catalogo = () => {
                         </div>
 
                         <div className="mt-4 flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
-                            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                            Disponível
-                          </span>
+                          {isOutOfStock ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
+                              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                              Esgotado
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+                              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                              Disponível
+                            </span>
+                          )}
 
                           <div className="text-right">
                             {discount > 0 ? (
