@@ -8,6 +8,7 @@ export interface InventoryItem {
   image?: string;
   image_url?: string | null;
   discount?: number;
+  product_type?: "single" | "drop";
 }
 
 export const inventoryData: InventoryItem[] = [];
