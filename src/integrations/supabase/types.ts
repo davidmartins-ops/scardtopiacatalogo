@@ -42,6 +42,7 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
+          product_type: string
           quantity: number
           updated_at: string
         }
@@ -54,6 +55,7 @@ export type Database = {
           image_url?: string | null
           name: string
           price?: number
+          product_type?: string
           quantity?: number
           updated_at?: string
         }
@@ -66,6 +68,7 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          product_type?: string
           quantity?: number
           updated_at?: string
         }
