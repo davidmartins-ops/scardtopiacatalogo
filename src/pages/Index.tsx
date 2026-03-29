@@ -9,6 +9,7 @@ import StatCard from "@/components/StatCard";
 import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
 import AddItemDialog from "@/components/AddItemDialog";
+import ScryfallSearchDialog from "@/components/ScryfallSearchDialog";
 
 const Index = () => {
   const { signOut } = useAuth();
@@ -51,6 +52,7 @@ const Index = () => {
             <p className="mt-1 text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium">Painel de Gerenciamento</p>
           </div>
           <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <ScryfallSearchDialog />
             <AddItemDialog />
             <Button
               variant="outline"
