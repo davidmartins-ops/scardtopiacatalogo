@@ -93,6 +93,22 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                   <div key={item.id} className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-60" : ""}`} style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
                     <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
+                    {/* Status Badge */}
+                    {item.status === "pre_sale" && (
+                      <div className="absolute top-2 left-2 z-30">
+                        <Badge className="bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-pulse">
+                          <Star className="h-3 w-3" />PRÉ VENDA
+                        </Badge>
+                      </div>
+                    )}
+                    {item.status === "launch" && (
+                      <div className="absolute top-2 left-2 z-30">
+                        <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1">
+                          <Flame className="h-3 w-3" />LANÇAMENTO
+                        </Badge>
+                      </div>
+                    )}
+
                     <div className="relative z-10 px-3 pt-3">
                       <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative">
                         {item.image_url ? (
