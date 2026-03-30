@@ -182,8 +182,8 @@ const ScryfallSearchDialog = () => {
         </DialogHeader>
 
         {!selected ? (
-          <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-            <div className="flex gap-2">
+          <div className="space-y-4 flex-1 min-h-0 flex flex-col">
+            <div className="flex gap-2 shrink-0">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar carta por nome (ex: Lightning Bolt)..." value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && searchScryfall()} className="pl-9 bg-muted border-border" />
@@ -193,8 +193,8 @@ const ScryfallSearchDialog = () => {
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 max-h-[50vh]">
-              <div className="space-y-2 pr-2">
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-lg border border-border scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
+              <div className="space-y-2 p-2">
                 {results.map((card) => {
                   const img = getCardSmall(card);
                   return (
@@ -223,7 +223,7 @@ const ScryfallSearchDialog = () => {
                   <p className="text-sm text-muted-foreground text-center py-8">Use a busca acima para encontrar cartas no Scryfall.</p>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         ) : (
           <ScrollArea className="flex-1 max-h-[70vh]">
