@@ -15,6 +15,17 @@ import {
 import { Button } from "@/components/ui/button";
 
 const DESCRIPTIONS = ["Foil", "Non-Foil", "Rainbow Foil"] as const;
+const LANGUAGES = [
+  { value: "PT", label: "Português" },
+  { value: "EN", label: "English" },
+  { value: "JP", label: "日本語" },
+];
+const CONDITIONS = [
+  { value: "NM", label: "NM - Near Mint" },
+  { value: "SP", label: "SP - Slightly Played" },
+  { value: "HP", label: "HP - Heavily Played" },
+  { value: "D", label: "D - Damaged" },
+];
 
 const AddItemDialog = () => {
   const [open, setOpen] = useState(false);
@@ -26,6 +37,7 @@ const AddItemDialog = () => {
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", quantity: "1", category: "",
+    language: "PT", condition: "NM",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -35,14 +47,8 @@ const AddItemDialog = () => {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Selecione um arquivo de imagem.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem deve ter no máximo 5MB.");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { toast.error("Selecione um arquivo de imagem."); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB."); return; }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -54,7 +60,7 @@ const AddItemDialog = () => {
   };
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "" });
+    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "", language: "PT", condition: "NM" });
     clearImage();
   };
 
@@ -89,6 +95,8 @@ const AddItemDialog = () => {
       price, quantity,
       category: form.category,
       image_url,
+      language: form.language,
+      condition: form.condition,
     });
 
     setLoading(false);
@@ -110,10 +118,11 @@ const AddItemDialog = () => {
       <DialogTrigger asChild>
         <Button className="gap-2 font-body">
           <Plus className="h-4 w-4" />
-          Novo Item
+          <span className="hidden sm:inline">Novo Item</span>
+          <span className="sm:hidden">Novo</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-card border-border">
+      <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-foreground">Adicionar Item</DialogTitle>
         </DialogHeader>
@@ -134,14 +143,34 @@ const AddItemDialog = () => {
             <Input id="name" placeholder="Secret Lair x ..." value={form.name} onChange={(e) => handleChange("name", e.target.value)} maxLength={200} className="bg-muted border-border" />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Tipo</Label>
-            <Select value={form.description} onValueChange={(v) => handleChange("description", v)}>
-              <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {DESCRIPTIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select value={form.description} onValueChange={(v) => handleChange("description", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DESCRIPTIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Idioma</Label>
+              <Select value={form.language} onValueChange={(v) => handleChange("language", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Qualidade</Label>
+              <Select value={form.condition} onValueChange={(v) => handleChange("condition", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Image upload */}
