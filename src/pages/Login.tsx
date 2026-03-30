@@ -6,12 +6,20 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
-import bannerDeadpool from "@/assets/banner-deadpool.jpg";
 import bannerDandan from "@/assets/banner-dandan.jpg";
+import bannerDpThrill from "@/assets/banner-dp-thrill.jpg";
+import bannerDpSolring from "@/assets/banner-dp-solring.jpg";
+import bannerDpPlunder from "@/assets/banner-dp-plunder.jpg";
+import bannerDpBolt from "@/assets/banner-dp-bolt.jpg";
+import bannerDpGreaves from "@/assets/banner-dp-greaves.jpg";
 
 const banners = [
-  { src: bannerDeadpool, alt: "Secret Lair x Deadpool", label: "🔥 Novidade", title: "Secret Lair x Deadpool", subtitle: "Edição limitada disponível agora!" },
-  { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "✨ Kit Exclusivo", title: "Secret Lair x Dandân Deck", subtitle: "Monte seu deck com estilo!" },
+  { src: bannerDpThrill, alt: "Thrill of Possibility – Deadpool", label: "🃏 Single", title: "Thrill of Possibility", subtitle: "Quando o Deadpool resolve dar aquela repensada... com estilo!" },
+  { src: bannerDpSolring, alt: "Worn Powerstone (Sol Ring) – Deadpool", label: "🃏 Single", title: "Worn Powerstone — Sol Ring", subtitle: "Mana infinita? Deadpool aprova esse tipo de poder!" },
+  { src: bannerDpPlunder, alt: "Costly Plunder / Deadly Dispute – Deadpool", label: "🃏 Single", title: "Costly Plunder / Deadly Dispute", subtitle: "Roubar tesouros e causar caos — a especialidade do Merc!" },
+  { src: bannerDpBolt, alt: "Lightning Bolt – Deadpool", label: "🃏 Single", title: "Lightning Bolt", subtitle: "3 de dano na cara e de cabeça pra baixo. Clássico Deadpool!" },
+  { src: bannerDpGreaves, alt: "Lightning Greaves – Deadpool", label: "🃏 Single", title: "Lightning Greaves", subtitle: "Velocidade e proteção — até o Deadpool precisa de um bom calçado!" },
+  { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "🔥 Novidade", title: "Secret Lair x Dandân Deck", subtitle: "Monte seu deck com estilo!" },
 ];
 
 const Login = () => {
