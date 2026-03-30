@@ -14,6 +14,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { type InventoryItem } from "@/data/inventory";
 
 const descriptionStyles: Record<string, string> = {
@@ -21,6 +24,19 @@ const descriptionStyles: Record<string, string> = {
   "Non-Foil": "bg-non-foil/15 text-non-foil border-non-foil/30",
   "Rainbow Foil": "bg-rainbow/15 text-rainbow border-rainbow/30",
 };
+
+const LANGUAGES = [
+  { value: "PT", label: "PT" },
+  { value: "EN", label: "EN" },
+  { value: "JP", label: "JP" },
+];
+
+const CONDITIONS = [
+  { value: "NM", label: "NM" },
+  { value: "SP", label: "SP" },
+  { value: "HP", label: "HP" },
+  { value: "D", label: "D" },
+];
 
 interface Props { data: InventoryItem[]; }
 type SortKey = "id" | "name" | "price" | "quantity";
@@ -32,7 +48,7 @@ const InventoryTable = ({ data }: Props) => {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
@@ -73,6 +89,7 @@ const InventoryTable = ({ data }: Props) => {
     setEditForm({
       name: item.name, price: String(item.price), quantity: String(item.quantity),
       category: item.category, discount: String(item.discount ?? 0),
+      language: item.language ?? "PT", condition: item.condition ?? "NM",
     });
   };
 
@@ -88,7 +105,11 @@ const InventoryTable = ({ data }: Props) => {
     }
     setSaving(true);
     const { error } = await supabase.from("inventory")
-      .update({ name: editForm.name.trim(), price, quantity, category: editForm.category.trim(), discount })
+      .update({
+        name: editForm.name.trim(), price, quantity,
+        category: editForm.category.trim(), discount,
+        language: editForm.language, condition: editForm.condition,
+      })
       .eq("id", id);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar."); return; }
@@ -165,7 +186,7 @@ const InventoryTable = ({ data }: Props) => {
   };
 
   const SortHeader = ({ label, k }: { label: string; k: SortKey }) => (
-    <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort(k)}>
+    <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none whitespace-nowrap" onClick={() => handleSort(k)}>
       <span className="inline-flex items-center gap-1">{label}<ArrowUpDown className={`h-3 w-3 ${sortKey === k ? "text-primary" : ""}`} /></span>
     </th>
   );
@@ -175,29 +196,28 @@ const InventoryTable = ({ data }: Props) => {
   return (
     <>
       <div className="glass-card overflow-hidden">
-        <div className="flex flex-col gap-3 p-4 border-b border-border">
+        <div className="flex flex-col gap-3 p-3 sm:p-4 border-b border-border">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-muted border-border font-body" />
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <Filter className="h-4 w-4 text-muted-foreground" />
               {typeFilters.map((f) => (
-                <button key={f} onClick={() => setFilterType(f)} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterType === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                <button key={f} onClick={() => setFilterType(f)} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterType === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
                   {f === "all" ? "Todos" : f}
                 </button>
               ))}
             </div>
           </div>
-          {/* Category filter */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <Tag className="h-4 w-4 text-muted-foreground" />
-            <button onClick={() => setFilterCategory("all")} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterCategory === "all" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-              Todas Categorias
+            <button onClick={() => setFilterCategory("all")} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === "all" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+              Todas
             </button>
             {categories.map((cat) => (
-              <button key={cat} onClick={() => setFilterCategory(filterCategory === cat ? "all" : cat)} className={`px-3 py-1 rounded-full text-xs font-body font-medium transition-all ${filterCategory === cat ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+              <button key={cat} onClick={() => setFilterCategory(filterCategory === cat ? "all" : cat)} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === cat ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
                 {cat}
               </button>
             ))}
@@ -205,19 +225,21 @@ const InventoryTable = ({ data }: Props) => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full font-body text-sm">
+          <table className="w-full font-body text-sm min-w-[700px]">
             <thead className="bg-muted/50">
               <tr>
                 <SortHeader label="ID" k="id" />
-                <th className="px-3 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Img</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Img</th>
                 <SortHeader label="Nome" k="name" />
-                <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Tipo</th>
-                <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Categoria</th>
+                <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Tipo</th>
+                <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Cat.</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Idioma</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Qual.</th>
                 <SortHeader label="Preço" k="price" />
-                <th className="px-3 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Desc.</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Desc.</th>
                 <SortHeader label="Qtd" k="quantity" />
-                <th className="px-3 py-3 text-left text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Valor Final</th>
-                <th className="px-3 py-3 text-center text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Ações</th>
+                <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Valor Final</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -226,8 +248,8 @@ const InventoryTable = ({ data }: Props) => {
                 const finalPrice = item.price * (1 - discount / 100);
                 return (
                   <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-3 py-2.5 font-mono text-primary text-xs">{item.id}</td>
-                    <td className="px-3 py-2.5 text-center">
+                    <td className="px-2 sm:px-3 py-2.5 font-mono text-primary text-xs">{item.id}</td>
+                    <td className="px-2 sm:px-3 py-2.5 text-center">
                       {item.image_url ? (
                         <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover mx-auto border border-border/40" />
                       ) : (
@@ -237,31 +259,47 @@ const InventoryTable = ({ data }: Props) => {
 
                     {editingId === item.id ? (
                       <>
-                        <td className="px-3 py-2">
+                        <td className="px-2 sm:px-3 py-2">
                           <Input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="h-8 text-sm bg-muted border-border" />
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-2 sm:px-3 py-2.5">
                           <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
                         </td>
-                        <td className="px-3 py-2">
-                          <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-28" />
+                        <td className="px-2 sm:px-3 py-2">
+                          <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-24" />
                         </td>
-                        <td className="px-3 py-2">
-                          <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-sm bg-muted border-border w-24" />
+                        <td className="px-2 sm:px-3 py-2">
+                          <Select value={editForm.language} onValueChange={(v) => setEditForm((p) => ({ ...p, language: v }))}>
+                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 sm:px-3 py-2">
+                          <Select value={editForm.condition} onValueChange={(v) => setEditForm((p) => ({ ...p, condition: v }))}>
+                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2">
+                          <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-sm bg-muted border-border w-20" />
+                        </td>
+                        <td className="px-2 sm:px-3 py-2">
                           <div className="flex items-center gap-1 justify-center">
-                            <Input type="number" min="0" max="100" step="1" value={editForm.discount} onChange={(e) => setEditForm((p) => ({ ...p, discount: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14 text-center" />
+                            <Input type="number" min="0" max="100" step="1" value={editForm.discount} onChange={(e) => setEditForm((p) => ({ ...p, discount: e.target.value }))} className="h-8 text-sm bg-muted border-border w-12 text-center" />
                             <span className="text-xs text-muted-foreground">%</span>
                           </div>
                         </td>
-                        <td className="px-3 py-2">
-                          <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-16" />
+                        <td className="px-2 sm:px-3 py-2">
+                          <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14" />
                         </td>
-                        <td className="px-3 py-2.5 font-semibold tabular-nums text-primary">
+                        <td className="px-2 sm:px-3 py-2.5 font-semibold tabular-nums text-primary text-xs">
                           R$ {(parseFloat(editForm.price || "0") * (1 - parseFloat(editForm.discount || "0") / 100) * parseInt(editForm.quantity || "0", 10)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-2 sm:px-3 py-2.5">
                           <div className="flex items-center justify-center gap-1">
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-success hover:text-success hover:bg-success/10" onClick={() => saveEdit(item.id)} disabled={saving}>
                               <Check className="h-4 w-4" />
@@ -274,18 +312,24 @@ const InventoryTable = ({ data }: Props) => {
                       </>
                     ) : (
                       <>
-                        <td className="px-3 py-2.5 max-w-xs">{item.name}</td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-2 sm:px-3 py-2.5 max-w-[200px] truncate">{item.name}</td>
+                        <td className="px-2 sm:px-3 py-2.5">
                           <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
                         </td>
-                        <td className="px-3 py-2.5 text-xs text-muted-foreground">{item.category}</td>
-                        <td className="px-3 py-2.5 tabular-nums">
+                        <td className="px-2 sm:px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[100px]">{item.category}</td>
+                        <td className="px-2 sm:px-3 py-2.5 text-center">
+                          <Badge variant="outline" className="text-[10px]">{item.language ?? "PT"}</Badge>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2.5 text-center">
+                          <Badge variant="outline" className="text-[10px]">{item.condition ?? "NM"}</Badge>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs">
                           R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-3 py-2.5 text-center">
+                        <td className="px-2 sm:px-3 py-2.5 text-center">
                           {discountEditId === item.id ? (
                             <div className="flex items-center gap-1 justify-center">
-                              <Input type="number" min="0" max="100" step="1" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="h-7 text-xs bg-muted border-border w-14 text-center" autoFocus onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") setDiscountEditId(null); }} />
+                              <Input type="number" min="0" max="100" step="1" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="h-7 text-xs bg-muted border-border w-12 text-center" autoFocus onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") setDiscountEditId(null); }} />
                               <span className="text-xs text-muted-foreground">%</span>
                               <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => saveDiscount(item.id)} disabled={saving}><Check className="h-3 w-3" /></Button>
                               <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => setDiscountEditId(null)}><X className="h-3 w-3" /></Button>
@@ -300,12 +344,12 @@ const InventoryTable = ({ data }: Props) => {
                             </button>
                           )}
                         </td>
-                        <td className="px-3 py-2.5 text-center tabular-nums">{item.quantity}</td>
-                        <td className="px-3 py-2.5 font-semibold tabular-nums text-primary">
-                          {discount > 0 && <span className="text-xs text-muted-foreground line-through mr-1">R$ {(item.price * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
+                        <td className="px-2 sm:px-3 py-2.5 text-center tabular-nums text-xs">{item.quantity}</td>
+                        <td className="px-2 sm:px-3 py-2.5 font-semibold tabular-nums text-primary text-xs whitespace-nowrap">
+                          {discount > 0 && <span className="text-[10px] text-muted-foreground line-through mr-1">R$ {(item.price * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
                           R$ {(finalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-2 sm:px-3 py-2.5">
                           <div className="flex items-center justify-center gap-1">
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/10" onClick={() => setImageDialogItem(item)} title="Gerenciar imagem">
                               <ImagePlus className="h-3.5 w-3.5" />
