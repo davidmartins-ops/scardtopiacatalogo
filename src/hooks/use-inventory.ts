@@ -24,6 +24,7 @@ export const useInventory = () => {
         product_type: (item as any).product_type as InventoryItem["product_type"] ?? "drop",
         language: (item as any).language ?? "PT",
         condition: (item as any).condition ?? "NM",
+        status: (item as any).status ?? "none",
       }));
     },
   });

@@ -164,6 +164,7 @@ const ScryfallSearchDialog = () => {
     setDescription("Non-Foil");
     setLanguage("PT");
     setCondition("NM");
+    setStatus("none");
     setQuery("");
     setResults([]);
     setPrintings([]);
