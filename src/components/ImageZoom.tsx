@@ -11,26 +11,22 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "" }: ImageZ
   const [hovered, setHovered] = useState(false);
 
   return (
-    <>
-      <div
-        className={`relative overflow-hidden ${containerClassName}`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <img src={src} alt={alt} className={className} />
-      </div>
+    <div
+      className={`relative overflow-visible ${containerClassName}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <img src={src} alt={alt} className={className} />
       {hovered && (
-        <div
-          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center pointer-events-none p-4"
-        >
+        <div className="absolute z-[60] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-scale-in">
           <img
             src={src}
             alt={alt}
-            className="max-w-full max-h-[90vh] object-contain rounded-xl border border-border shadow-2xl animate-scale-in"
+            className="w-[280px] sm:w-[340px] h-auto object-contain rounded-xl border-2 border-primary/30 shadow-2xl"
           />
         </div>
       )}
-    </>
+    </div>
   );
 };
 
