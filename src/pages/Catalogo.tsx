@@ -56,11 +56,11 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome, categoria ou tipo..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105" onClick={() => setActiveCategory(null)}>Todos</Badge>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 shrink-0" onClick={() => setActiveCategory(null)}>Todos</Badge>
           {categories.map((cat) => (
-            <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
+            <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 shrink-0 whitespace-nowrap" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
           ))}
         </div>
       </div>
