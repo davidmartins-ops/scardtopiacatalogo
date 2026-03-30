@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory ADD COLUMN status text NOT NULL DEFAULT 'none';
