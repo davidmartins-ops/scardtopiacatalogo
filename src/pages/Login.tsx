@@ -63,7 +63,12 @@ const Login = () => {
       </div>
 
       {/* Login button */}
-      <header className="relative z-50 flex justify-end p-4 sm:p-6">
+      <header className="relative z-50 flex items-center justify-between p-4 sm:p-6">
+        <img
+          src={logo}
+          alt="Spencer's Cardtopia"
+          className="w-28 sm:w-36 md:w-40 drop-shadow-2xl animate-float"
+        />
         <Button
           type="button"
           onClick={handleGoogleLogin}
@@ -83,14 +88,9 @@ const Login = () => {
 
       {/* Main content */}
       <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12">
-        {/* Logo + tagline */}
-        <div className="flex flex-col items-center mt-4 sm:mt-8 mb-8 sm:mb-10">
-          <img
-            src={logo}
-            alt="Spencer's Cardtopia"
-            className="w-48 sm:w-64 md:w-72 drop-shadow-2xl animate-float"
-          />
-          <div className="premium-divider max-w-[140px] mt-3 mb-2 opacity-60" />
+        {/* Slogan */}
+        <div className="flex flex-col items-center mt-2 sm:mt-4 mb-6 sm:mb-8">
+          <div className="premium-divider max-w-[140px] mb-2 opacity-60" />
           <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in" style={{ animationDelay: "0.2s" }}>
             Sua loja de Secret Lair!
           </p>
