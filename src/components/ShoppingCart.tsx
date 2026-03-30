@@ -57,7 +57,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty }: ShoppingCartPro
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className="fixed bottom-24 right-6 z-50 flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-primary/50 hover:shadow-primary/10 hover:shadow-xl transition-all duration-300">
+        <button className="fixed bottom-6 right-6 z-50 flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-primary/50 hover:shadow-primary/10 hover:shadow-xl transition-all duration-300">
           <CartIcon className="h-5 w-5 text-primary" />
           Carrinho
           {totalItems > 0 && (

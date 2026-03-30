@@ -92,14 +92,22 @@ const Login = () => {
         <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s", opacity: 0 }}>
           <Link to="/catalogo" className="block group">
             <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.01]">
-              {banners.map((banner, idx) => (
-                <img
-                  key={idx}
-                  src={banner.src}
-                  alt={banner.alt}
-                  className={`w-full h-auto object-cover transition-opacity duration-1000 ${idx === currentBanner ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`}
-                />
-              ))}
+              <div className="relative w-full overflow-hidden">
+                <div
+                  className="flex transition-transform duration-700 ease-in-out"
+                  style={{ transform: `translateX(-${currentBanner * 100}%)` }}
+                >
+                  {banners.map((banner, idx) => (
+                    <img
+                      key={idx}
+                      src={banner.src}
+                      alt={banner.alt}
+                      className="w-full h-auto object-cover flex-shrink-0"
+                      style={{ minWidth: "100%" }}
+                    />
+                  ))}
+                </div>
+              </div>
 
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
