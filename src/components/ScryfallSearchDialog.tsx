@@ -125,7 +125,8 @@ const ScryfallSearchDialog = () => {
     if (isNaN(price) || price < 0) { toast.error("Preço em R$ inválido."); return; }
     if (isNaN(qty) || qty < 0) { toast.error("Quantidade inválida."); return; }
 
-    const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}-${language}`;
+    const foilSuffix = description === "Foil" ? "F" : "NF";
+    const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}-${language}-${foilSuffix}`;
     const imageUrl = getCardImage(selected);
 
     setSaving(true);
