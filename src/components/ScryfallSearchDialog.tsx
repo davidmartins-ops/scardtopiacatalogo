@@ -55,6 +55,7 @@ const ScryfallSearchDialog = () => {
   const [description, setDescription] = useState<"Foil" | "Non-Foil">("Non-Foil");
   const [language, setLanguage] = useState("PT");
   const [condition, setCondition] = useState("NM");
+  const [status, setStatus] = useState<"none" | "pre_sale" | "launch">("none");
   const [saving, setSaving] = useState(false);
 
   // Edition selector
@@ -82,7 +83,7 @@ const ScryfallSearchDialog = () => {
     setSelected(null);
     setPrintings([]);
     try {
-      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query.trim())}&unique=cards&order=released&dir=desc`);
+      const res = await fetch(`https://api.scryfall.com/cards/search?q=name:${encodeURIComponent(`"${query.trim()}"`)}&unique=cards&order=released&dir=desc`);
       if (!res.ok) {
         if (res.status === 404) toast.info("Nenhuma carta encontrada.");
         else toast.error("Erro na busca.");
@@ -141,6 +142,7 @@ const ScryfallSearchDialog = () => {
       product_type: "single",
       language,
       condition,
+      status,
     });
     setSaving(false);
 
@@ -162,6 +164,7 @@ const ScryfallSearchDialog = () => {
     setDescription("Non-Foil");
     setLanguage("PT");
     setCondition("NM");
+    setStatus("none");
     setQuery("");
     setResults([]);
     setPrintings([]);
@@ -321,6 +324,17 @@ const ScryfallSearchDialog = () => {
                     <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Status</Label>
+                  <Select value={status} onValueChange={(v) => setStatus(v as "none" | "pre_sale" | "launch")}>
+                    <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      <SelectItem value="pre_sale">Pré Venda</SelectItem>
+                      <SelectItem value="launch">Lançamento</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

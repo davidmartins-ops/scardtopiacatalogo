@@ -11,6 +11,7 @@ export interface InventoryItem {
   product_type?: "single" | "drop";
   language?: string;
   condition?: string;
+  status?: "none" | "pre_sale" | "launch";
 }
 
 export const inventoryData: InventoryItem[] = [];

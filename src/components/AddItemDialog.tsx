@@ -37,7 +37,7 @@ const AddItemDialog = () => {
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", quantity: "1", category: "",
-    language: "PT", condition: "NM",
+    language: "PT", condition: "NM", status: "none" as string,
   });
 
   const handleChange = (field: string, value: string) => {
@@ -60,7 +60,7 @@ const AddItemDialog = () => {
   };
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "", language: "PT", condition: "NM" });
+    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none" });
     clearImage();
   };
 
@@ -97,6 +97,7 @@ const AddItemDialog = () => {
       image_url,
       language: form.language,
       condition: form.condition,
+      status: form.status,
     });
 
     setLoading(false);
@@ -171,6 +172,19 @@ const AddItemDialog = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Status */}
+          <div className="space-y-2">
+            <Label>Status do Produto</Label>
+            <Select value={form.status} onValueChange={(v) => handleChange("status", v)}>
+              <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="pre_sale">Pré Venda</SelectItem>
+                <SelectItem value="launch">Lançamento</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Image upload */}
