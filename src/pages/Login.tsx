@@ -96,7 +96,7 @@ const Login = () => {
           Sua loja de Secret Lair!
         </p>
 
-        <div className="w-full max-w-sm h-[2px] my-3" style={{ background: "linear-gradient(90deg, transparent, hsl(43 74% 49% / 0.7), hsl(43 74% 60% / 0.9), hsl(43 74% 49% / 0.7), transparent)" }} />
+        <div className="w-full max-w-3xl mx-auto h-[2px] my-3" style={{ background: "linear-gradient(90deg, transparent, hsl(43 74% 49% / 0.7), hsl(43 74% 60% / 0.9), hsl(43 74% 49% / 0.7), transparent)" }} />
 
         {/* Banner carousel — hero prominence */}
         <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
