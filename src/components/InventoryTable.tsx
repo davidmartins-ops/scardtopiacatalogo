@@ -248,7 +248,7 @@ const InventoryTable = ({ data }: Props) => {
                 const finalPrice = item.price * (1 - discount / 100);
                 return (
                   <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-2 sm:px-3 py-2.5 font-mono text-primary text-xs">{item.id}</td>
+                    <td className="px-2 sm:px-3 py-2.5 font-mono text-primary text-xs max-w-[120px]"><span className="line-clamp-2 break-all">{item.id}</span></td>
                     <td className="px-2 sm:px-3 py-2.5 text-center">
                       {item.image_url ? (
                         <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover mx-auto border border-border/40" />
