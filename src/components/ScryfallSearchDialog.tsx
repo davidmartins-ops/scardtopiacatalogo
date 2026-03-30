@@ -142,6 +142,7 @@ const ScryfallSearchDialog = () => {
       product_type: "single",
       language,
       condition,
+      status,
     });
     setSaving(false);
 
