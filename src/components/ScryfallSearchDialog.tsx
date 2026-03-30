@@ -55,6 +55,7 @@ const ScryfallSearchDialog = () => {
   const [description, setDescription] = useState<"Foil" | "Non-Foil">("Non-Foil");
   const [language, setLanguage] = useState("PT");
   const [condition, setCondition] = useState("NM");
+  const [status, setStatus] = useState<"none" | "pre_sale" | "launch">("none");
   const [saving, setSaving] = useState(false);
 
   // Edition selector
