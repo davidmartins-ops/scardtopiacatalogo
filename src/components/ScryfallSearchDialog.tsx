@@ -82,7 +82,7 @@ const ScryfallSearchDialog = () => {
     setSelected(null);
     setPrintings([]);
     try {
-      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query.trim())}&unique=cards&order=released&dir=desc`);
+      const res = await fetch(`https://api.scryfall.com/cards/search?q=name:${encodeURIComponent(`"${query.trim()}"`)}&unique=cards&order=released&dir=desc`);
       if (!res.ok) {
         if (res.status === 404) toast.info("Nenhuma carta encontrada.");
         else toast.error("Erro na busca.");
