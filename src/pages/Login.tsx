@@ -14,11 +14,11 @@ import bannerDpBolt from "@/assets/banner-dp-bolt.jpg";
 import bannerDpGreaves from "@/assets/banner-dp-greaves.jpg";
 
 const banners = [
-  { src: bannerDpThrill, alt: "Thrill of Possibility – Deadpool", label: "🃏 Single", title: "Thrill of Possibility", subtitle: "Quando o Deadpool resolve dar aquela repensada... com estilo!" },
-  { src: bannerDpSolring, alt: "Worn Powerstone (Sol Ring) – Deadpool", label: "🃏 Single", title: "Worn Powerstone — Sol Ring", subtitle: "Mana infinita? Deadpool aprova esse tipo de poder!" },
-  { src: bannerDpPlunder, alt: "Costly Plunder / Deadly Dispute – Deadpool", label: "🃏 Single", title: "Costly Plunder / Deadly Dispute", subtitle: "Roubar tesouros e causar caos — a especialidade do Merc!" },
-  { src: bannerDpBolt, alt: "Lightning Bolt – Deadpool", label: "🃏 Single", title: "Lightning Bolt", subtitle: "3 de dano na cara e de cabeça pra baixo. Clássico Deadpool!" },
-  { src: bannerDpGreaves, alt: "Lightning Greaves – Deadpool", label: "🃏 Single", title: "Lightning Greaves", subtitle: "Velocidade e proteção — até o Deadpool precisa de um bom calçado!" },
+  { src: bannerDpThrill, alt: "Thrill of Possibility – Deadpool", label: "🎬 Próximo Lançamento", title: "Thrill of Possibility", subtitle: "Quando o Deadpool resolve dar aquela repensada... com estilo!" },
+  { src: bannerDpSolring, alt: "Worn Powerstone (Sol Ring) – Deadpool", label: "🎬 Próximo Lançamento", title: "Worn Powerstone — Sol Ring", subtitle: "Mana infinita? Deadpool aprova esse tipo de poder!" },
+  { src: bannerDpPlunder, alt: "Costly Plunder / Deadly Dispute – Deadpool", label: "🎬 Próximo Lançamento", title: "Costly Plunder / Deadly Dispute", subtitle: "Roubar tesouros e causar caos — a especialidade do Merc!" },
+  { src: bannerDpBolt, alt: "Lightning Bolt – Deadpool", label: "🎬 Próximo Lançamento", title: "Lightning Bolt", subtitle: "3 de dano na cara e de cabeça pra baixo. Clássico Deadpool!" },
+  { src: bannerDpGreaves, alt: "Lightning Greaves – Deadpool", label: "🎬 Próximo Lançamento", title: "Lightning Greaves", subtitle: "Velocidade e proteção — até o Deadpool precisa de um bom calçado!" },
   { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "🔥 Novidade", title: "Secret Lair x Dandân Deck", subtitle: "Monte seu deck com estilo!" },
 ];
 
@@ -97,7 +97,7 @@ const Login = () => {
         </div>
 
         {/* Banner carousel — hero prominence */}
-        <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s", opacity: 0 }}>
+        <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
           <Link to="/catalogo" className="block group">
             <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.01]">
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: "3 / 4" }}>
@@ -164,7 +164,7 @@ const Login = () => {
         </div>
 
         {/* CTA */}
-        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "0.5s", opacity: 0 }}>
+        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
           <Link to="/catalogo">
             <Button
               size="lg"
