@@ -87,7 +87,7 @@ const Login = () => {
       </header>
 
       {/* Main content */}
-      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-2 sm:-mt-4">
+      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-10 sm:-mt-20">
         {/* Slogan */}
         <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in w-full max-w-3xl text-center" style={{ animationDelay: "0.2s" }}>
           Sua loja de Secret Lair!
