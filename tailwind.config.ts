@@ -122,6 +122,8 @@ export default {
         "scale-in": "scale-in 0.3s ease-out forwards",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
         "float": "float 6s ease-in-out infinite",
+        "badge-glow": "badge-glow 2s ease-in-out infinite",
+        "badge-glow-primary": "badge-glow-primary 2s ease-in-out infinite",
       },
     },
   },
