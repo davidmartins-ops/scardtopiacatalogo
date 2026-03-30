@@ -119,7 +119,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-body font-medium text-foreground leading-snug text-sm group-hover:text-primary transition-colors duration-300">{item.name}</h3>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">{item.id}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 font-mono truncate max-w-[120px]" title={item.id}>{item.id}</p>
                           {isSingles && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {item.language && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.language}</Badge>}

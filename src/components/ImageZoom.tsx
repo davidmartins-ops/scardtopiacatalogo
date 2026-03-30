@@ -8,20 +8,20 @@ interface ImageZoomProps {
 }
 
 const ImageZoom = ({ src, alt, className = "", containerClassName = "" }: ImageZoomProps) => {
-  const [zoomed, setZoomed] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   return (
     <>
       <div
-        className={`relative overflow-hidden cursor-zoom-in ${containerClassName}`}
-        onClick={() => setZoomed(true)}
+        className={`relative overflow-hidden ${containerClassName}`}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
         <img src={src} alt={alt} className={className} />
       </div>
-      {zoomed && (
+      {hovered && (
         <div
-          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center cursor-zoom-out p-4"
-          onClick={() => setZoomed(false)}
+          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center pointer-events-none p-4"
         >
           <img
             src={src}
