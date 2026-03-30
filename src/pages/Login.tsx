@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import loginBg from "@/assets/login-bg.png";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
 import bannerDeadpool from "@/assets/banner-deadpool.jpg";
 import bannerDandan from "@/assets/banner-dandan.jpg";
 
 const banners = [
-  { src: bannerDeadpool, alt: "Secret Lair x Deadpool", label: "🔥 Novidade", title: "Secret Lair x Deadpool" },
-  { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "✨ Kit Exclusivo", title: "Secret Lair x Dandân Deck" },
+  { src: bannerDeadpool, alt: "Secret Lair x Deadpool", label: "🔥 Novidade", title: "Secret Lair x Deadpool", subtitle: "Edição limitada disponível agora!" },
+  { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "✨ Kit Exclusivo", title: "Secret Lair x Dandân Deck", subtitle: "Monte seu deck com estilo!" },
 ];
 
 const Login = () => {
@@ -20,7 +21,7 @@ const Login = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 10000);
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
@@ -42,16 +43,18 @@ const Login = () => {
     }
   };
 
+  const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
+  const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % banners.length);
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
-      {/* Fundo */}
+      {/* Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <img src={loginBg} alt="" className="w-full h-full object-cover scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-background/90" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
+        <img src={loginBg} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background/95" />
       </div>
 
-      {/* Topo */}
+      {/* Login button */}
       <header className="relative z-50 flex justify-end p-4 sm:p-6">
         <Button
           type="button"
@@ -70,75 +73,93 @@ const Login = () => {
         </Button>
       </header>
 
-      {/* Conteúdo central */}
-      <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-        <img
-          src={logo}
-          alt="Spencer's Cardtopia"
-          className="w-60 sm:w-80 md:w-[420px] lg:w-[500px] mb-6 drop-shadow-2xl animate-float"
-        />
+      {/* Main content */}
+      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12">
+        {/* Logo + tagline */}
+        <div className="flex flex-col items-center mt-4 sm:mt-8 mb-8 sm:mb-10">
+          <img
+            src={logo}
+            alt="Spencer's Cardtopia"
+            className="w-48 sm:w-64 md:w-72 drop-shadow-2xl animate-float"
+          />
+          <div className="premium-divider max-w-[140px] mt-3 mb-2 opacity-60" />
+          <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            Sua loja de Secret Lair!
+          </p>
+        </div>
 
-        <div className="premium-divider max-w-[200px] mb-4 opacity-60" />
-
-        <p
-          className="text-foreground/60 text-sm sm:text-base font-body mb-8 max-w-md tracking-wider uppercase animate-fade-in"
-          style={{ animationDelay: "0.2s" }}
-        >
-          Sua loja de Secret Lair!
-        </p>
-
-        <Link to="/catalogo" className="animate-fade-in-up" style={{ animationDelay: "0.4s", opacity: 0 }}>
-          <Button
-            size="lg"
-            className="relative text-lg px-12 py-7 font-bold font-body rounded-xl shadow-2xl shadow-primary/20 animate-glow-pulse transition-all duration-300 hover:scale-105 hover:shadow-primary/40 group overflow-hidden"
-          >
-            <span className="absolute inset-0 foil-shimmer pointer-events-none" />
-            <span className="relative flex items-center gap-2">🔥 Ver Catálogo de Drops</span>
-          </Button>
-        </Link>
-
-        {/* Banner carousel */}
-        <div
-          className="mt-12 w-full max-w-sm sm:max-w-md animate-fade-in-up"
-          style={{ animationDelay: "0.6s", opacity: 0 }}
-        >
+        {/* Banner carousel — hero prominence */}
+        <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s", opacity: 0 }}>
           <Link to="/catalogo" className="block group">
-            <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.02]">
+            <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.01]">
               {banners.map((banner, idx) => (
                 <img
                   key={idx}
                   src={banner.src}
                   alt={banner.alt}
-                  className={`w-full h-auto object-cover transition-opacity duration-1000 ${idx === currentBanner ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+                  className={`w-full h-auto object-cover transition-opacity duration-1000 ${idx === currentBanner ? "opacity-100 relative" : "opacity-0 absolute inset-0"}`}
                 />
               ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
-                <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold font-body uppercase tracking-wider mb-2">
+
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+
+              {/* Banner info */}
+              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold font-body uppercase tracking-wider mb-2 animate-fade-in">
                   {banners[currentBanner].label}
                 </span>
-                <p className="text-sm font-body font-medium text-foreground drop-shadow-lg">
+                <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">
                   {banners[currentBanner].title}
+                </h2>
+                <p className="text-sm text-foreground/60 font-body mt-1">
+                  {banners[currentBanner].subtitle}
                 </p>
               </div>
+
+              {/* Navigation arrows */}
+              <button
+                onClick={(e) => { e.preventDefault(); prevBanner(); }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); nextBanner(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
               {/* Dots */}
-              <div className="absolute bottom-2 right-3 flex gap-1.5">
+              <div className="absolute bottom-3 right-4 flex gap-2">
                 {banners.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={(e) => { e.preventDefault(); setCurrentBanner(idx); }}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentBanner ? "w-4 bg-primary" : "w-1.5 bg-foreground/30"}`}
+                    className={`h-2 rounded-full transition-all duration-300 ${idx === currentBanner ? "w-6 bg-primary" : "w-2 bg-foreground/30 hover:bg-foreground/50"}`}
                   />
                 ))}
               </div>
+
               <div className="absolute inset-0 foil-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             </div>
           </Link>
         </div>
-      </main>
 
-      {/* Fade inferior */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none z-[5]" />
+        {/* CTA */}
+        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "0.5s", opacity: 0 }}>
+          <Link to="/catalogo">
+            <Button
+              size="lg"
+              className="relative text-base sm:text-lg px-10 sm:px-12 py-6 sm:py-7 font-bold font-body rounded-xl shadow-2xl shadow-primary/20 animate-glow-pulse transition-all duration-300 hover:scale-105 hover:shadow-primary/40 group overflow-hidden"
+            >
+              <span className="absolute inset-0 foil-shimmer pointer-events-none" />
+              <span className="relative flex items-center gap-2">🔥 Ver Catálogo de Drops</span>
+            </Button>
+          </Link>
+        </div>
+      </main>
     </div>
   );
 };
