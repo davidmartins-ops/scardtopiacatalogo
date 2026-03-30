@@ -264,21 +264,21 @@ const ScryfallSearchDialog = () => {
               {printings.length > 1 && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold">Edição / Variante ({printings.length} disponíveis)</Label>
-                  <ScrollArea className="max-h-32">
-                    <div className="flex flex-wrap gap-2 pr-2">
+                  <ScrollArea className="h-auto max-h-40">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pr-2 pb-2">
                       {printings.map((p) => (
                         <button
                           key={p.id}
                           onClick={() => setSelected(p)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition-all ${
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${
                             p.id === selected.id
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-border bg-muted/20 text-muted-foreground hover:border-primary/30"
                           }`}
                         >
-                          {getCardSmall(p) && <img src={getCardSmall(p)!} alt="" className="h-8 w-6 rounded object-cover" />}
-                          <div className="text-left">
-                            <p className="font-medium truncate max-w-[120px]">{p.set_name}</p>
+                          {getCardSmall(p) && <img src={getCardSmall(p)!} alt="" className="h-8 w-6 rounded object-cover shrink-0" />}
+                          <div className="text-left min-w-0">
+                            <p className="font-medium truncate">{p.set_name}</p>
                             <p className="text-[10px] text-muted-foreground font-mono">#{p.collector_number}</p>
                           </div>
                         </button>
