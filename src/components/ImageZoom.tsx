@@ -18,11 +18,11 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "" }: ImageZ
     >
       <img src={src} alt={alt} className={className} />
       {hovered && (
-        <div className="absolute z-[60] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-scale-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none p-6">
           <img
             src={src}
             alt={alt}
-            className="w-[500px] sm:w-[700px] h-auto object-contain rounded-xl border-2 border-primary/30 shadow-2xl"
+            className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded-xl border-2 border-primary/30 shadow-2xl animate-scale-in"
           />
         </div>
       )}
