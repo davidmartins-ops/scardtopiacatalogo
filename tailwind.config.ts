@@ -104,6 +104,14 @@ export default {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-8px)" },
         },
+        "badge-glow": {
+          "0%, 100%": { boxShadow: "0 0 6px 1px hsl(var(--accent) / 0.4)", transform: "scale(1)" },
+          "50%": { boxShadow: "0 0 14px 3px hsl(var(--accent) / 0.7)", transform: "scale(1.05)" },
+        },
+        "badge-glow-primary": {
+          "0%, 100%": { boxShadow: "0 0 6px 1px hsl(var(--primary) / 0.4)", transform: "scale(1)" },
+          "50%": { boxShadow: "0 0 14px 3px hsl(var(--primary) / 0.7)", transform: "scale(1.05)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
