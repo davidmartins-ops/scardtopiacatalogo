@@ -100,7 +100,7 @@ const Login = () => {
         <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s", opacity: 0 }}>
           <Link to="/catalogo" className="block group">
             <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.01]">
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16 / 9" }}>
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: "3 / 4" }}>
                 <div
                   className="flex h-full transition-transform duration-700 ease-in-out"
                   style={{ transform: `translateX(-${currentBanner * 100}%)` }}
