@@ -69,6 +69,9 @@ const Login = () => {
           alt="Spencer's Cardtopia"
           className="w-28 sm:w-36 md:w-40 drop-shadow-2xl animate-float"
         />
+        <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in hidden sm:block" style={{ animationDelay: "0.2s" }}>
+          Sua loja de Secret Lair!
+        </p>
         <Button
           type="button"
           onClick={handleGoogleLogin}
@@ -88,13 +91,10 @@ const Login = () => {
 
       {/* Main content */}
       <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12">
-        {/* Slogan */}
-        <div className="flex flex-col items-center mt-2 sm:mt-4 mb-6 sm:mb-8">
-          <div className="premium-divider max-w-[140px] mb-2 opacity-60" />
-          <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            Sua loja de Secret Lair!
-          </p>
-        </div>
+        {/* Mobile slogan */}
+        <p className="text-foreground/50 text-xs font-body tracking-[0.25em] uppercase animate-fade-in sm:hidden mb-4">
+          Sua loja de Secret Lair!
+        </p>
 
         {/* Banner carousel — hero prominence */}
         <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
