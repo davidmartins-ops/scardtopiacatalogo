@@ -264,8 +264,8 @@ const ScryfallSearchDialog = () => {
               {printings.length > 1 && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold">Edição / Variante ({printings.length} disponíveis)</Label>
-                  <ScrollArea className="h-auto max-h-40">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pr-2 pb-2">
+                  <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {printings.map((p) => (
                         <button
                           key={p.id}
