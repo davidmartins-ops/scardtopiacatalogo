@@ -28,7 +28,7 @@ const CategoryChart = ({ data }: { data: InventoryItem[] }) => {
       <h3 className="font-display font-semibold text-foreground mb-4">Valor por Categoria</h3>
       <div className="premium-divider mb-4" />
       <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
+        <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20 }}>
           <XAxis
             type="number"
             tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`}
@@ -39,10 +39,10 @@ const CategoryChart = ({ data }: { data: InventoryItem[] }) => {
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: "hsl(45, 20%, 90%)", fontSize: 13, fontFamily: "Cinzel" }}
+            tick={{ fill: "hsl(45, 20%, 90%)", fontSize: 11, fontFamily: "Cinzel" }}
             axisLine={false}
             tickLine={false}
-            width={100}
+            width={140}
           />
           <Tooltip
             contentStyle={{
