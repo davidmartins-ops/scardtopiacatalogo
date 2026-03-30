@@ -37,7 +37,7 @@ const AddItemDialog = () => {
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", quantity: "1", category: "",
-    language: "PT", condition: "NM",
+    language: "PT", condition: "NM", status: "none" as string,
   });
 
   const handleChange = (field: string, value: string) => {
