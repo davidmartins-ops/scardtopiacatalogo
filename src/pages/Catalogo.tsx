@@ -96,15 +96,15 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                     {/* Status Badge */}
                     {item.status === "pre_sale" && (
                       <div className="absolute top-2 left-2 z-30">
-                        <Badge className="bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-pulse">
-                          <Star className="h-3 w-3" />PRÉ VENDA
+                        <Badge className="bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-badge-glow">
+                          <Star className="h-3 w-3 animate-spin" style={{ animationDuration: '3s' }} />PRÉ VENDA
                         </Badge>
                       </div>
                     )}
                     {item.status === "launch" && (
                       <div className="absolute top-2 left-2 z-30">
-                        <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1">
-                          <Flame className="h-3 w-3" />LANÇAMENTO
+                        <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-badge-glow-primary">
+                          <Flame className="h-3 w-3 animate-pulse" />LANÇAMENTO
                         </Badge>
                       </div>
                     )}
