@@ -174,6 +174,19 @@ const AddItemDialog = () => {
             </div>
           </div>
 
+          {/* Status */}
+          <div className="space-y-2">
+            <Label>Status do Produto</Label>
+            <Select value={form.status} onValueChange={(v) => handleChange("status", v)}>
+              <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="pre_sale">Pré Venda</SelectItem>
+                <SelectItem value="launch">Lançamento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Image upload */}
           <div className="space-y-2">
             <Label>Imagem do Produto</Label>

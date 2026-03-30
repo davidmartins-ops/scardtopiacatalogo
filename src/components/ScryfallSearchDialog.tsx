@@ -327,6 +327,17 @@ const ScryfallSearchDialog = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Status</Label>
+                  <Select value={status} onValueChange={(v) => setStatus(v as "none" | "pre_sale" | "launch")}>
+                    <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      <SelectItem value="pre_sale">Pré Venda</SelectItem>
+                      <SelectItem value="launch">Lançamento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
