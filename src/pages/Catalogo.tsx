@@ -249,7 +249,7 @@ const Catalogo = () => {
       </div>
 
       {/* Social FABs */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+      <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3">
         <a href="https://www.instagram.com/scardtopia/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300">
           <Instagram className="h-5 w-5 text-accent" />Instagram
         </a>
