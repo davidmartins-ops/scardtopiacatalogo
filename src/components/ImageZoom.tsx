@@ -22,7 +22,7 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "" }: ImageZ
           <img
             src={src}
             alt={alt}
-            className="w-[280px] sm:w-[340px] h-auto object-contain rounded-xl border-2 border-primary/30 shadow-2xl"
+            className="w-[500px] sm:w-[700px] h-auto object-contain rounded-xl border-2 border-primary/30 shadow-2xl"
           />
         </div>
       )}
