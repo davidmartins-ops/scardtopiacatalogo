@@ -97,6 +97,7 @@ const AddItemDialog = () => {
       image_url,
       language: form.language,
       condition: form.condition,
+      status: form.status,
     });
 
     setLoading(false);
