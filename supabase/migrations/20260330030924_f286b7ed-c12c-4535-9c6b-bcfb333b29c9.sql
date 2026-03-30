@@ -1,0 +1,2 @@
+ALTER TABLE public.inventory ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'PT';
+ALTER TABLE public.inventory ADD COLUMN IF NOT EXISTS condition text NOT NULL DEFAULT 'NM';

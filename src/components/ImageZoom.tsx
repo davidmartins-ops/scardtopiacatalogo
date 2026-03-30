@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 interface ImageZoomProps {
   src: string;
@@ -9,38 +9,28 @@ interface ImageZoomProps {
 
 const ImageZoom = ({ src, alt, className = "", containerClassName = "" }: ImageZoomProps) => {
   const [zoomed, setZoomed] = useState(false);
-  const [pos, setPos] = useState({ x: 50, y: 50 });
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setPos({ x, y });
-  };
 
   return (
-    <div
-      ref={containerRef}
-      className={`relative overflow-hidden cursor-crosshair ${containerClassName}`}
-      onMouseEnter={() => setZoomed(true)}
-      onMouseLeave={() => setZoomed(false)}
-      onMouseMove={handleMouseMove}
-    >
-      <img src={src} alt={alt} className={className} />
+    <>
+      <div
+        className={`relative overflow-hidden cursor-zoom-in ${containerClassName}`}
+        onClick={() => setZoomed(true)}
+      >
+        <img src={src} alt={alt} className={className} />
+      </div>
       {zoomed && (
         <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            backgroundImage: `url(${src})`,
-            backgroundSize: "250%",
-            backgroundPosition: `${pos.x}% ${pos.y}%`,
-            backgroundRepeat: "no-repeat",
-          }}
-        />
+          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center cursor-zoom-out p-4"
+          onClick={() => setZoomed(false)}
+        >
+          <img
+            src={src}
+            alt={alt}
+            className="max-w-full max-h-[90vh] object-contain rounded-xl border border-border shadow-2xl animate-scale-in"
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 };
 

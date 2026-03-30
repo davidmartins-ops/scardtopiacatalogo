@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ScryfallCard {
   id: string;
@@ -30,6 +31,19 @@ const rarityColors: Record<string, string> = {
   mythic: "bg-rainbow/15 text-rainbow border-rainbow/30",
 };
 
+const LANGUAGES = [
+  { value: "PT", label: "Português" },
+  { value: "EN", label: "English" },
+  { value: "JP", label: "日本語" },
+];
+
+const CONDITIONS = [
+  { value: "NM", label: "NM - Near Mint" },
+  { value: "SP", label: "SP - Slightly Played" },
+  { value: "HP", label: "HP - Heavily Played" },
+  { value: "D", label: "D - Damaged" },
+];
+
 const ScryfallSearchDialog = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -39,7 +53,14 @@ const ScryfallSearchDialog = () => {
   const [priceBRL, setPriceBRL] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [description, setDescription] = useState<"Foil" | "Non-Foil">("Non-Foil");
+  const [language, setLanguage] = useState("PT");
+  const [condition, setCondition] = useState("NM");
   const [saving, setSaving] = useState(false);
+
+  // Edition selector
+  const [printings, setPrintings] = useState<ScryfallCard[]>([]);
+  const [loadingPrintings, setLoadingPrintings] = useState(false);
+
   const queryClient = useQueryClient();
 
   const getCardImage = (card: ScryfallCard) => {
@@ -59,11 +80,12 @@ const ScryfallSearchDialog = () => {
     setSearching(true);
     setResults([]);
     setSelected(null);
+    setPrintings([]);
     try {
-      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query.trim())}&order=released&dir=desc`);
+      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query.trim())}&unique=cards&order=released&dir=desc`);
       if (!res.ok) {
-        if (res.status === 404) { toast.info("Nenhuma carta encontrada."); }
-        else { toast.error("Erro na busca."); }
+        if (res.status === 404) toast.info("Nenhuma carta encontrada.");
+        else toast.error("Erro na busca.");
         setSearching(false);
         return;
       }
@@ -76,6 +98,26 @@ const ScryfallSearchDialog = () => {
     }
   };
 
+  const loadPrintings = async (cardName: string) => {
+    setLoadingPrintings(true);
+    try {
+      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(`!"${cardName}"`)}&unique=prints&order=released&dir=desc`);
+      if (res.ok) {
+        const data = await res.json();
+        setPrintings(data.data ?? []);
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoadingPrintings(false);
+    }
+  };
+
+  const selectCard = (card: ScryfallCard) => {
+    setSelected(card);
+    loadPrintings(card.name);
+  };
+
   const handleAdd = async () => {
     if (!selected) return;
     const price = parseFloat(priceBRL);
@@ -83,7 +125,7 @@ const ScryfallSearchDialog = () => {
     if (isNaN(price) || price < 0) { toast.error("Preço em R$ inválido."); return; }
     if (isNaN(qty) || qty < 0) { toast.error("Quantidade inválida."); return; }
 
-    const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}`;
+    const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}-${language}`;
     const imageUrl = getCardImage(selected);
 
     setSaving(true);
@@ -96,6 +138,8 @@ const ScryfallSearchDialog = () => {
       category: selected.set_name,
       image_url: imageUrl,
       product_type: "single",
+      language,
+      condition,
     });
     setSaving(false);
 
@@ -115,8 +159,11 @@ const ScryfallSearchDialog = () => {
     setPriceBRL("");
     setQuantity("1");
     setDescription("Non-Foil");
+    setLanguage("PT");
+    setCondition("NM");
     setQuery("");
     setResults([]);
+    setPrintings([]);
   };
 
   return (
@@ -124,7 +171,8 @@ const ScryfallSearchDialog = () => {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2 font-body">
           <Search className="h-4 w-4" />
-          Cadastrar Single
+          <span className="hidden sm:inline">Cadastrar Single</span>
+          <span className="sm:hidden">Single</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[90vh] overflow-hidden flex flex-col">
@@ -134,34 +182,22 @@ const ScryfallSearchDialog = () => {
 
         {!selected ? (
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-            {/* Search bar */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar carta por nome (ex: Lightning Bolt)..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && searchScryfall()}
-                  className="pl-9 bg-muted border-border"
-                />
+                <Input placeholder="Buscar carta por nome (ex: Lightning Bolt)..." value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && searchScryfall()} className="pl-9 bg-muted border-border" />
               </div>
               <Button onClick={searchScryfall} disabled={searching || !query.trim()}>
                 {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
               </Button>
             </div>
 
-            {/* Results */}
             <ScrollArea className="flex-1 max-h-[50vh]">
               <div className="space-y-2 pr-2">
                 {results.map((card) => {
                   const img = getCardSmall(card);
                   return (
-                    <button
-                      key={`${card.id}`}
-                      onClick={() => setSelected(card)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all text-left"
-                    >
+                    <button key={card.id} onClick={() => selectCard(card)} className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all text-left">
                       {img ? (
                         <img src={img} alt={card.name} className="h-16 w-12 rounded object-cover border border-border/40 shrink-0" />
                       ) : (
@@ -171,129 +207,133 @@ const ScryfallSearchDialog = () => {
                         <p className="font-medium text-sm text-foreground truncate">{card.name}</p>
                         <p className="text-xs text-muted-foreground truncate">{card.set_name} · {card.type_line}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className={`text-[10px] capitalize ${rarityColors[card.rarity] ?? ""}`}>
-                            {card.rarity}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground font-mono">
-                            #{card.collector_number}
-                          </span>
+                          <Badge variant="outline" className={`text-[10px] capitalize ${rarityColors[card.rarity] ?? ""}`}>{card.rarity}</Badge>
+                          <span className="text-[10px] text-muted-foreground font-mono">#{card.collector_number}</span>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        {card.prices?.usd && (
-                          <p className="text-xs text-muted-foreground">USD ${card.prices.usd}</p>
-                        )}
-                        {card.prices?.usd_foil && (
-                          <p className="text-xs text-foil">Foil ${card.prices.usd_foil}</p>
-                        )}
+                        {card.prices?.usd && <p className="text-xs text-muted-foreground">USD ${card.prices.usd}</p>}
+                        {card.prices?.usd_foil && <p className="text-xs text-foil">Foil ${card.prices.usd_foil}</p>}
                       </div>
                     </button>
                   );
                 })}
                 {results.length === 0 && !searching && query && (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Use a busca acima para encontrar cartas no Scryfall.
-                  </p>
+                  <p className="text-sm text-muted-foreground text-center py-8">Use a busca acima para encontrar cartas no Scryfall.</p>
                 )}
               </div>
             </ScrollArea>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Selected card details */}
-            <div className="flex gap-4">
-              {getCardImage(selected) && (
-                <img src={getCardImage(selected)!} alt={selected.name} className="h-52 w-auto rounded-lg border border-border shadow-lg shrink-0" />
-              )}
-              <div className="flex-1 space-y-2">
-                <h3 className="font-display text-lg font-semibold text-foreground">{selected.name}</h3>
-                <p className="text-sm text-muted-foreground">{selected.type_line}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-xs">{selected.set_name}</Badge>
-                  <Badge variant="outline" className={`text-xs capitalize ${rarityColors[selected.rarity] ?? ""}`}>
-                    {selected.rarity}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs font-mono">#{selected.collector_number}</Badge>
-                </div>
-
-                {/* International prices */}
-                <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Base de Preço Internacional</p>
-                  <div className="flex gap-4">
-                    {selected.prices?.usd ? (
-                      <p className="text-sm">Non-Foil: <span className="font-bold text-foreground">US$ {selected.prices.usd}</span></p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">Non-Foil: N/A</p>
-                    )}
-                    {selected.prices?.usd_foil ? (
-                      <p className="text-sm">Foil: <span className="font-bold text-foil">US$ {selected.prices.usd_foil}</span></p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">Foil: N/A</p>
-                    )}
+          <ScrollArea className="flex-1 max-h-[70vh]">
+            <div className="space-y-4 pr-2">
+              <div className="flex gap-4">
+                {getCardImage(selected) && (
+                  <img src={getCardImage(selected)!} alt={selected.name} className="h-52 w-auto rounded-lg border border-border shadow-lg shrink-0" />
+                )}
+                <div className="flex-1 space-y-2">
+                  <h3 className="font-display text-lg font-semibold text-foreground">{selected.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selected.type_line}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-xs">{selected.set_name}</Badge>
+                    <Badge variant="outline" className={`text-xs capitalize ${rarityColors[selected.rarity] ?? ""}`}>{selected.rarity}</Badge>
+                    <Badge variant="outline" className="text-xs font-mono">#{selected.collector_number}</Badge>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Fonte: TCGPlayer / CardKingdom via Scryfall</p>
+
+                  <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Base de Preço Internacional</p>
+                    <div className="flex gap-4">
+                      {selected.prices?.usd ? (
+                        <p className="text-sm">Non-Foil: <span className="font-bold text-foreground">US$ {selected.prices.usd}</span></p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Non-Foil: N/A</p>
+                      )}
+                      {selected.prices?.usd_foil ? (
+                        <p className="text-sm">Foil: <span className="font-bold text-foil">US$ {selected.prices.usd_foil}</span></p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Foil: N/A</p>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Fonte: TCGPlayer / CardKingdom via Scryfall</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* BRL price & options */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Preço (R$) *</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0,00"
-                  value={priceBRL}
-                  onChange={(e) => setPriceBRL(e.target.value)}
-                  className="bg-muted border-border"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Quantidade</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="bg-muted border-border"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Tipo</Label>
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={description === "Non-Foil" ? "default" : "outline"}
-                    onClick={() => setDescription("Non-Foil")}
-                    className="flex-1 text-xs"
-                  >
-                    Non-Foil
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={description === "Foil" ? "default" : "outline"}
-                    onClick={() => setDescription("Foil")}
-                    className="flex-1 text-xs"
-                  >
-                    Foil
-                  </Button>
+              {/* Edition / Printings selector */}
+              {printings.length > 1 && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold">Edição / Variante ({printings.length} disponíveis)</Label>
+                  <ScrollArea className="max-h-32">
+                    <div className="flex flex-wrap gap-2 pr-2">
+                      {printings.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setSelected(p)}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition-all ${
+                            p.id === selected.id
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border bg-muted/20 text-muted-foreground hover:border-primary/30"
+                          }`}
+                        >
+                          {getCardSmall(p) && <img src={getCardSmall(p)!} alt="" className="h-8 w-6 rounded object-cover" />}
+                          <div className="text-left">
+                            <p className="font-medium truncate max-w-[120px]">{p.set_name}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono">#{p.collector_number}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  {loadingPrintings && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+              )}
+
+              {/* Price, qty, type, language, condition */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Preço (R$) *</Label>
+                  <Input type="number" min="0" step="0.01" placeholder="0,00" value={priceBRL} onChange={(e) => setPriceBRL(e.target.value)} className="bg-muted border-border" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Quantidade</Label>
+                  <Input type="number" min="0" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="bg-muted border-border" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Tipo</Label>
+                  <div className="flex gap-2 pt-1">
+                    <Button type="button" size="sm" variant={description === "Non-Foil" ? "default" : "outline"} onClick={() => setDescription("Non-Foil")} className="flex-1 text-xs">Non-Foil</Button>
+                    <Button type="button" size="sm" variant={description === "Foil" ? "default" : "outline"} onClick={() => setDescription("Foil")} className="flex-1 text-xs">Foil</Button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Idioma</Label>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Qualidade</Label>
+                  <Select value={condition} onValueChange={setCondition}>
+                    <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setSelected(null)}>Voltar</Button>
-              <Button onClick={handleAdd} disabled={saving} className="gap-2">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Adicionar ao Estoque
-              </Button>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={() => { setSelected(null); setPrintings([]); }}>Voltar</Button>
+                <Button onClick={handleAdd} disabled={saving} className="gap-2">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Adicionar ao Estoque
+                </Button>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         )}
       </DialogContent>
     </Dialog>
