@@ -32,6 +32,202 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_cards: {
+        Row: {
+          card_name: string
+          collection_id: string
+          condition: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          language: string | null
+          notes: string | null
+          quantity: number
+          scryfall_id: string | null
+        }
+        Insert: {
+          card_name: string
+          collection_id: string
+          condition?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          language?: string | null
+          notes?: string | null
+          quantity?: number
+          scryfall_id?: string | null
+        }
+        Update: {
+          card_name?: string
+          collection_id?: string
+          condition?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          language?: string | null
+          notes?: string | null
+          quantity?: number
+          scryfall_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_cards_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      deck_cards: {
+        Row: {
+          card_name: string
+          created_at: string
+          deck_id: string
+          id: string
+          image_url: string | null
+          is_commander: boolean
+          is_sideboard: boolean
+          quantity: number
+          scryfall_id: string | null
+        }
+        Insert: {
+          card_name: string
+          created_at?: string
+          deck_id: string
+          id?: string
+          image_url?: string | null
+          is_commander?: boolean
+          is_sideboard?: boolean
+          quantity?: number
+          scryfall_id?: string | null
+        }
+        Update: {
+          card_name?: string
+          created_at?: string
+          deck_id?: string
+          id?: string
+          image_url?: string | null
+          is_commander?: boolean
+          is_sideboard?: boolean
+          quantity?: number
+          scryfall_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_cards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decks: {
+        Row: {
+          created_at: string
+          description: string | null
+          format: string
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          format?: string
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          format?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           category: string
@@ -80,6 +276,30 @@ export type Database = {
           quantity?: number
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          quantity?: number
+          user_id?: string
         }
         Relationships: []
       }
