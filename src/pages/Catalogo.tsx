@@ -327,11 +327,11 @@ const Catalogo = () => {
           </TabsList>
 
           <TabsContent value="drops">
-            <ItemGrid items={drops} onAddToCart={addToCart} />
+            <ItemGrid items={drops} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
           </TabsContent>
 
           <TabsContent value="singles">
-            <ItemGrid items={singles} isSingles onAddToCart={addToCart} />
+            <ItemGrid items={singles} isSingles onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
           </TabsContent>
         </Tabs>
       </div>
