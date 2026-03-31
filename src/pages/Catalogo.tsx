@@ -16,6 +16,7 @@ import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useSavedCart } from "@/hooks/use-saved-cart";
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
