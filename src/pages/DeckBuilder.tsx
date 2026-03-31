@@ -263,9 +263,69 @@ const DeckBuilder = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-xl font-display font-bold text-foreground">{deck.name}</h1>
-          <Badge variant="outline">{format?.label ?? deck.format}</Badge>
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-display font-bold text-foreground">{deck.name}</h1>
+            <Badge variant="outline">{format?.label ?? deck.format}</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Import */}
+            <Dialog open={importOpen} onOpenChange={setImportOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="gap-1 text-xs"><Upload className="h-3.5 w-3.5" /> Importar</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle className="font-display">Importar Decklist</DialogTitle></DialogHeader>
+                <p className="text-xs text-muted-foreground">Cole sua lista nos formatos MTGO ou Arena. Isso substituirá as cartas atuais do deck.</p>
+                <Tabs defaultValue="paste">
+                  <TabsList className="mb-2 bg-muted/50">
+                    <TabsTrigger value="paste" className="text-xs">Colar Lista</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="paste">
+                    <Textarea
+                      value={importText}
+                      onChange={(e) => setImportText(e.target.value)}
+                      placeholder={"Deck\n4 Lightning Bolt\n4 Monastery Swiftspear\n2 Goblin Guide\n\nSideboard\n2 Smash to Smithereens"}
+                      className="min-h-[200px] font-mono text-xs"
+                    />
+                  </TabsContent>
+                </Tabs>
+                <Button className="w-full gap-1" onClick={handleImport} disabled={importing || !importText.trim()}>
+                  {importing ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Importando...</> : <><Upload className="h-3.5 w-3.5" /> Importar Cartas</>}
+                </Button>
+              </DialogContent>
+            </Dialog>
+
+            {/* Export */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="gap-1 text-xs" disabled={cards.length === 0}><Download className="h-3.5 w-3.5" /> Exportar</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle className="font-display">Exportar Decklist</DialogTitle></DialogHeader>
+                <Tabs defaultValue="mtgo">
+                  <TabsList className="mb-2 bg-muted/50">
+                    <TabsTrigger value="mtgo" className="text-xs">MTGO</TabsTrigger>
+                    <TabsTrigger value="arena" className="text-xs">Arena</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="mtgo">
+                    <Textarea readOnly value={exportMTGO()} className="min-h-[200px] font-mono text-xs" />
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="outline" className="gap-1 flex-1" onClick={() => copyToClipboard(exportMTGO(), "MTGO")}><Copy className="h-3 w-3" /> Copiar</Button>
+                      <Button size="sm" variant="outline" className="gap-1 flex-1" onClick={() => downloadAsFile(exportMTGO(), "MTGO")}><FileText className="h-3 w-3" /> Baixar .txt</Button>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="arena">
+                    <Textarea readOnly value={exportArena()} className="min-h-[200px] font-mono text-xs" />
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="outline" className="gap-1 flex-1" onClick={() => copyToClipboard(exportArena(), "Arena")}><Copy className="h-3 w-3" /> Copiar</Button>
+                      <Button size="sm" variant="outline" className="gap-1 flex-1" onClick={() => downloadAsFile(exportArena(), "Arena")}><FileText className="h-3 w-3" /> Baixar .txt</Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {warnings.length > 0 && (
