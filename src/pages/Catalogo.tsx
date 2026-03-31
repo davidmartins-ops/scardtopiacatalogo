@@ -46,7 +46,7 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instag
   }
 };
 
-const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void }) => {
+const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
