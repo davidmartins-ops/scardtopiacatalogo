@@ -245,34 +245,81 @@ const Catalogo = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
+  const cartLoadedFromDb = useRef(false);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
-  const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
+  // Load cart from DB when user logs in and inventory is ready
+  useEffect(() => {
+    if (!user || savedCartLoading || cartLoadedFromDb.current || inventoryData.length === 0) return;
+    if (savedItems.length > 0) {
+      const restored: CartItem[] = [];
+      savedItems.forEach((si) => {
+        const item = inventoryData.find((inv) => inv.id === si.inventory_item_id);
+        if (item) restored.push({ item, qty: Math.min(si.quantity, item.quantity) });
+      });
+      if (restored.length > 0) {
+        setCartItems((prev) => {
+          // Merge: keep existing local items, add DB items that aren't already present
+          const merged = [...prev];
+          restored.forEach((r) => {
+            if (!merged.find((m) => m.item.id === r.item.id)) merged.push(r);
+          });
+          return merged;
+        });
+      }
+    }
+    cartLoadedFromDb.current = true;
+  }, [user, savedItems, savedCartLoading, inventoryData]);
+
+  // Auto-sync cart to DB with debounce
+  const syncCartToDb = useCallback((items: CartItem[]) => {
+    if (!user) return;
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    syncTimeoutRef.current = setTimeout(() => {
+      syncCart.mutate(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty })));
+    }, 1500);
+  }, [user, syncCart]);
 
   const addToCart = useCallback((item: InventoryItem) => {
     if (item.quantity <= 0) { toast.error("Item esgotado."); return; }
     setCartItems((prev) => {
       const existing = prev.find((ci) => ci.item.id === item.id);
+      let next: CartItem[];
       if (existing) {
         if (existing.qty >= item.quantity) { toast.error("Quantidade máxima atingida."); return prev; }
         toast.success(`${item.name} — quantidade atualizada!`);
-        return prev.map((ci) => ci.item.id === item.id ? { ...ci, qty: ci.qty + 1 } : ci);
+        next = prev.map((ci) => ci.item.id === item.id ? { ...ci, qty: ci.qty + 1 } : ci);
+      } else {
+        toast.success(`${item.name} adicionado ao carrinho!`);
+        next = [...prev, { item, qty: 1 }];
       }
-      toast.success(`${item.name} adicionado ao carrinho!`);
-      return [...prev, { item, qty: 1 }];
+      syncCartToDb(next);
+      return next;
     });
-  }, []);
+  }, [syncCartToDb]);
 
   const removeFromCart = useCallback((itemId: string) => {
-    setCartItems((prev) => prev.filter((ci) => ci.item.id !== itemId));
-  }, []);
+    setCartItems((prev) => {
+      const next = prev.filter((ci) => ci.item.id !== itemId);
+      syncCartToDb(next);
+      return next;
+    });
+  }, [syncCartToDb]);
 
   const updateCartQty = useCallback((itemId: string, qty: number) => {
     if (qty <= 0) { removeFromCart(itemId); return; }
-    setCartItems((prev) => prev.map((ci) => ci.item.id === itemId ? { ...ci, qty } : ci));
-  }, [removeFromCart]);
+    setCartItems((prev) => {
+      const next = prev.map((ci) => ci.item.id === itemId ? { ...ci, qty } : ci);
+      syncCartToDb(next);
+      return next;
+    });
+  }, [removeFromCart, syncCartToDb]);
 
-  const clearCart = useCallback(() => setCartItems([]), []);
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+    syncCartToDb([]);
+  }, [syncCartToDb]);
 
   if (isLoading) {
     return (
