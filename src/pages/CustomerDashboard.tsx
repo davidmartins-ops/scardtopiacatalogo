@@ -1,0 +1,249 @@
+import { useState, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { useFavorites } from "@/hooks/use-favorites";
+import { useDecks, MTG_FORMATS } from "@/hooks/use-decks";
+import { useCollections } from "@/hooks/use-collections";
+import { useInventory } from "@/hooks/use-inventory";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye } from "lucide-react";
+import { toast } from "sonner";
+import logo from "@/assets/logo.png";
+
+const CustomerDashboard = () => {
+  const navigate = useNavigate();
+  const { user, profile, loading, signOut } = useCustomerAuth();
+  const { favorites, isLoading: favLoading } = useFavorites();
+  const { data: inventory = [] } = useInventory();
+  const { decks, isLoading: decksLoading, createDeck, deleteDeck, updateDeck } = useDecks();
+  const { collections, isLoading: colsLoading, createCollection, deleteCollection, updateCollection } = useCollections();
+
+  const [newDeckOpen, setNewDeckOpen] = useState(false);
+  const [newDeckName, setNewDeckName] = useState("");
+  const [newDeckFormat, setNewDeckFormat] = useState("commander");
+  const [newDeckDesc, setNewDeckDesc] = useState("");
+
+  const [newColOpen, setNewColOpen] = useState(false);
+  const [newColName, setNewColName] = useState("");
+  const [newColDesc, setNewColDesc] = useState("");
+
+  const favoriteItems = useMemo(() => inventory.filter((i) => favorites.includes(i.id)), [inventory, favorites]);
+
+  if (loading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (!user) {
+    navigate("/conta/login");
+    return null;
+  }
+
+  const handleCreateDeck = () => {
+    if (!newDeckName.trim()) return;
+    createDeck.mutate({ name: newDeckName, format: newDeckFormat, description: newDeckDesc });
+    setNewDeckOpen(false);
+    setNewDeckName("");
+    setNewDeckDesc("");
+  };
+
+  const handleCreateCol = () => {
+    if (!newColName.trim()) return;
+    createCollection.mutate({ name: newColName, description: newColDesc });
+    setNewColOpen(false);
+    setNewColName("");
+    setNewColDesc("");
+  };
+
+  return (
+    <div className="min-h-screen bg-background font-body">
+      {/* Header */}
+      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link to="/catalogo" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Catálogo
+          </Link>
+          <img src={logo} alt="Spencer's Cardtopia" className="h-10" />
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-foreground">{profile?.display_name ?? user.email}</span>
+            <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" onClick={() => { signOut(); navigate("/catalogo"); }}>
+              <LogOut className="h-3.5 w-3.5" /> Sair
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-display font-bold text-foreground mb-6">Minha Conta</h1>
+
+        <Tabs defaultValue="favorites">
+          <TabsList className="bg-muted/50 mb-6">
+            <TabsTrigger value="favorites" className="gap-1 font-display"><Heart className="h-3.5 w-3.5" /> Favoritos ({favorites.length})</TabsTrigger>
+            <TabsTrigger value="decks" className="gap-1 font-display"><Layers className="h-3.5 w-3.5" /> Decks ({decks.length})</TabsTrigger>
+            <TabsTrigger value="collections" className="gap-1 font-display"><BookOpen className="h-3.5 w-3.5" /> Coleções ({collections.length})</TabsTrigger>
+          </TabsList>
+
+          {/* FAVORITES */}
+          <TabsContent value="favorites">
+            {favLoading ? (
+              <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>
+            ) : favoriteItems.length === 0 ? (
+              <div className="text-center py-16">
+                <Heart className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhum favorito ainda.</p>
+                <Link to="/catalogo"><Button variant="outline" className="mt-4">Explorar catálogo</Button></Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {favoriteItems.map((item) => {
+                  const discount = item.discount ?? 0;
+                  const finalPrice = item.price * (1 - discount / 100);
+                  return (
+                    <div key={item.id} className="glass-card overflow-hidden">
+                      {item.image_url ? (
+                        <img src={item.image_url} alt={item.name} className="w-full h-40 object-cover" />
+                      ) : (
+                        <div className="w-full h-40 bg-muted/20 flex items-center justify-center text-xs text-muted-foreground">Sem imagem</div>
+                      )}
+                      <div className="p-3">
+                        <h3 className="text-sm font-medium text-foreground truncate">{item.name}</h3>
+                        <p className="text-xs text-muted-foreground">{item.category}</p>
+                        <p className="text-sm font-bold text-primary mt-1">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* DECKS */}
+          <TabsContent value="decks">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">{decks.length} deck(s)</p>
+              <Dialog open={newDeckOpen} onOpenChange={setNewDeckOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1"><Plus className="h-3.5 w-3.5" /> Novo Deck</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle className="font-display">Criar Deck</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
+                    <div><Label>Nome</Label><Input value={newDeckName} onChange={(e) => setNewDeckName(e.target.value)} placeholder="Ex: Mono Red Aggro" /></div>
+                    <div>
+                      <Label>Formato</Label>
+                      <Select value={newDeckFormat} onValueChange={setNewDeckFormat}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(MTG_FORMATS).map(([key, fmt]) => (
+                            <SelectItem key={key} value={key}>{fmt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div><Label>Descrição (opcional)</Label><Textarea value={newDeckDesc} onChange={(e) => setNewDeckDesc(e.target.value)} /></div>
+                    <Button className="w-full" onClick={handleCreateDeck} disabled={!newDeckName.trim()}>Criar Deck</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {decksLoading ? (
+              <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>
+            ) : decks.length === 0 ? (
+              <div className="text-center py-16">
+                <Layers className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhum deck criado.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {decks.map((deck) => (
+                  <div key={deck.id} className="glass-card p-4 flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link to={`/conta/decks/${deck.id}`} className="font-medium text-foreground hover:text-primary transition-colors truncate">{deck.name}</Link>
+                        <Badge variant="outline" className="text-[10px] shrink-0">{MTG_FORMATS[deck.format]?.label ?? deck.format}</Badge>
+                        {deck.is_public ? <Globe className="h-3.5 w-3.5 text-success shrink-0" /> : <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                      </div>
+                      {deck.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{deck.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link to={`/conta/decks/${deck.id}`}>
+                        <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm("Excluir deck?")) deleteDeck.mutate(deck.id); }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* COLLECTIONS */}
+          <TabsContent value="collections">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">{collections.length} coleção(ões)</p>
+              <Dialog open={newColOpen} onOpenChange={setNewColOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1"><Plus className="h-3.5 w-3.5" /> Nova Coleção</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle className="font-display">Criar Coleção</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
+                    <div><Label>Nome</Label><Input value={newColName} onChange={(e) => setNewColName(e.target.value)} placeholder="Ex: Meus Mythics" /></div>
+                    <div><Label>Descrição (opcional)</Label><Textarea value={newColDesc} onChange={(e) => setNewColDesc(e.target.value)} /></div>
+                    <Button className="w-full" onClick={handleCreateCol} disabled={!newColName.trim()}>Criar Coleção</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {colsLoading ? (
+              <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>
+            ) : collections.length === 0 ? (
+              <div className="text-center py-16">
+                <BookOpen className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhuma coleção criada.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {collections.map((col) => (
+                  <div key={col.id} className="glass-card p-4 flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link to={`/conta/colecoes/${col.id}`} className="font-medium text-foreground hover:text-primary transition-colors truncate">{col.name}</Link>
+                        <div className="flex items-center gap-1">
+                          {col.is_public ? <Globe className="h-3.5 w-3.5 text-success" /> : <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+                          <Switch checked={col.is_public} onCheckedChange={(v) => updateCollection.mutate({ id: col.id, is_public: v })} className="scale-75" />
+                        </div>
+                      </div>
+                      {col.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{col.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link to={`/conta/colecoes/${col.id}`}>
+                        <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm("Excluir coleção?")) deleteCollection.mutate(col.id); }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default CustomerDashboard;
