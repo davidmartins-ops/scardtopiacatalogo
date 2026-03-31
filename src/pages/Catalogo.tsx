@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame } from "lucide-react";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
 import { useInventory } from "@/hooks/use-inventory";
@@ -21,6 +22,23 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
 };
 
 const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", HP: "Heavily Played", D: "Damaged" };
+
+const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "copy") => {
+  const discount = item.discount ?? 0;
+  const finalPrice = item.price * (1 - discount / 100);
+  const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  const text = `🎴 ${item.name} — ${priceStr}\n${item.description}${item.language ? ` · ${item.language}` : ""}${item.condition ? ` · ${item.condition}` : ""}\n\nConfira no catálogo da Spencer's Cardtopia!`;
+  const url = window.location.href;
+
+  if (method === "whatsapp") {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
+  } else if (method === "twitter") {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  } else {
+    navigator.clipboard.writeText(text + "\n" + url);
+    toast.success("Link copiado!");
+  }
+};
 
 const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void }) => {
   const [search, setSearch] = useState("");
@@ -150,15 +168,35 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                       </div>
 
                       <div className="mt-3 flex items-center justify-between">
-                        {isOutOfStock ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
-                            <span className="h-1.5 w-1.5 rounded-full bg-destructive" />Esgotado
-                          </span>
-                        ) : (
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 hover:border-primary/40" onClick={() => onAddToCart(item)}>
-                            <Plus className="h-3 w-3" /> Adicionar
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {isOutOfStock ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
+                              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />Esgotado
+                            </span>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1 hover:border-primary/40" onClick={() => onAddToCart(item)}>
+                              <Plus className="h-3 w-3" /> Adicionar
+                            </Button>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                <Share2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[160px]">
+                              <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
+                                <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
+                                <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
+                                <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
 
                         <div className="text-right">
                           {discount > 0 ? (
