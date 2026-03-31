@@ -400,6 +400,8 @@ const DeckBuilder = () => {
                 {sideboard.length === 0 ? <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma carta no sideboard.</p> : sideboard.map((c) => <CardRow key={c.id} card={c} />)}
               </div>
             )}
+
+            <DeckStats cards={cards} />
           </div>
         </div>
       </div>
