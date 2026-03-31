@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Plus, Trash2, Search, Loader2, AlertTriangle, Shield, Swords, Crown } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ArrowLeft, Plus, Trash2, Search, Loader2, AlertTriangle, Shield, Swords, Crown, Download, Upload, Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
