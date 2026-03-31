@@ -23,7 +23,7 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
 
 const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", HP: "Heavily Played", D: "Damaged" };
 
-const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "copy") => {
+const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
   const finalPrice = item.price * (1 - discount / 100);
   const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
