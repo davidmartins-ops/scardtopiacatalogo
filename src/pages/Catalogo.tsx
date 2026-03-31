@@ -23,6 +23,23 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
 
 const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", HP: "Heavily Played", D: "Damaged" };
 
+const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "copy") => {
+  const discount = item.discount ?? 0;
+  const finalPrice = item.price * (1 - discount / 100);
+  const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  const text = `🎴 ${item.name} — ${priceStr}\n${item.description}${item.language ? ` · ${item.language}` : ""}${item.condition ? ` · ${item.condition}` : ""}\n\nConfira no catálogo da Spencer's Cardtopia!`;
+  const url = window.location.href;
+
+  if (method === "whatsapp") {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
+  } else if (method === "twitter") {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  } else {
+    navigator.clipboard.writeText(text + "\n" + url);
+    toast.success("Link copiado!");
+  }
+};
+
 const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
