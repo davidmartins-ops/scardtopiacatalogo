@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter } from "lucide-react";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
@@ -14,6 +14,8 @@ import ImageZoom from "@/components/ImageZoom";
 import ShoppingCart, { type CartItem } from "@/components/ShoppingCart";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
+import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { useFavorites } from "@/hooks/use-favorites";
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
@@ -44,7 +46,7 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instag
   }
 };
 
-const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void }) => {
+const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -114,6 +116,14 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                 return (
                   <div key={item.id} className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-60" : ""}`} style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
                     <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                    {/* Favorite button */}
+                    <button
+                      className={`absolute top-2 right-2 z-30 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/60 text-muted-foreground hover:text-destructive"}`}
+                      onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
+                    >
+                      <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
+                    </button>
 
                     {/* Status Badge */}
                     {item.status === "pre_sale" && (
@@ -232,6 +242,8 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
 const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { user } = useCustomerAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
@@ -284,6 +296,21 @@ const Catalogo = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8">
+          <div className="absolute top-4 right-4">
+            {user ? (
+              <Link to="/conta">
+                <button className="flex items-center gap-2 glass-card rounded-full px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-all">
+                  <User className="h-4 w-4 text-primary" /> Minha Conta
+                </button>
+              </Link>
+            ) : (
+              <Link to="/conta/login">
+                <button className="flex items-center gap-2 glass-card rounded-full px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-all">
+                  <User className="h-4 w-4 text-primary" /> Entrar
+                </button>
+              </Link>
+            )}
+          </div>
           <Link to="/login">
             <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in cursor-pointer hover:scale-105 transition-transform duration-300" />
           </Link>
@@ -300,11 +327,11 @@ const Catalogo = () => {
           </TabsList>
 
           <TabsContent value="drops">
-            <ItemGrid items={drops} onAddToCart={addToCart} />
+            <ItemGrid items={drops} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
           </TabsContent>
 
           <TabsContent value="singles">
-            <ItemGrid items={singles} isSingles onAddToCart={addToCart} />
+            <ItemGrid items={singles} isSingles onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
           </TabsContent>
         </Tabs>
       </div>
