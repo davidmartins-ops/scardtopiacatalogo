@@ -23,7 +23,7 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
 
 const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", HP: "Heavily Played", D: "Damaged" };
 
-const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "copy") => {
+const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
   const finalPrice = item.price * (1 - discount / 100);
   const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
@@ -34,6 +34,10 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "copy")
     window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
   } else if (method === "twitter") {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  } else if (method === "instagram") {
+    navigator.clipboard.writeText(text + "\n" + url);
+    toast.success("Texto copiado! Cole no seu Instagram Stories 📸");
+    window.open("https://www.instagram.com/", "_blank");
   } else {
     navigator.clipboard.writeText(text + "\n" + url);
     toast.success("Link copiado!");
@@ -190,6 +194,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
                                 <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
+                                <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
                                 <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
