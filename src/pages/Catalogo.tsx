@@ -197,6 +197,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart }: { items: InventoryItem[] | 
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
                                 <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
                                 <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
                               </DropdownMenuItem>
