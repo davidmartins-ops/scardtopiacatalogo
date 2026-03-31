@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ArrowLeft, Plus, Trash2, Search, Loader2, AlertTriangle, Shield, Swords, Crown, Download, Upload, Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import DeckStats from "@/components/DeckStats";
 
 const BASIC_LANDS = ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Snow-Covered Plains", "Snow-Covered Island", "Snow-Covered Swamp", "Snow-Covered Mountain", "Snow-Covered Forest"];
 
@@ -399,6 +400,8 @@ const DeckBuilder = () => {
                 {sideboard.length === 0 ? <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma carta no sideboard.</p> : sideboard.map((c) => <CardRow key={c.id} card={c} />)}
               </div>
             )}
+
+            <DeckStats cards={cards} />
           </div>
         </div>
       </div>
