@@ -1,7 +1,8 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
 import { useInventory } from "@/hooks/use-inventory";
@@ -243,7 +244,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const { user } = useCustomerAuth();
+  const { user, profile, signOut } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
   const cartLoadedFromDb = useRef(false);
@@ -342,28 +343,90 @@ const Catalogo = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      <div className="relative h-64 sm:h-72 overflow-hidden">
-        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
-        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8">
-          <div className="absolute top-4 right-4">
+      {/* Sticky Header Bar */}
+      <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+          <Link to="/login">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
+          </Link>
+
+          <div className="flex items-center gap-2">
             {user ? (
-              <Link to="/conta">
-                <button className="flex items-center gap-2 glass-card rounded-full px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-all">
-                  <User className="h-4 w-4 text-primary" /> Minha Conta
-                </button>
-              </Link>
+              <>
+                <Link to="/conta">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Heart className="h-4 w-4" />
+                    <span className="hidden sm:inline">Favoritos</span>
+                  </Button>
+                </Link>
+                <Link to="/conta">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Layers className="h-4 w-4" />
+                    <span className="hidden sm:inline">Decks</span>
+                  </Button>
+                </Link>
+                <Link to="/conta">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <BookOpen className="h-4 w-4" />
+                    <span className="hidden sm:inline">Coleções</span>
+                  </Button>
+                </Link>
+
+                <div className="h-5 w-px bg-border mx-1" />
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-muted/50 transition-colors">
+                      <Avatar className="h-7 w-7">
+                        <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
+                          {(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium text-foreground hidden sm:inline max-w-[120px] truncate">
+                        {profile?.display_name ?? user.email?.split("@")[0]}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                      <Link to="/conta"><User className="h-4 w-4" /> Minha Conta</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                      <Link to="/conta"><Heart className="h-4 w-4" /> Favoritos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                      <Link to="/conta"><Layers className="h-4 w-4" /> Meus Decks</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                      <Link to="/conta"><BookOpen className="h-4 w-4" /> Minhas Coleções</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive" onClick={() => signOut()}>
+                      <LogOut className="h-4 w-4" /> Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <Link to="/conta/login">
-                <button className="flex items-center gap-2 glass-card rounded-full px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-all">
+                <Button size="sm" variant="outline" className="gap-1.5 border-primary/30 hover:border-primary/60">
                   <User className="h-4 w-4 text-primary" /> Entrar
-                </button>
+                </Button>
               </Link>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Hero Banner */}
+      <div className="relative h-48 sm:h-56 overflow-hidden">
+        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
+        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-6">
           <Link to="/login">
-            <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in cursor-pointer hover:scale-105 transition-transform duration-300" />
+            <img src={logo} alt="Spencer's Cardtopia" className="h-24 sm:h-28 drop-shadow-2xl animate-fade-in cursor-pointer hover:scale-105 transition-transform duration-300" />
           </Link>
           <div className="premium-divider max-w-[120px] mt-3 mb-2" />
           <p className="text-sm text-muted-foreground tracking-[0.25em] uppercase font-medium animate-fade-in" style={{ animationDelay: "0.15s" }}>Catálogo</p>
