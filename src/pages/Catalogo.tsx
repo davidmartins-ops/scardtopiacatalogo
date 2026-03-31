@@ -242,6 +242,8 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { user } = useCustomerAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
