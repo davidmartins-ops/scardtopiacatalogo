@@ -28,6 +28,9 @@ const DeckBuilder = () => {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importing, setImporting] = useState(false);
 
   const mainDeck = useMemo(() => cards.filter((c) => !c.is_sideboard && !c.is_commander), [cards]);
   const sideboard = useMemo(() => cards.filter((c) => c.is_sideboard), [cards]);
