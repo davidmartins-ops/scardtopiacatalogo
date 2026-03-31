@@ -244,7 +244,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const { user } = useCustomerAuth();
+  const { user, profile, signOut } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
   const cartLoadedFromDb = useRef(false);
