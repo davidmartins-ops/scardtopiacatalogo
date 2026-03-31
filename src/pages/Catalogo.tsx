@@ -296,6 +296,21 @@ const Catalogo = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8">
+          <div className="absolute top-4 right-4">
+            {user ? (
+              <Link to="/conta">
+                <button className="flex items-center gap-2 glass-card rounded-full px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-all">
+                  <User className="h-4 w-4 text-primary" /> Minha Conta
+                </button>
+              </Link>
+            ) : (
+              <Link to="/conta/login">
+                <button className="flex items-center gap-2 glass-card rounded-full px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-all">
+                  <User className="h-4 w-4 text-primary" /> Entrar
+                </button>
+              </Link>
+            )}
+          </div>
           <Link to="/login">
             <img src={logo} alt="Spencer's Cardtopia" className="h-28 sm:h-36 drop-shadow-2xl animate-fade-in cursor-pointer hover:scale-105 transition-transform duration-300" />
           </Link>
