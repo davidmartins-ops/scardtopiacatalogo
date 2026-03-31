@@ -34,6 +34,10 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "copy")
     window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
   } else if (method === "twitter") {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  } else if (method === "instagram") {
+    navigator.clipboard.writeText(text + "\n" + url);
+    toast.success("Texto copiado! Cole no seu Instagram Stories 📸");
+    window.open("https://www.instagram.com/", "_blank");
   } else {
     navigator.clipboard.writeText(text + "\n" + url);
     toast.success("Link copiado!");
