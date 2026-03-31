@@ -1,7 +1,8 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
 import { useInventory } from "@/hooks/use-inventory";
