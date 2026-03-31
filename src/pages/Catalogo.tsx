@@ -321,6 +321,9 @@ const Catalogo = () => {
     syncCartToDb([]);
   }, [syncCartToDb]);
 
+  const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
+  const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
