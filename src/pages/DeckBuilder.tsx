@@ -94,6 +94,132 @@ const DeckBuilder = () => {
     toast.success(`${card.name} adicionado!`);
   };
 
+  // Export in MTGO format: "4 Lightning Bolt"
+  const exportMTGO = useCallback(() => {
+    let text = "";
+    if (commanders.length > 0) {
+      commanders.forEach((c) => text += `${c.quantity} ${c.card_name}\n`);
+      text += "\n";
+    }
+    mainDeck.forEach((c) => text += `${c.quantity} ${c.card_name}\n`);
+    if (sideboard.length > 0) {
+      text += "\nSideboard\n";
+      sideboard.forEach((c) => text += `${c.quantity} ${c.card_name}\n`);
+    }
+    return text.trim();
+  }, [mainDeck, sideboard, commanders]);
+
+  // Export in Arena format: "4 Lightning Bolt (SET) 123"
+  const exportArena = useCallback(() => {
+    let text = "";
+    if (commanders.length > 0) {
+      text += "Commander\n";
+      commanders.forEach((c) => text += `${c.quantity} ${c.card_name}\n`);
+      text += "\n";
+    }
+    text += "Deck\n";
+    mainDeck.forEach((c) => text += `${c.quantity} ${c.card_name}\n`);
+    if (sideboard.length > 0) {
+      text += "\nSideboard\n";
+      sideboard.forEach((c) => text += `${c.quantity} ${c.card_name}\n`);
+    }
+    return text.trim();
+  }, [mainDeck, sideboard, commanders]);
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`Decklist copiada no formato ${label}!`);
+  };
+
+  const downloadAsFile = (text: string, label: string) => {
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${deck?.name ?? "deck"}_${label}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Arquivo ${label} baixado!`);
+  };
+
+  // Parse imported decklist (supports both MTGO and Arena formats)
+  const handleImport = useCallback(async () => {
+    if (!importText.trim() || !deckId) return;
+    setImporting(true);
+
+    const lines = importText.trim().split("\n").map((l) => l.trim()).filter(Boolean);
+    let zone: "main" | "sideboard" | "commander" = "main";
+    const entries: { name: string; qty: number; zone: "main" | "sideboard" | "commander" }[] = [];
+
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      if (lower === "sideboard" || lower === "sideboard:") { zone = "sideboard"; continue; }
+      if (lower === "commander" || lower === "commander:") { zone = "commander"; continue; }
+      if (lower === "deck" || lower === "deck:" || lower === "companion" || lower === "companion:") { zone = "main"; continue; }
+      if (lower.startsWith("//") || lower === "") continue;
+
+      // Match: "4 Lightning Bolt" or "4x Lightning Bolt" or "4 Lightning Bolt (SET) 123"
+      const match = line.match(/^(\d+)x?\s+(.+?)(?:\s+\([A-Z0-9]+\)\s*\d*)?$/i);
+      if (match) {
+        entries.push({ qty: parseInt(match[1], 10), name: match[2].trim(), zone });
+      }
+    }
+
+    if (entries.length === 0) {
+      toast.error("Nenhuma carta reconhecida. Verifique o formato.");
+      setImporting(false);
+      return;
+    }
+
+    // Clear existing cards first
+    for (const card of cards) {
+      await removeCard.mutateAsync(card.id);
+    }
+
+    // Add parsed cards (fetch image from Scryfall for each unique name)
+    const nameCache: Record<string, { scryfall_id: string; image_url: string | null }> = {};
+    let added = 0;
+
+    for (const entry of entries) {
+      let meta = nameCache[entry.name];
+      if (!meta) {
+        try {
+          const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(entry.name)}`);
+          if (res.ok) {
+            const data = await res.json();
+            meta = {
+              scryfall_id: data.id,
+              image_url: data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.normal ?? null,
+            };
+          } else {
+            meta = { scryfall_id: "", image_url: null };
+          }
+          nameCache[entry.name] = meta;
+          // Scryfall rate limit: 50ms between requests
+          await new Promise((r) => setTimeout(r, 75));
+        } catch {
+          meta = { scryfall_id: "", image_url: null };
+          nameCache[entry.name] = meta;
+        }
+      }
+
+      await addCard.mutateAsync({
+        card_name: entry.name,
+        quantity: entry.qty,
+        is_sideboard: entry.zone === "sideboard",
+        is_commander: entry.zone === "commander",
+        scryfall_id: meta.scryfall_id || undefined,
+        image_url: meta.image_url || undefined,
+      });
+      added++;
+    }
+
+    toast.success(`${added} cartas importadas com sucesso!`);
+    setImportText("");
+    setImportOpen(false);
+    setImporting(false);
+  }, [importText, deckId, cards, removeCard, addCard]);
+
   if (authLoading || isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
