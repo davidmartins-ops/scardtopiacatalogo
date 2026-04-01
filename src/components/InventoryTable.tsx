@@ -38,6 +38,12 @@ const CONDITIONS = [
   { value: "D", label: "D" },
 ];
 
+const STATUSES = [
+  { value: "none", label: "—" },
+  { value: "pre_sale", label: "Pré Venda" },
+  { value: "launch", label: "Lançamento" },
+];
+
 interface Props { data: InventoryItem[]; }
 type SortKey = "id" | "name" | "price" | "quantity";
 
@@ -48,7 +54,7 @@ const InventoryTable = ({ data }: Props) => {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
@@ -90,6 +96,7 @@ const InventoryTable = ({ data }: Props) => {
       name: item.name, price: String(item.price), quantity: String(item.quantity),
       category: item.category, discount: String(item.discount ?? 0),
       language: item.language ?? "PT", condition: item.condition ?? "NM",
+      status: item.status ?? "none",
     });
   };
 
@@ -109,6 +116,7 @@ const InventoryTable = ({ data }: Props) => {
         name: editForm.name.trim(), price, quantity,
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
+        status: editForm.status,
       })
       .eq("id", id);
     setSaving(false);
@@ -235,6 +243,7 @@ const InventoryTable = ({ data }: Props) => {
                 <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Cat.</th>
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Idioma</th>
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Qual.</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                 <SortHeader label="Preço" k="price" />
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Desc.</th>
                 <SortHeader label="Qtd" k="quantity" />
@@ -285,6 +294,14 @@ const InventoryTable = ({ data }: Props) => {
                           </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
+                          <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
+                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-24"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2">
                           <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-sm bg-muted border-border w-20" />
                         </td>
                         <td className="px-2 sm:px-3 py-2">
@@ -322,6 +339,15 @@ const InventoryTable = ({ data }: Props) => {
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 text-center">
                           <Badge variant="outline" className="text-[10px]">{item.condition ?? "NM"}</Badge>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2.5 text-center">
+                          {item.status === "pre_sale" ? (
+                            <Badge variant="secondary" className="text-[10px]">Pré Venda</Badge>
+                          ) : item.status === "launch" ? (
+                            <Badge className="text-[10px]">Lançamento</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-[10px]">—</span>
+                          )}
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs">
                           R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
