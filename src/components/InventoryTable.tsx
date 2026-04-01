@@ -38,6 +38,12 @@ const CONDITIONS = [
   { value: "D", label: "D" },
 ];
 
+const STATUSES = [
+  { value: "none", label: "—" },
+  { value: "pre_sale", label: "Pré Venda" },
+  { value: "launch", label: "Lançamento" },
+];
+
 interface Props { data: InventoryItem[]; }
 type SortKey = "id" | "name" | "price" | "quantity";
 
