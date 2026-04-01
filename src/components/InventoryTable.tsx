@@ -294,6 +294,14 @@ const InventoryTable = ({ data }: Props) => {
                           </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
+                          <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
+                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-24"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2">
                           <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-sm bg-muted border-border w-20" />
                         </td>
                         <td className="px-2 sm:px-3 py-2">
