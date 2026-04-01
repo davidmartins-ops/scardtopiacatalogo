@@ -340,6 +340,15 @@ const InventoryTable = ({ data }: Props) => {
                         <td className="px-2 sm:px-3 py-2.5 text-center">
                           <Badge variant="outline" className="text-[10px]">{item.condition ?? "NM"}</Badge>
                         </td>
+                        <td className="px-2 sm:px-3 py-2.5 text-center">
+                          {item.status === "pre_sale" ? (
+                            <Badge variant="secondary" className="text-[10px]">Pré Venda</Badge>
+                          ) : item.status === "launch" ? (
+                            <Badge className="text-[10px]">Lançamento</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-[10px]">—</span>
+                          )}
+                        </td>
                         <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs">
                           R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
