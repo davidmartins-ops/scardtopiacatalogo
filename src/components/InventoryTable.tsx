@@ -243,6 +243,7 @@ const InventoryTable = ({ data }: Props) => {
                 <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Cat.</th>
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Idioma</th>
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Qual.</th>
+                <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                 <SortHeader label="Preço" k="price" />
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Desc.</th>
                 <SortHeader label="Qtd" k="quantity" />
