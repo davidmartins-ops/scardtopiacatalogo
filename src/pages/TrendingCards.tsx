@@ -380,7 +380,7 @@ const TrendingCards = () => {
         {/* Controls Row: Formats + Search + Sort */}
         <div className="glass-card p-3 sm:p-4 space-y-3">
           {/* Format buttons */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin justify-center">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin sm:justify-center px-1">
             {Object.entries(FORMAT_QUERIES).map(([key, val]) => (
               <Button
                 key={key}
