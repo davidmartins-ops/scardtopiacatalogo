@@ -105,7 +105,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
               </button>
             )}
           </div>
-          <div className={`flex flex-wrap gap-1.5 overflow-hidden transition-all duration-300 ${showAllCategories ? "max-h-[500px]" : "max-h-[34px]"}`}>
+          <div className={`flex flex-wrap gap-1.5 transition-all duration-300 ${showAllCategories ? "max-h-[40vh] overflow-y-auto" : "max-h-[34px] overflow-hidden"}`}>
             <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(null)}>Todas</Badge>
             {categories.map((cat) => (
               <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
@@ -199,24 +199,33 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                     </div>
 
                     <div className="relative z-10 p-3 pt-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-body font-medium text-foreground leading-snug text-sm group-hover:text-primary transition-colors duration-300">{item.name}</h3>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 font-mono truncate max-w-[120px]" title={item.id}>{item.id}</p>
-                          {isSingles && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {item.language && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.language}</Badge>}
-                              {item.condition && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.condition}</Badge>}
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex items-start gap-1 mb-1">
+                        <h3 className="font-body font-medium text-foreground leading-snug text-sm group-hover:text-primary transition-colors duration-300 flex-1 min-w-0 line-clamp-2">{item.name}</h3>
                         <Badge variant="outline" className={`shrink-0 gap-1 text-[10px] ${config?.className ?? ""}`}>
                           <Icon className="h-2.5 w-2.5" />
                           {config?.label ?? item.description}
                         </Badge>
                       </div>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate" title={item.id}>{item.id}</p>
+                      {isSingles && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.language && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.language}</Badge>}
+                          {item.condition && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.condition}</Badge>}
+                        </div>
+                      )}
 
-                      <div className="mt-3 flex items-center justify-between">
+                      <div className="mt-2">
+                        <div className="mb-2">
+                          {discount > 0 ? (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-[10px] text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                              <span className="text-sm font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                              <Badge variant="outline" className="text-[9px] bg-accent/15 text-accent border-accent/30">-{discount}%</Badge>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-bold text-gradient font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1">
                           {isOutOfStock ? (
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
@@ -248,18 +257,6 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </div>
-
-                        <div className="text-right">
-                          {discount > 0 ? (
-                            <>
-                              <span className="block text-[10px] text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                              <span className="text-sm font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                              <Badge variant="outline" className="ml-1 text-[9px] bg-accent/15 text-accent border-accent/30">-{discount}%</Badge>
-                            </>
-                          ) : (
-                            <span className="text-sm font-bold text-gradient font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                          )}
                         </div>
                       </div>
                     </div>
