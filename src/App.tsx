@@ -13,6 +13,7 @@ import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
 import CollectionManager from "./pages/CollectionManager.tsx";
 import PublicCollection from "./pages/PublicCollection.tsx";
+import TrendingCards from "./pages/TrendingCards.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
