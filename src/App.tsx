@@ -69,6 +69,7 @@ const App = () => (
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
           <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
           <Route path="/colecao/:collectionId" element={<PublicCollection />} />
+          <Route path="/tendencias" element={<TrendingCards />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
