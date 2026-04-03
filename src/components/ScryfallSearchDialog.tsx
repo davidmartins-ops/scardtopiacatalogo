@@ -179,7 +179,7 @@ const ScryfallSearchDialog = () => {
           <span className="sm:hidden">Single</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto flex flex-col">
+      <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-display text-foreground">Cadastrar Carta Avulsa (Single)</DialogTitle>
         </DialogHeader>
@@ -229,7 +229,7 @@ const ScryfallSearchDialog = () => {
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[70vh]">
+          <ScrollArea className="flex-1 max-h-[65vh]">
             <div className="space-y-4 pr-2">
               <div className="flex gap-4">
                 {getCardImage(selected) && (
