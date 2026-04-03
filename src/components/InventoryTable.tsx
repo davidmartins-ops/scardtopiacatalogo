@@ -252,6 +252,16 @@ const InventoryTable = ({ data }: Props) => {
               ))}
             </div>
           </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Preço:</span>
+            <Input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-20 sm:w-24 h-7 text-xs bg-muted border-border font-body" min="0" />
+            <span className="text-[10px] text-muted-foreground">—</span>
+            <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-20 sm:w-24 h-7 text-xs bg-muted border-border font-body" min="0" />
+            {(priceMin || priceMax) && (
+              <button className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
