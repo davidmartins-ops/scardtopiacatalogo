@@ -92,6 +92,7 @@ const CustomerDashboard = () => {
             <TabsTrigger value="favorites" className="gap-1 font-display"><Heart className="h-3.5 w-3.5" /> Favoritos ({favorites.length})</TabsTrigger>
             <TabsTrigger value="decks" className="gap-1 font-display"><Layers className="h-3.5 w-3.5" /> Decks ({decks.length})</TabsTrigger>
             <TabsTrigger value="collections" className="gap-1 font-display"><BookOpen className="h-3.5 w-3.5" /> Coleções ({collections.length})</TabsTrigger>
+            <TabsTrigger value="orders" className="gap-1 font-display"><ShoppingBag className="h-3.5 w-3.5" /> Pedidos ({orders.length})</TabsTrigger>
           </TabsList>
 
           {/* FAVORITES */}
