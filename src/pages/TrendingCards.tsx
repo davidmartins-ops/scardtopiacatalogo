@@ -328,7 +328,7 @@ const TrendingCards = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         {/* Title */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center justify-center gap-2" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
@@ -346,9 +346,10 @@ const TrendingCards = () => {
           )}
         </div>
 
-        {/* Format Tabs */}
-        <div className="flex justify-center">
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        {/* Controls Row: Formats + Search + Sort */}
+        <div className="glass-card p-3 sm:p-4 space-y-3">
+          {/* Format buttons */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin justify-center">
             {Object.entries(FORMAT_QUERIES).map(([key, val]) => (
               <Button
                 key={key}
@@ -361,47 +362,45 @@ const TrendingCards = () => {
               </Button>
             ))}
           </div>
-        </div>
-
-        {/* Search + Sort */}
-        <div className="glass-card p-3 max-w-lg mx-auto flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome ou coleção..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
-            />
+          {/* Search + Sort */}
+          <div className="flex gap-2 max-w-xl mx-auto">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou coleção..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
+              />
+            </div>
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
+              <SelectTrigger className="w-[130px] sm:w-[140px] bg-muted/30 border-border/50">
+                <ArrowUpDown className="h-3.5 w-3.5 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="price_desc">Maior preço</SelectItem>
+                <SelectItem value="price_asc">Menor preço</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
-            <SelectTrigger className="w-[140px] bg-muted/30 border-border/50">
-              <ArrowUpDown className="h-3.5 w-3.5 mr-1" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="price_desc">Maior preço</SelectItem>
-              <SelectItem value="price_asc">Menor preço</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
-        {/* Disclaimer */}
-        <div className="glass-card p-3 flex items-start gap-2 border-yellow-500/30 max-w-2xl mx-auto">
-          <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Aviso:</strong> Os valores são em dólar americano (USD) obtidos do Scryfall.
-            A conversão para Real (BRL) é <strong>ilustrativa</strong>, baseada na cotação atual, e pode não refletir o preço real de mercado no Brasil.
-          </p>
-        </div>
-
-        {/* Exchange rate info */}
-        {exchangeRate && (
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <DollarSign className="h-3.5 w-3.5" />
-            Cotação: 1 USD = R$ {exchangeRate.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+        {/* Disclaimer + Exchange in row */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="glass-card p-3 flex items-start gap-2 border-yellow-500/30 flex-1">
+            <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">
+              <strong className="text-foreground">Aviso:</strong> Valores em USD (Scryfall). Conversão BRL é <strong>ilustrativa</strong>.
+            </p>
           </div>
-        )}
+          {exchangeRate && (
+            <div className="glass-card p-3 flex items-center justify-center gap-2 text-xs text-muted-foreground shrink-0">
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+              1 USD = R$ {exchangeRate.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+            </div>
+          )}
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -409,7 +408,7 @@ const TrendingCards = () => {
           </div>
         ) : (
           <Tabs defaultValue="rising" className="w-full">
-            <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
+            <TabsList className="w-full max-w-md mx-auto mb-5 bg-muted/50 backdrop-blur-sm">
               <TabsTrigger value="rising" className="flex-1 font-display gap-1.5">
                 <TrendingUp className="h-3.5 w-3.5" /> Em Alta ({filteredRising.length})
               </TabsTrigger>
@@ -418,11 +417,11 @@ const TrendingCards = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="rising">
+            <TabsContent value="rising" className="space-y-5">
               <PriceDistributionChart cards={filteredRising} type="rising" />
               <CardList cards={filteredRising} type="rising" />
             </TabsContent>
-            <TabsContent value="falling">
+            <TabsContent value="falling" className="space-y-5">
               <PriceDistributionChart cards={filteredFalling} type="falling" />
               <CardList cards={filteredFalling} type="falling" />
             </TabsContent>
