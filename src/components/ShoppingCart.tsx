@@ -22,7 +22,7 @@ interface ShoppingCartProps {
 const WHATSAPP_NUMBER = "5511947154555";
 const STORE_EMAIL = "barbaradiasx@gmail.com";
 
-const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty }: ShoppingCartProps) => {
+const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
 
   const total = items.reduce((s, ci) => {
