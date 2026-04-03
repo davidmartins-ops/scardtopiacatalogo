@@ -351,6 +351,12 @@ const Catalogo = () => {
           </Link>
 
           <div className="flex items-center gap-2">
+            <Link to="/tendencias">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Flame className="h-4 w-4" />
+                <span className="hidden sm:inline">Tendências</span>
+              </Button>
+            </Link>
             {user ? (
               <>
                 <Link to="/conta">
@@ -420,16 +426,13 @@ const Catalogo = () => {
       </div>
 
       {/* Hero Banner */}
-      <div className="relative h-48 sm:h-56 overflow-hidden">
+      <div className="relative h-32 sm:h-40 overflow-hidden">
         <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
-        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-6">
-          <Link to="/login">
-            <img src={logo} alt="Spencer's Cardtopia" className="h-24 sm:h-28 drop-shadow-2xl animate-fade-in cursor-pointer hover:scale-105 transition-transform duration-300" />
-          </Link>
-          <div className="premium-divider max-w-[120px] mt-3 mb-2" />
-          <p className="text-sm text-muted-foreground tracking-[0.25em] uppercase font-medium animate-fade-in" style={{ animationDelay: "0.15s" }}>Catálogo</p>
+        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in">Catálogo</h1>
+          <div className="premium-divider max-w-[80px] mt-2" />
         </div>
       </div>
 
