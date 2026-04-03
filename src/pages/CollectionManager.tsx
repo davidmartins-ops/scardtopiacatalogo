@@ -127,7 +127,10 @@ const CollectionManager = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-foreground truncate">{card.name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-[9px] px-1">{card.set?.toUpperCase()}</Badge>
+                        <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
+                      </div>
                     </div>
                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleAddCard(card)}>
                       <Plus className="h-3 w-3" /> Add
