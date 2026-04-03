@@ -229,7 +229,7 @@ const ScryfallSearchDialog = () => {
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[70vh]">
+          <ScrollArea className="flex-1 max-h-[65vh]">
             <div className="space-y-4 pr-2">
               <div className="flex gap-4">
                 {getCardImage(selected) && (
