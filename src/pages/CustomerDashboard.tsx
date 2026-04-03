@@ -5,6 +5,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useDecks, MTG_FORMATS } from "@/hooks/use-decks";
 import { useCollections } from "@/hooks/use-collections";
 import { useInventory } from "@/hooks/use-inventory";
+import { useOrders, type Order } from "@/hooks/use-orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
