@@ -174,25 +174,66 @@ const TrendingCards = () => {
     }, [cards]);
 
     if (chartData.length === 0) return null;
-    const color = type === "rising" ? "hsl(142, 71%, 45%)" : "hsl(0, 84%, 60%)";
+
+    const gradientId = `bar-gradient-${type}`;
+    const colorStart = type === "rising" ? "hsl(45, 80%, 55%)" : "hsl(0, 70%, 55%)";
+    const colorEnd = type === "rising" ? "hsl(45, 60%, 40%)" : "hsl(0, 50%, 40%)";
+    const maxCount = Math.max(...chartData.map(d => d.count));
 
     return (
-      <div className="glass-card p-4 mb-6">
-        <h3 className="text-sm font-display font-semibold text-foreground mb-3 flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-primary" /> Distribuição de Preços
-        </h3>
-        <div className="h-48">
+      <div className="glass-card p-4 sm:p-6 mb-6 border border-border/50">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <span className="text-gradient">Distribuição de Preços</span>
+          </h3>
+          <span className="text-[10px] text-muted-foreground">{cards.length} cartas</span>
+        </div>
+        <div className="premium-divider mb-4" />
+        <div className="h-52 sm:h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <XAxis dataKey="range" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-              <Tooltip
-                contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
+            <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: -8 }}>
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={colorStart} stopOpacity={0.95} />
+                  <stop offset="100%" stopColor={colorEnd} stopOpacity={0.6} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="range"
+                tick={{ fontSize: 10, fill: "hsl(45, 20%, 90%)", fontFamily: "'Cinzel', serif" }}
+                axisLine={{ stroke: "hsl(240, 8%, 25%)" }}
+                tickLine={false}
               />
-              <Bar dataKey="count" name="Cartas" radius={[4, 4, 0, 0]}>
-                {chartData.map((_, i) => (
-                  <Cell key={i} fill={color} opacity={0.8 + (i * 0.03)} />
+              <YAxis
+                tick={{ fontSize: 10, fill: "hsl(240, 5%, 55%)" }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                cursor={{ fill: "hsl(240, 8%, 20%)", opacity: 0.5 }}
+                contentStyle={{
+                  background: "hsl(240, 10%, 12%)",
+                  border: "1px solid hsl(240, 8%, 25%)",
+                  borderRadius: "12px",
+                  fontFamily: "Inter",
+                  backdropFilter: "blur(12px)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                }}
+                labelStyle={{ color: "hsl(45, 20%, 90%)", fontFamily: "'Cinzel', serif", fontSize: 12, marginBottom: 4 }}
+                formatter={(value: number) => [`${value} carta${value !== 1 ? 's' : ''}`, 'Quantidade']}
+              />
+              <Bar dataKey="count" name="Cartas" radius={[6, 6, 0, 0]} barSize={40}>
+                {chartData.map((entry, i) => (
+                  <Cell
+                    key={i}
+                    fill={`url(#${gradientId})`}
+                    opacity={0.6 + (entry.count / maxCount) * 0.4}
+                    stroke={colorStart}
+                    strokeWidth={1}
+                    strokeOpacity={0.3}
+                  />
                 ))}
               </Bar>
             </BarChart>
