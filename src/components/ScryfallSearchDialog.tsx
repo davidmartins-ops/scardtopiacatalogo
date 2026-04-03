@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ScryfallCard {
@@ -44,6 +43,11 @@ const CONDITIONS = [
   { value: "D", label: "D - Damaged" },
 ];
 
+const headingStyle = {
+  fontFamily: "'Cinzel Decorative', 'Cinzel', serif",
+  letterSpacing: "0.05em",
+} as const;
+
 const ScryfallSearchDialog = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -57,8 +61,6 @@ const ScryfallSearchDialog = () => {
   const [condition, setCondition] = useState("NM");
   const [status, setStatus] = useState<"none" | "pre_sale" | "launch">("none");
   const [saving, setSaving] = useState(false);
-
-  // Edition selector
   const [printings, setPrintings] = useState<ScryfallCard[]>([]);
   const [loadingPrintings, setLoadingPrintings] = useState(false);
 
@@ -82,6 +84,7 @@ const ScryfallSearchDialog = () => {
     setResults([]);
     setSelected(null);
     setPrintings([]);
+
     try {
       const res = await fetch(`https://api.scryfall.com/cards/search?q=name:${encodeURIComponent(`"${query.trim()}"`)}&unique=cards&order=released&dir=desc`);
       if (!res.ok) {
@@ -90,6 +93,7 @@ const ScryfallSearchDialog = () => {
         setSearching(false);
         return;
       }
+
       const data = await res.json();
       setResults(data.data?.slice(0, 20) ?? []);
     } catch {
@@ -121,10 +125,19 @@ const ScryfallSearchDialog = () => {
 
   const handleAdd = async () => {
     if (!selected) return;
+
     const price = parseFloat(priceBRL);
     const qty = parseInt(quantity, 10);
-    if (isNaN(price) || price < 0) { toast.error("Preço em R$ inválido."); return; }
-    if (isNaN(qty) || qty < 0) { toast.error("Quantidade inválida."); return; }
+
+    if (isNaN(price) || price < 0) {
+      toast.error("Preço em R$ inválido.");
+      return;
+    }
+
+    if (isNaN(qty) || qty < 0) {
+      toast.error("Quantidade inválida.");
+      return;
+    }
 
     const foilSuffix = description === "Foil" ? "F" : "NF";
     const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}-${language}-${foilSuffix}-${condition}`;
@@ -179,17 +192,26 @@ const ScryfallSearchDialog = () => {
           <span className="sm:hidden">Single</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[85vh] flex flex-col overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-foreground">Cadastrar Carta Avulsa (Single)</DialogTitle>
+
+      <DialogContent className="top-2 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] translate-y-0 rounded-lg border-border bg-card p-4 flex flex-col overflow-hidden max-h-[calc(100dvh-1rem)] sm:top-[50%] sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:translate-y-[-50%] sm:p-6">
+        <DialogHeader className="shrink-0 pr-10 text-left">
+          <DialogTitle className="text-2xl font-bold text-foreground sm:text-3xl" style={headingStyle}>
+            <span className="text-gradient">Cadastrar Carta Avulsa (Single)</span>
+          </DialogTitle>
         </DialogHeader>
 
         {!selected ? (
-          <div className="space-y-4 flex-1 min-h-0 flex flex-col">
+          <div className="space-y-4 flex-1 min-h-0 flex flex-col overflow-hidden">
             <div className="flex gap-2 shrink-0">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar carta por nome (ex: Lightning Bolt)..." value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && searchScryfall()} className="pl-9 bg-muted border-border" />
+                <Input
+                  placeholder="Buscar carta por nome (ex: Lightning Bolt)..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && searchScryfall()}
+                  className="pl-9 bg-muted border-border"
+                />
               </div>
               <Button onClick={searchScryfall} disabled={searching || !query.trim()}>
                 {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
@@ -201,7 +223,11 @@ const ScryfallSearchDialog = () => {
                 {results.map((card) => {
                   const img = getCardSmall(card);
                   return (
-                    <button key={card.id} onClick={() => selectCard(card)} className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all text-left">
+                    <button
+                      key={card.id}
+                      onClick={() => selectCard(card)}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all text-left"
+                    >
                       {img ? (
                         <img src={img} alt={card.name} className="h-16 w-12 rounded object-cover border border-border/40 shrink-0" />
                       ) : (
@@ -229,24 +255,28 @@ const ScryfallSearchDialog = () => {
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[65vh]">
-            <div className="space-y-4 pr-2">
-              <div className="flex gap-4">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
+            <div className="space-y-4 pb-4">
+              <div className="flex flex-col gap-4 sm:flex-row">
                 {getCardImage(selected) && (
-                  <img src={getCardImage(selected)!} alt={selected.name} className="h-52 w-auto rounded-lg border border-border shadow-lg shrink-0" />
+                  <img
+                    src={getCardImage(selected)!}
+                    alt={selected.name}
+                    className="mx-auto h-auto w-full max-w-[170px] rounded-lg border border-border shadow-lg sm:mx-0 sm:h-52 sm:w-auto sm:max-w-none shrink-0"
+                  />
                 )}
-                <div className="flex-1 space-y-2">
-                  <h3 className="font-display text-lg font-semibold text-foreground">{selected.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selected.type_line}</p>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <h3 className="font-display text-lg font-semibold text-foreground sm:text-xl">{selected.name}</h3>
+                  <p className="text-sm text-muted-foreground break-words">{selected.type_line}</p>
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-xs">{selected.set_name}</Badge>
+                    <Badge variant="outline" className="text-xs max-w-full break-words whitespace-normal">{selected.set_name}</Badge>
                     <Badge variant="outline" className={`text-xs capitalize ${rarityColors[selected.rarity] ?? ""}`}>{selected.rarity}</Badge>
                     <Badge variant="outline" className="text-xs font-mono">#{selected.collector_number}</Badge>
                   </div>
 
                   <div className="mt-3 p-3 rounded-lg bg-muted/30 border border-border space-y-1">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Base de Preço Internacional</p>
-                    <div className="flex gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       {selected.prices?.usd ? (
                         <p className="text-sm">Non-Foil: <span className="font-bold text-foreground">US$ {selected.prices.usd}</span></p>
                       ) : (
@@ -263,12 +293,11 @@ const ScryfallSearchDialog = () => {
                 </div>
               </div>
 
-              {/* Edition / Printings selector */}
               {printings.length > 1 && (
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold">Edição / Variante ({printings.length} disponíveis)</Label>
-                  <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  <div className="max-h-44 overflow-y-auto rounded-lg border border-border p-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {printings.map((p) => (
                         <button
                           key={p.id}
@@ -292,8 +321,7 @@ const ScryfallSearchDialog = () => {
                 </div>
               )}
 
-              {/* Price, qty, type, language, condition */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Preço (R$) *</Label>
                   <Input type="number" min="0" step="0.01" placeholder="0,00" value={priceBRL} onChange={(e) => setPriceBRL(e.target.value)} className="bg-muted border-border" />
@@ -304,9 +332,9 @@ const ScryfallSearchDialog = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Tipo</Label>
-                  <div className="flex gap-2 pt-1">
-                    <Button type="button" size="sm" variant={description === "Non-Foil" ? "default" : "outline"} onClick={() => setDescription("Non-Foil")} className="flex-1 text-xs">Non-Foil</Button>
-                    <Button type="button" size="sm" variant={description === "Foil" ? "default" : "outline"} onClick={() => setDescription("Foil")} className="flex-1 text-xs">Foil</Button>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Button type="button" size="sm" variant={description === "Non-Foil" ? "default" : "outline"} onClick={() => setDescription("Non-Foil")} className="text-xs">Non-Foil</Button>
+                    <Button type="button" size="sm" variant={description === "Foil" ? "default" : "outline"} onClick={() => setDescription("Foil")} className="text-xs">Foil</Button>
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -340,7 +368,7 @@ const ScryfallSearchDialog = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
                 <Button variant="outline" onClick={() => { setSelected(null); setPrintings([]); }}>Voltar</Button>
                 <Button onClick={handleAdd} disabled={saving} className="gap-2">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
@@ -348,7 +376,7 @@ const ScryfallSearchDialog = () => {
                 </Button>
               </div>
             </div>
-          </ScrollArea>
+          </div>
         )}
       </DialogContent>
     </Dialog>
