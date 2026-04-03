@@ -16,6 +16,7 @@ interface ShoppingCartProps {
   onRemove: (itemId: string) => void;
   onClear: () => void;
   onUpdateQty: (itemId: string, qty: number) => void;
+  onOrderPlaced?: (items: CartItem[], total: number) => void;
 }
 
 const WHATSAPP_NUMBER = "5511947154555";
