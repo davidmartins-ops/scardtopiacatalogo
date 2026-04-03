@@ -333,9 +333,11 @@ const TrendingCards = () => {
             </TabsList>
 
             <TabsContent value="rising">
+              <PriceDistributionChart cards={filteredRising} type="rising" />
               <CardList cards={filteredRising} type="rising" />
             </TabsContent>
             <TabsContent value="falling">
+              <PriceDistributionChart cards={filteredFalling} type="falling" />
               <CardList cards={filteredFalling} type="falling" />
             </TabsContent>
           </Tabs>
