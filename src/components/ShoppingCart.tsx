@@ -53,6 +53,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced }: 
     const msg = buildMessage();
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, "_blank");
+    if (onOrderPlaced) {
+      onOrderPlaced(items, total);
+    }
   };
 
   return (
