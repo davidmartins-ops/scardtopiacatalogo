@@ -91,7 +91,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType, filterCategory]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory, priceMin, priceMax]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
