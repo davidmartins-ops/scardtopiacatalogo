@@ -54,6 +54,8 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const categories = useMemo(() => [...new Set((items ?? []).map((i) => i.category))].sort(), [items]);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const MAX_VISIBLE_CATEGORIES = 12;
 
   const filteredItems = useMemo(() => {
     return (items ?? []).filter((item) => {
