@@ -72,12 +72,17 @@ const InventoryTable = ({ data }: Props) => {
   const categories = useMemo(() => [...new Set(data.map((i) => i.category))].sort(), [data]);
 
   const filtered = useMemo(() => {
+    const minP = priceMin ? parseFloat(priceMin) : null;
+    const maxP = priceMax ? parseFloat(priceMax) : null;
     let items = data.filter(
       (item) =>
         (filterType === "all" || item.description === filterType) &&
         (filterCategory === "all" || item.category === filterCategory) &&
+        (minP === null || item.price >= minP) &&
+        (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.id.toLowerCase().includes(search.toLowerCase()))
+    );
     );
     items.sort((a, b) => {
       const av = a[sortKey];
