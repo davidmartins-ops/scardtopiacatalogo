@@ -176,8 +176,8 @@ const TrendingCards = () => {
     if (chartData.length === 0) return null;
 
     const gradientId = `bar-gradient-${type}`;
-    const colorStart = type === "rising" ? "hsl(45, 80%, 55%)" : "hsl(0, 70%, 55%)";
-    const colorEnd = type === "rising" ? "hsl(45, 60%, 40%)" : "hsl(0, 50%, 40%)";
+    const colorStart = type === "rising" ? "hsl(45, 80%, 55%)" : "hsl(0, 45%, 50%)";
+    const colorEnd = type === "rising" ? "hsl(45, 60%, 40%)" : "hsl(0, 35%, 35%)";
     const maxCount = Math.max(...chartData.map(d => d.count));
 
     return (
