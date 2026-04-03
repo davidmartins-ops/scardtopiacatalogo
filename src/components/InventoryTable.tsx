@@ -83,7 +83,6 @@ const InventoryTable = ({ data }: Props) => {
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.id.toLowerCase().includes(search.toLowerCase()))
     );
-    );
     items.sort((a, b) => {
       const av = a[sortKey];
       const bv = b[sortKey];
