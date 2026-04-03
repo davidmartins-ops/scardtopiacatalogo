@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
