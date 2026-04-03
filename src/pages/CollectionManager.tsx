@@ -50,8 +50,9 @@ const CollectionManager = () => {
 
   const handleAddCard = (card: any) => {
     const imageUrl = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? null;
+    const setCode = card.set ? ` [${card.set.toUpperCase()}]` : "";
     addCard.mutate({
-      card_name: card.name,
+      card_name: `${card.name}${setCode}`,
       quantity: 1,
       condition: addCondition,
       language: addLanguage,
