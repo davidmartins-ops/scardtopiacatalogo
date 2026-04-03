@@ -488,7 +488,7 @@ const Catalogo = () => {
       </div>
 
       {/* Shopping Cart */}
-      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} />
+      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} />
     </div>
   );
 };
