@@ -33,10 +33,10 @@ const CollectionManager = () => {
     if (!search.trim()) return;
     setSearching(true);
     try {
-      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(search)}&order=name&unique=cards`);
+      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(search)}&order=name&unique=prints`);
       if (res.ok) {
         const data = await res.json();
-        setSearchResults(data.data?.slice(0, 20) ?? []);
+        setSearchResults(data.data?.slice(0, 40) ?? []);
       } else {
         setSearchResults([]);
         toast.error("Nenhuma carta encontrada.");
