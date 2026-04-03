@@ -157,7 +157,51 @@ const TrendingCards = () => {
     }
   };
 
-  const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => (
+  const PriceDistributionChart = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => {
+    const chartData = useMemo(() => {
+      const ranges = [
+        { label: "$0-5", min: 0, max: 5 },
+        { label: "$5-10", min: 5, max: 10 },
+        { label: "$10-25", min: 10, max: 25 },
+        { label: "$25-50", min: 25, max: 50 },
+        { label: "$50-100", min: 50, max: 100 },
+        { label: "$100+", min: 100, max: Infinity },
+      ];
+      return ranges.map((r) => ({
+        range: r.label,
+        count: cards.filter((c) => { const p = getPrice(c); return p >= r.min && p < r.max; }).length,
+      })).filter((d) => d.count > 0);
+    }, [cards]);
+
+    if (chartData.length === 0) return null;
+    const color = type === "rising" ? "hsl(142, 71%, 45%)" : "hsl(0, 84%, 60%)";
+
+    return (
+      <div className="glass-card p-4 mb-6">
+        <h3 className="text-sm font-display font-semibold text-foreground mb-3 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-primary" /> Distribuição de Preços
+        </h3>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <XAxis dataKey="range" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "hsl(var(--foreground))" }}
+              />
+              <Bar dataKey="count" name="Cartas" radius={[4, 4, 0, 0]}>
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={color} opacity={0.8 + (i * 0.03)} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  };
+
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
       {cards.map((card, idx) => {
         const img = getImage(card);
