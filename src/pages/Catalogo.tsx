@@ -53,7 +53,8 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instag
 const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const categories = useMemo(() => [...new Set((items ?? []).map((i) => i.category))].sort(), [items]);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
