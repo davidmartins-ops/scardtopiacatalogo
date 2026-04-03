@@ -179,7 +179,7 @@ const ScryfallSearchDialog = () => {
           <span className="sm:hidden">Single</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl bg-card border-border max-h-[85vh] flex flex-col overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-foreground">Cadastrar Carta Avulsa (Single)</DialogTitle>
         </DialogHeader>
