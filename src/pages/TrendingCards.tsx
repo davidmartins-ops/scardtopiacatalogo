@@ -202,6 +202,7 @@ const TrendingCards = () => {
     );
   };
 
+  const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
       {cards.map((card, idx) => {
         const img = getImage(card);
