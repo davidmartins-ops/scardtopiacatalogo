@@ -219,16 +219,31 @@ const InventoryTable = ({ data }: Props) => {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <Tag className="h-4 w-4 text-muted-foreground" />
-            <button onClick={() => setFilterCategory("all")} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === "all" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-              Todas
-            </button>
-            {categories.map((cat) => (
-              <button key={cat} onClick={() => setFilterCategory(filterCategory === cat ? "all" : cat)} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === cat ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                {cat}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Categorias ({categories.length})</span>
+              </div>
+              {categories.length > 0 && (
+                <button
+                  className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                >
+                  {showAllCategories ? "Recolher ▲" : "Expandir ▼"}
+                </button>
+              )}
+            </div>
+            <div className={`flex flex-wrap gap-1.5 overflow-hidden transition-all duration-300 ${showAllCategories ? "max-h-[500px]" : "max-h-[30px]"}`}>
+              <button onClick={() => setFilterCategory("all")} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === "all" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                Todas
               </button>
-            ))}
+              {categories.map((cat) => (
+                <button key={cat} onClick={() => setFilterCategory(filterCategory === cat ? "all" : cat)} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === cat ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
