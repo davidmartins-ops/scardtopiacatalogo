@@ -59,6 +59,8 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   const filteredItems = useMemo(() => {
+    const minP = priceMin ? parseFloat(priceMin) : null;
+    const maxP = priceMax ? parseFloat(priceMax) : null;
     return (items ?? []).filter((item) => {
       const matchesSearch =
         !search ||
@@ -66,9 +68,11 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         item.category.toLowerCase().includes(search.toLowerCase()) ||
         item.description.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = !activeCategory || item.category === activeCategory;
-      return matchesSearch && matchesCategory;
+      const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
+      const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
+      return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [items, search, activeCategory]);
+  }, [items, search, activeCategory, priceMin, priceMax]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof filteredItems> = {};
