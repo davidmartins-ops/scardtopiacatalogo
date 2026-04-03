@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "@/assets/logo.png";
 
 interface ScryfallCard {
@@ -18,45 +19,78 @@ interface ScryfallCard {
   scryfall_uri: string;
 }
 
+interface FormatData {
+  rising: ScryfallCard[];
+  falling: ScryfallCard[];
+}
+
 const EXCHANGE_API = "https://economia.awesomeapi.com.br/last/USD-BRL";
 
+const FORMAT_QUERIES: Record<string, { rising: string; falling: string; label: string }> = {
+  standard: {
+    rising: "https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>5+f:standard&unique=cards&page=1",
+    falling: "https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+r>=rare+f:standard&unique=cards&page=1",
+    label: "Standard",
+  },
+  pauper: {
+    rising: "https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>0.5+f:pauper&unique=cards&page=1",
+    falling: "https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+f:pauper&unique=cards&page=1",
+    label: "Pauper",
+  },
+  commander: {
+    rising: "https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>5+f:commander&unique=cards&page=1",
+    falling: "https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+r>=rare+f:commander&unique=cards&page=1",
+    label: "Commander",
+  },
+  legacy: {
+    rising: "https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>5+f:legacy&unique=cards&page=1",
+    falling: "https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+r>=rare+f:legacy&unique=cards&page=1",
+    label: "Legacy",
+  },
+  modern: {
+    rising: "https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>5+f:modern&unique=cards&page=1",
+    falling: "https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+r>=rare+f:modern&unique=cards&page=1",
+    label: "Modern",
+  },
+};
+
 const TrendingCards = () => {
-  const [risingCards, setRisingCards] = useState<ScryfallCard[]>([]);
-  const [fallingCards, setFallingCards] = useState<ScryfallCard[]>([]);
+  const [formatData, setFormatData] = useState<Record<string, FormatData>>({});
+  const [activeFormat, setActiveFormat] = useState("standard");
   const [loading, setLoading] = useState(true);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"default" | "price_asc" | "price_desc">("default");
 
   const fetchExchangeRate = async () => {
     try {
       const res = await fetch(EXCHANGE_API);
       const data = await res.json();
-      if (data?.USDBRL?.bid) {
-        setExchangeRate(parseFloat(data.USDBRL.bid));
-      }
+      if (data?.USDBRL?.bid) setExchangeRate(parseFloat(data.USDBRL.bid));
     } catch {
       setExchangeRate(null);
     }
   };
 
-  const fetchCards = async () => {
+  const fetchFormatCards = async (format: string) => {
+    const q = FORMAT_QUERIES[format];
+    if (!q) return;
     setLoading(true);
     try {
-      await fetchExchangeRate();
+      if (!exchangeRate) await fetchExchangeRate();
 
-      const risingRes = await fetch("https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>5+f:standard&unique=cards&page=1");
+      const risingRes = await fetch(q.rising);
       const risingData = await risingRes.json();
       const risingList: ScryfallCard[] = (risingData.data ?? []).slice(0, 50);
 
       await new Promise(r => setTimeout(r, 150));
 
-      const fallingRes = await fetch("https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+r>=rare+f:standard&unique=cards&page=1");
+      const fallingRes = await fetch(q.falling);
       const fallingData = await fallingRes.json();
       const fallingList: ScryfallCard[] = (fallingData.data ?? []).slice(0, 50);
 
-      setRisingCards(risingList);
-      setFallingCards(fallingList);
+      setFormatData(prev => ({ ...prev, [format]: { rising: risingList, falling: fallingList } }));
       setLastUpdate(new Date());
     } catch (err) {
       console.error("Error fetching trending cards:", err);
@@ -66,24 +100,40 @@ const TrendingCards = () => {
   };
 
   useEffect(() => {
-    fetchCards();
+    fetchExchangeRate();
+    fetchFormatCards("standard");
   }, []);
 
-  const filteredRising = useMemo(() => {
-    if (!search) return risingCards;
-    const q = search.toLowerCase();
-    return risingCards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
-  }, [risingCards, search]);
+  useEffect(() => {
+    if (!formatData[activeFormat]) {
+      fetchFormatCards(activeFormat);
+    }
+  }, [activeFormat]);
 
-  const filteredFalling = useMemo(() => {
-    if (!search) return fallingCards;
-    const q = search.toLowerCase();
-    return fallingCards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
-  }, [fallingCards, search]);
+  const currentData = formatData[activeFormat] ?? { rising: [], falling: [] };
 
-  const getSmallImage = (card: ScryfallCard) => {
-    if (card.image_uris?.small) return card.image_uris.small;
-    if (card.card_faces?.[0]?.image_uris?.small) return card.card_faces[0].image_uris.small;
+  const getPrice = (card: ScryfallCard) => {
+    const p = card.prices.usd ?? card.prices.usd_foil;
+    return p ? parseFloat(p) : 0;
+  };
+
+  const applyFilterAndSort = (cards: ScryfallCard[]) => {
+    let filtered = cards;
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = cards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
+    }
+    if (sortOrder === "price_asc") return [...filtered].sort((a, b) => getPrice(a) - getPrice(b));
+    if (sortOrder === "price_desc") return [...filtered].sort((a, b) => getPrice(b) - getPrice(a));
+    return filtered;
+  };
+
+  const filteredRising = useMemo(() => applyFilterAndSort(currentData.rising), [currentData.rising, search, sortOrder]);
+  const filteredFalling = useMemo(() => applyFilterAndSort(currentData.falling), [currentData.falling, search, sortOrder]);
+
+  const getImage = (card: ScryfallCard) => {
+    if (card.image_uris?.normal) return card.image_uris.normal;
+    if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal;
     return null;
   };
 
@@ -110,7 +160,7 @@ const TrendingCards = () => {
   const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
       {cards.map((card, idx) => {
-        const img = getSmallImage(card);
+        const img = getImage(card);
         const price = card.prices.usd ?? card.prices.usd_foil;
         return (
           <a
@@ -183,7 +233,7 @@ const TrendingCards = () => {
                 Catálogo
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground text-xs" onClick={fetchCards} disabled={loading}>
+            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground text-xs" onClick={() => fetchFormatCards(activeFormat)} disabled={loading}>
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Atualizar</span>
             </Button>
@@ -201,7 +251,7 @@ const TrendingCards = () => {
             <TrendingDown className="h-6 w-6 text-red-400" />
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-            Top 50 cartas em alta e em baixa no formato Standard — valores atualizados via Scryfall
+            Top 50 cartas em alta e em baixa — valores atualizados via Scryfall
           </p>
           {lastUpdate && (
             <p className="text-[11px] text-muted-foreground">
@@ -210,9 +260,26 @@ const TrendingCards = () => {
           )}
         </div>
 
-        {/* Search */}
-        <div className="glass-card p-3 max-w-md mx-auto">
-          <div className="relative">
+        {/* Format Tabs */}
+        <div className="flex justify-center">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+            {Object.entries(FORMAT_QUERIES).map(([key, val]) => (
+              <Button
+                key={key}
+                variant={activeFormat === key ? "default" : "outline"}
+                size="sm"
+                className="text-xs shrink-0"
+                onClick={() => setActiveFormat(key)}
+              >
+                {val.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Search + Sort */}
+        <div className="glass-card p-3 max-w-lg mx-auto flex gap-2">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome ou coleção..."
@@ -221,13 +288,24 @@ const TrendingCards = () => {
               className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
             />
           </div>
+          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
+            <SelectTrigger className="w-[140px] bg-muted/30 border-border/50">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Padrão</SelectItem>
+              <SelectItem value="price_desc">Maior preço</SelectItem>
+              <SelectItem value="price_asc">Menor preço</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Disclaimer */}
         <div className="glass-card p-3 flex items-start gap-2 border-yellow-500/30 max-w-2xl mx-auto">
           <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Aviso:</strong> Os valores são em dólar americano (USD) obtidos do Scryfall. 
+            <strong className="text-foreground">Aviso:</strong> Os valores são em dólar americano (USD) obtidos do Scryfall.
             A conversão para Real (BRL) é <strong>ilustrativa</strong>, baseada na cotação atual, e pode não refletir o preço real de mercado no Brasil.
           </p>
         </div>

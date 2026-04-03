@@ -431,7 +431,9 @@ const Catalogo = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in">Catálogo</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
+            <span className="text-gradient">Catálogo</span>
+          </h1>
           <div className="premium-divider max-w-[80px] mt-2" />
         </div>
       </div>
