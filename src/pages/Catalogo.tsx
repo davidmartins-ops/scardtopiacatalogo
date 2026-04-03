@@ -105,7 +105,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
               </button>
             )}
           </div>
-          <div className={`flex flex-wrap gap-1.5 overflow-hidden transition-all duration-300 ${showAllCategories ? "max-h-[500px]" : "max-h-[34px]"}`}>
+          <div className={`flex flex-wrap gap-1.5 transition-all duration-300 ${showAllCategories ? "max-h-[40vh] overflow-y-auto" : "max-h-[34px] overflow-hidden"}`}>
             <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(null)}>Todas</Badge>
             {categories.map((cat) => (
               <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
