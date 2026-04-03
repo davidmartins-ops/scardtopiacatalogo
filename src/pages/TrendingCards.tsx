@@ -124,8 +124,7 @@ const TrendingCards = () => {
       filtered = cards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
     }
     if (sortOrder === "price_asc") return [...filtered].sort((a, b) => getPrice(a) - getPrice(b));
-    if (sortOrder === "price_desc") return [...filtered].sort((a, b) => getPrice(b) - getPrice(a));
-    return filtered;
+    return [...filtered].sort((a, b) => getPrice(b) - getPrice(a));
   };
 
   const filteredRising = useMemo(() => applyFilterAndSort(currentData.rising), [currentData.rising, search, sortOrder]);
