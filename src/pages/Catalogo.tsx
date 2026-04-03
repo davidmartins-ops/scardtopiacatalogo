@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -52,11 +53,14 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instag
 const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const categories = useMemo(() => [...new Set((items ?? []).map((i) => i.category))].sort(), [items]);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   const filteredItems = useMemo(() => {
+    const minP = priceMin ? parseFloat(priceMin) : null;
+    const maxP = priceMax ? parseFloat(priceMax) : null;
     return (items ?? []).filter((item) => {
       const matchesSearch =
         !search ||
@@ -64,9 +68,11 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         item.category.toLowerCase().includes(search.toLowerCase()) ||
         item.description.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = !activeCategory || item.category === activeCategory;
-      return matchesSearch && matchesCategory;
+      const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
+      const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
+      return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [items, search, activeCategory]);
+  }, [items, search, activeCategory, priceMin, priceMax]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof filteredItems> = {};
@@ -105,6 +111,16 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
               <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
             ))}
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
+          <Input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          <span className="text-xs text-muted-foreground">—</span>
+          <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          {(priceMin || priceMax) && (
+            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
+          )}
         </div>
       </div>
 

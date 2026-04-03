@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -54,6 +54,8 @@ const InventoryTable = ({ data }: Props) => {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
@@ -70,10 +72,14 @@ const InventoryTable = ({ data }: Props) => {
   const categories = useMemo(() => [...new Set(data.map((i) => i.category))].sort(), [data]);
 
   const filtered = useMemo(() => {
+    const minP = priceMin ? parseFloat(priceMin) : null;
+    const maxP = priceMax ? parseFloat(priceMax) : null;
     let items = data.filter(
       (item) =>
         (filterType === "all" || item.description === filterType) &&
         (filterCategory === "all" || item.category === filterCategory) &&
+        (minP === null || item.price >= minP) &&
+        (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.id.toLowerCase().includes(search.toLowerCase()))
     );
@@ -84,7 +90,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType, filterCategory]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory, priceMin, priceMax]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
@@ -245,6 +251,16 @@ const InventoryTable = ({ data }: Props) => {
                 </button>
               ))}
             </div>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Preço:</span>
+            <Input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-20 sm:w-24 h-7 text-xs bg-muted border-border font-body" min="0" />
+            <span className="text-[10px] text-muted-foreground">—</span>
+            <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-20 sm:w-24 h-7 text-xs bg-muted border-border font-body" min="0" />
+            {(priceMin || priceMax) && (
+              <button className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
+            )}
           </div>
         </div>
 
