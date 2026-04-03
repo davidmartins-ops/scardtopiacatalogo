@@ -95,7 +95,7 @@ const CollectionManager = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <h1 className="text-xl font-display font-bold text-foreground mb-1">{collection.name}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}><span className="text-gradient">{collection.name}</span></h1>
         {collection.description && <p className="text-sm text-muted-foreground mb-4">{collection.description}</p>}
         <p className="text-sm text-muted-foreground mb-4">{cards.length} carta(s) · {cards.reduce((s, c) => s + c.quantity, 0)} unidades</p>
 

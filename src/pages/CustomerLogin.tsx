@@ -74,7 +74,7 @@ const CustomerLogin = () => {
           <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-20 mx-auto mb-4 drop-shadow-xl" />
           </Link>
-          <h1 className="text-xl font-display font-bold text-foreground">Minha Conta</h1>
+          <h1 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}><span className="text-gradient">Minha Conta</span></h1>
           <p className="text-sm text-muted-foreground mt-1">Salve favoritos, crie decks e gerencie coleções.</p>
         </div>
 

@@ -81,7 +81,9 @@ const CustomerDashboard = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-display font-bold text-foreground mb-6">Minha Conta</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-6" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
+          <span className="text-gradient">Minha Conta</span>
+        </h1>
 
         <Tabs defaultValue="favorites">
           <TabsList className="bg-muted/50 mb-6">
