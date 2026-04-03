@@ -53,6 +53,7 @@ const InventoryTable = ({ data }: Props) => {
   const [sortAsc, setSortAsc] = useState(true);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
