@@ -214,14 +214,16 @@ const TrendingCards = () => {
               <Tooltip
                 cursor={{ fill: "hsl(240, 8%, 20%)", opacity: 0.5 }}
                 contentStyle={{
-                  background: "hsl(240, 10%, 12%)",
-                  border: "1px solid hsl(240, 8%, 25%)",
+                  background: "hsl(240, 10%, 14%)",
+                  border: "1px solid hsl(45, 40%, 30%)",
                   borderRadius: "12px",
                   fontFamily: "Inter",
                   backdropFilter: "blur(12px)",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                  padding: "10px 14px",
                 }}
-                labelStyle={{ color: "hsl(45, 20%, 90%)", fontFamily: "'Cinzel', serif", fontSize: 12, marginBottom: 4 }}
+                labelStyle={{ color: "hsl(45, 80%, 70%)", fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 600, marginBottom: 6 }}
+                itemStyle={{ color: "hsl(45, 20%, 90%)", fontSize: 12 }}
                 formatter={(value: number) => [`${value} carta${value !== 1 ? 's' : ''}`, 'Quantidade']}
               />
               <Bar dataKey="count" name="Cartas" radius={[6, 6, 0, 0]} barSize={40}>
