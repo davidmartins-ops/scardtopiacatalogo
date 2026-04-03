@@ -26,6 +26,7 @@ const CustomerDashboard = () => {
   const { data: inventory = [] } = useInventory();
   const { decks, isLoading: decksLoading, createDeck, deleteDeck, updateDeck } = useDecks();
   const { collections, isLoading: colsLoading, createCollection, deleteCollection, updateCollection } = useCollections();
+  const { orders, isLoading: ordersLoading } = useOrders();
 
   const [newDeckOpen, setNewDeckOpen] = useState(false);
   const [newDeckName, setNewDeckName] = useState("");
