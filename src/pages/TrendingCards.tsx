@@ -293,7 +293,6 @@ const TrendingCards = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Padrão</SelectItem>
               <SelectItem value="price_desc">Maior preço</SelectItem>
               <SelectItem value="price_asc">Menor preço</SelectItem>
             </SelectContent>
