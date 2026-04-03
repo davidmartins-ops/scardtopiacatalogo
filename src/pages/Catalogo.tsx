@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown } from "lucide-react";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -428,6 +428,9 @@ const Catalogo = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer gap-2">
                       <Link to="/conta"><BookOpen className="h-4 w-4" /> Minhas Coleções</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                      <Link to="/conta?tab=orders"><ShoppingBag className="h-4 w-4" /> Meus Pedidos</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive" onClick={() => signOut()}>
