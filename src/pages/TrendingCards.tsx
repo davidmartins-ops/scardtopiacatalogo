@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import logo from "@/assets/logo.png";
 
@@ -25,6 +26,7 @@ const TrendingCards = () => {
   const [loading, setLoading] = useState(true);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [search, setSearch] = useState("");
 
   const fetchExchangeRate = async () => {
     try {
@@ -43,15 +45,12 @@ const TrendingCards = () => {
     try {
       await fetchExchangeRate();
 
-      // Fetch expensive cards (trending high) - most expensive standard cards
       const risingRes = await fetch("https://api.scryfall.com/cards/search?order=usd&dir=desc&q=usd>5+f:standard&unique=cards&page=1");
       const risingData = await risingRes.json();
       const risingList: ScryfallCard[] = (risingData.data ?? []).slice(0, 50);
 
-      // Small delay to respect Scryfall rate limit
       await new Promise(r => setTimeout(r, 150));
 
-      // Fetch cheap cards (trending low) - cheapest rares/mythics
       const fallingRes = await fetch("https://api.scryfall.com/cards/search?order=usd&dir=asc&q=usd>0+r>=rare+f:standard&unique=cards&page=1");
       const fallingData = await fallingRes.json();
       const fallingList: ScryfallCard[] = (fallingData.data ?? []).slice(0, 50);
@@ -70,11 +69,17 @@ const TrendingCards = () => {
     fetchCards();
   }, []);
 
-  const getImage = (card: ScryfallCard) => {
-    if (card.image_uris?.normal) return card.image_uris.normal;
-    if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal;
-    return null;
-  };
+  const filteredRising = useMemo(() => {
+    if (!search) return risingCards;
+    const q = search.toLowerCase();
+    return risingCards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
+  }, [risingCards, search]);
+
+  const filteredFalling = useMemo(() => {
+    if (!search) return fallingCards;
+    const q = search.toLowerCase();
+    return fallingCards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
+  }, [fallingCards, search]);
 
   const getSmallImage = (card: ScryfallCard) => {
     if (card.image_uris?.small) return card.image_uris.small;
@@ -190,9 +195,9 @@ const TrendingCards = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Title */}
         <div className="text-center space-y-2">
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center justify-center gap-2" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
             <TrendingUp className="h-6 w-6 text-green-400" />
-            Tendências de Mercado
+            <span className="text-gradient">Tendências de Mercado</span>
             <TrendingDown className="h-6 w-6 text-red-400" />
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
@@ -203,6 +208,19 @@ const TrendingCards = () => {
               Atualizado em {lastUpdate.toLocaleString("pt-BR")}
             </p>
           )}
+        </div>
+
+        {/* Search */}
+        <div className="glass-card p-3 max-w-md mx-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou coleção..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
+            />
+          </div>
         </div>
 
         {/* Disclaimer */}
@@ -230,18 +248,18 @@ const TrendingCards = () => {
           <Tabs defaultValue="rising" className="w-full">
             <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
               <TabsTrigger value="rising" className="flex-1 font-display gap-1.5">
-                <TrendingUp className="h-3.5 w-3.5" /> Em Alta ({risingCards.length})
+                <TrendingUp className="h-3.5 w-3.5" /> Em Alta ({filteredRising.length})
               </TabsTrigger>
               <TabsTrigger value="falling" className="flex-1 font-display gap-1.5">
-                <TrendingDown className="h-3.5 w-3.5" /> Em Baixa ({fallingCards.length})
+                <TrendingDown className="h-3.5 w-3.5" /> Em Baixa ({filteredFalling.length})
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="rising">
-              <CardList cards={risingCards} type="rising" />
+              <CardList cards={filteredRising} type="rising" />
             </TabsContent>
             <TabsContent value="falling">
-              <CardList cards={fallingCards} type="falling" />
+              <CardList cards={filteredFalling} type="falling" />
             </TabsContent>
           </Tabs>
         )}
