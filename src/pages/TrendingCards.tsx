@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search, ArrowUpDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search, ArrowUpDown, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import logo from "@/assets/logo.png";
 
 interface ScryfallCard {
