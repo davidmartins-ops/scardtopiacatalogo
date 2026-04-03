@@ -351,6 +351,12 @@ const Catalogo = () => {
           </Link>
 
           <div className="flex items-center gap-2">
+            <Link to="/tendencias">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Flame className="h-4 w-4" />
+                <span className="hidden sm:inline">Tendências</span>
+              </Button>
+            </Link>
             {user ? (
               <>
                 <Link to="/conta">
