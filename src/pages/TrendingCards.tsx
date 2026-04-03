@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search, ArrowUpDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2, ArrowLeft, RefreshCw, AlertTriangle, DollarSign, Search, ArrowUpDown, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import logo from "@/assets/logo.png";
 
 interface ScryfallCard {
@@ -61,7 +62,7 @@ const TrendingCards = () => {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"default" | "price_asc" | "price_desc">("default");
+  const [sortOrder, setSortOrder] = useState<"price_asc" | "price_desc">("price_desc");
 
   const fetchExchangeRate = async () => {
     try {
@@ -124,8 +125,7 @@ const TrendingCards = () => {
       filtered = cards.filter(c => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
     }
     if (sortOrder === "price_asc") return [...filtered].sort((a, b) => getPrice(a) - getPrice(b));
-    if (sortOrder === "price_desc") return [...filtered].sort((a, b) => getPrice(b) - getPrice(a));
-    return filtered;
+    return [...filtered].sort((a, b) => getPrice(b) - getPrice(a));
   };
 
   const filteredRising = useMemo(() => applyFilterAndSort(currentData.rising), [currentData.rising, search, sortOrder]);
@@ -155,6 +155,51 @@ const TrendingCards = () => {
       case "uncommon": return "text-slate-300";
       default: return "text-muted-foreground";
     }
+  };
+
+  const PriceDistributionChart = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => {
+    const chartData = useMemo(() => {
+      const ranges = [
+        { label: "$0-5", min: 0, max: 5 },
+        { label: "$5-10", min: 5, max: 10 },
+        { label: "$10-25", min: 10, max: 25 },
+        { label: "$25-50", min: 25, max: 50 },
+        { label: "$50-100", min: 50, max: 100 },
+        { label: "$100+", min: 100, max: Infinity },
+      ];
+      return ranges.map((r) => ({
+        range: r.label,
+        count: cards.filter((c) => { const p = getPrice(c); return p >= r.min && p < r.max; }).length,
+      })).filter((d) => d.count > 0);
+    }, [cards]);
+
+    if (chartData.length === 0) return null;
+    const color = type === "rising" ? "hsl(142, 71%, 45%)" : "hsl(0, 84%, 60%)";
+
+    return (
+      <div className="glass-card p-4 mb-6">
+        <h3 className="text-sm font-display font-semibold text-foreground mb-3 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-primary" /> Distribuição de Preços
+        </h3>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <XAxis dataKey="range" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "hsl(var(--foreground))" }}
+              />
+              <Bar dataKey="count" name="Cartas" radius={[4, 4, 0, 0]}>
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={color} opacity={0.8 + (i * 0.03)} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
   };
 
   const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => (
@@ -294,7 +339,6 @@ const TrendingCards = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Padrão</SelectItem>
               <SelectItem value="price_desc">Maior preço</SelectItem>
               <SelectItem value="price_asc">Menor preço</SelectItem>
             </SelectContent>
@@ -334,9 +378,11 @@ const TrendingCards = () => {
             </TabsList>
 
             <TabsContent value="rising">
+              <PriceDistributionChart cards={filteredRising} type="rising" />
               <CardList cards={filteredRising} type="rising" />
             </TabsContent>
             <TabsContent value="falling">
+              <PriceDistributionChart cards={filteredFalling} type="falling" />
               <CardList cards={filteredFalling} type="falling" />
             </TabsContent>
           </Tabs>

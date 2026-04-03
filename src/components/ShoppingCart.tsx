@@ -16,12 +16,13 @@ interface ShoppingCartProps {
   onRemove: (itemId: string) => void;
   onClear: () => void;
   onUpdateQty: (itemId: string, qty: number) => void;
+  onOrderPlaced?: (items: CartItem[], total: number) => void;
 }
 
 const WHATSAPP_NUMBER = "5511947154555";
 const STORE_EMAIL = "barbaradiasx@gmail.com";
 
-const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty }: ShoppingCartProps) => {
+const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
 
   const total = items.reduce((s, ci) => {
@@ -52,6 +53,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty }: ShoppingCartPro
     const msg = buildMessage();
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, "_blank");
+    if (onOrderPlaced) {
+      onOrderPlaced(items, total);
+    }
   };
 
   return (

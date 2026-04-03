@@ -33,10 +33,10 @@ const CollectionManager = () => {
     if (!search.trim()) return;
     setSearching(true);
     try {
-      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(search)}&order=name&unique=cards`);
+      const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(search)}&order=name&unique=prints`);
       if (res.ok) {
         const data = await res.json();
-        setSearchResults(data.data?.slice(0, 20) ?? []);
+        setSearchResults(data.data?.slice(0, 40) ?? []);
       } else {
         setSearchResults([]);
         toast.error("Nenhuma carta encontrada.");
@@ -50,8 +50,9 @@ const CollectionManager = () => {
 
   const handleAddCard = (card: any) => {
     const imageUrl = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? null;
+    const setCode = card.set ? ` [${card.set.toUpperCase()}]` : "";
     addCard.mutate({
-      card_name: card.name,
+      card_name: `${card.name}${setCode}`,
       quantity: 1,
       condition: addCondition,
       language: addLanguage,
@@ -95,7 +96,7 @@ const CollectionManager = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <h1 className="text-xl font-display font-bold text-foreground mb-1">{collection.name}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}><span className="text-gradient">{collection.name}</span></h1>
         {collection.description && <p className="text-sm text-muted-foreground mb-4">{collection.description}</p>}
         <p className="text-sm text-muted-foreground mb-4">{cards.length} carta(s) · {cards.reduce((s, c) => s + c.quantity, 0)} unidades</p>
 
@@ -126,7 +127,10 @@ const CollectionManager = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-foreground truncate">{card.name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-[9px] px-1">{card.set?.toUpperCase()}</Badge>
+                        <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
+                      </div>
                     </div>
                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleAddCard(card)}>
                       <Plus className="h-3 w-3" /> Add

@@ -5,6 +5,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useDecks, MTG_FORMATS } from "@/hooks/use-decks";
 import { useCollections } from "@/hooks/use-collections";
 import { useInventory } from "@/hooks/use-inventory";
+import { useOrders, type Order } from "@/hooks/use-orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye } from "lucide-react";
+import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -25,6 +26,7 @@ const CustomerDashboard = () => {
   const { data: inventory = [] } = useInventory();
   const { decks, isLoading: decksLoading, createDeck, deleteDeck, updateDeck } = useDecks();
   const { collections, isLoading: colsLoading, createCollection, deleteCollection, updateCollection } = useCollections();
+  const { orders, isLoading: ordersLoading } = useOrders();
 
   const [newDeckOpen, setNewDeckOpen] = useState(false);
   const [newDeckName, setNewDeckName] = useState("");
@@ -81,13 +83,16 @@ const CustomerDashboard = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-display font-bold text-foreground mb-6">Minha Conta</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-6" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
+          <span className="text-gradient">Minha Conta</span>
+        </h1>
 
         <Tabs defaultValue="favorites">
           <TabsList className="bg-muted/50 mb-6">
             <TabsTrigger value="favorites" className="gap-1 font-display"><Heart className="h-3.5 w-3.5" /> Favoritos ({favorites.length})</TabsTrigger>
             <TabsTrigger value="decks" className="gap-1 font-display"><Layers className="h-3.5 w-3.5" /> Decks ({decks.length})</TabsTrigger>
             <TabsTrigger value="collections" className="gap-1 font-display"><BookOpen className="h-3.5 w-3.5" /> Coleções ({collections.length})</TabsTrigger>
+            <TabsTrigger value="orders" className="gap-1 font-display"><ShoppingBag className="h-3.5 w-3.5" /> Pedidos ({orders.length})</TabsTrigger>
           </TabsList>
 
           {/* FAVORITES */}
@@ -234,6 +239,47 @@ const CustomerDashboard = () => {
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm("Excluir coleção?")) deleteCollection.mutate(col.id); }}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ORDERS */}
+          <TabsContent value="orders">
+            {ordersLoading ? (
+              <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-16">
+                <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhum pedido realizado ainda.</p>
+                <p className="text-xs text-muted-foreground mt-1">Seus pedidos aparecerão aqui após enviar pelo WhatsApp.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((order) => (
+                  <div key={order.id} className="glass-card p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">
+                          {order.status === "sent" ? "Enviado" : order.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-primary font-display">
+                        R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {(order.items as any[]).map((item: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="truncate flex-1">{item.quantity}× {item.name}</span>
+                          <span className="shrink-0 ml-2">R$ {Number(item.total_price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}

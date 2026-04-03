@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
+import { useOrders, type OrderItem } from "@/hooks/use-orders";
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
@@ -247,6 +248,7 @@ const Catalogo = () => {
   const { user, profile, signOut } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
+  const { createOrder } = useOrders();
   const cartLoadedFromDb = useRef(false);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -321,6 +323,26 @@ const Catalogo = () => {
     setCartItems([]);
     syncCartToDb([]);
   }, [syncCartToDb]);
+
+  const handleOrderPlaced = useCallback((items: CartItem[], total: number) => {
+    if (!user) return;
+    const orderItems: OrderItem[] = items.map((ci) => {
+      const discount = ci.item.discount ?? 0;
+      const unitPrice = ci.item.price * (1 - discount / 100);
+      return {
+        id: ci.item.id,
+        name: ci.item.name,
+        description: ci.item.description,
+        language: ci.item.language,
+        condition: ci.item.condition,
+        quantity: ci.qty,
+        unit_price: unitPrice,
+        total_price: unitPrice * ci.qty,
+      };
+    });
+    createOrder.mutate({ items: orderItems, total });
+    toast.success("Pedido registrado no seu histórico!");
+  }, [user, createOrder]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
@@ -466,7 +488,7 @@ const Catalogo = () => {
       </div>
 
       {/* Shopping Cart */}
-      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} />
+      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} />
     </div>
   );
 };
