@@ -245,60 +245,89 @@ const TrendingCards = () => {
     );
   };
 
-  const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-      {cards.map((card, idx) => {
-        const img = getImage(card);
-        const price = card.prices.usd ?? card.prices.usd_foil;
-        return (
-          <a
-            key={`${card.name}-${idx}`}
-            href={card.scryfall_uri}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group glass-card overflow-hidden glow-hover transition-all duration-300 hover:scale-[1.02]"
-          >
-            <div className="relative">
-              <div className="absolute top-1.5 left-1.5 z-10">
-                <Badge className={`text-[10px] font-bold px-1.5 py-0.5 ${type === "rising" ? "bg-green-600/90 text-green-50" : "bg-red-600/90 text-red-50"}`}>
-                  #{idx + 1}
-                </Badge>
-              </div>
-              {img ? (
-                <img src={img} alt={card.name} className="w-full aspect-[2.5/3.5] object-cover" loading="lazy" />
-              ) : (
-                <div className="w-full aspect-[2.5/3.5] bg-muted/20 flex items-center justify-center text-xs text-muted-foreground">
-                  Sem imagem
+  const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => {
+    const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
+
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const idx = Number(entry.target.getAttribute("data-idx"));
+              setVisibleCards((prev) => new Set(prev).add(idx));
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "50px" }
+      );
+
+      const elements = document.querySelectorAll(`[data-card-type="${type}"]`);
+      elements.forEach((el) => observer.observe(el));
+      return () => observer.disconnect();
+    }, [cards, type]);
+
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+        {cards.map((card, idx) => {
+          const img = getImage(card);
+          const price = card.prices.usd ?? card.prices.usd_foil;
+          const isVisible = visibleCards.has(idx);
+          return (
+            <a
+              key={`${card.name}-${idx}`}
+              href={card.scryfall_uri}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-idx={idx}
+              data-card-type={type}
+              className={`group glass-card overflow-hidden glow-hover transition-all duration-500 hover:scale-[1.02] ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+              style={{ transitionDelay: `${Math.min(idx % 12, 8) * 60}ms` }}
+            >
+              <div className="relative">
+                <div className="absolute top-1.5 left-1.5 z-10">
+                  <Badge className={`text-[10px] font-bold px-1.5 py-0.5 ${type === "rising" ? "bg-green-600/90 text-green-50" : "bg-red-600/90 text-red-50"}`}>
+                    #{idx + 1}
+                  </Badge>
                 </div>
-              )}
-            </div>
-            <div className="p-2.5 space-y-1">
-              <h3 className="text-xs font-medium text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-                {card.name}
-              </h3>
-              <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
-              <div className="flex items-center justify-between pt-1">
-                <div>
-                  <span className={`text-sm font-bold ${type === "rising" ? "text-green-400" : "text-red-400"}`}>
-                    {formatUSD(price)}
-                  </span>
-                  <span className="block text-[10px] text-muted-foreground">{formatBRL(price)}</span>
-                </div>
-                {type === "rising" ? (
-                  <TrendingUp className="h-3.5 w-3.5 text-green-400" />
+                {img ? (
+                  <img src={img} alt={card.name} className="w-full aspect-[2.5/3.5] object-cover" loading="lazy" />
                 ) : (
-                  <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+                  <div className="w-full aspect-[2.5/3.5] bg-muted/20 flex items-center justify-center text-xs text-muted-foreground">
+                    Sem imagem
+                  </div>
                 )}
               </div>
-              <Badge variant="outline" className={`text-[9px] ${rarityColor(card.rarity)}`}>
-                {card.rarity}
-              </Badge>
-            </div>
-          </a>
-        );
-      })}
-    </div>
-  );
+              <div className="p-2.5 space-y-1">
+                <h3 className="text-xs font-medium text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                  {card.name}
+                </h3>
+                <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <span className={`text-sm font-bold ${type === "rising" ? "text-green-400" : "text-red-400"}`}>
+                      {formatUSD(price)}
+                    </span>
+                    <span className="block text-[10px] text-muted-foreground">{formatBRL(price)}</span>
+                  </div>
+                  {type === "rising" ? (
+                    <TrendingUp className="h-3.5 w-3.5 text-green-400" />
+                  ) : (
+                    <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+                  )}
+                </div>
+                <Badge variant="outline" className={`text-[9px] ${rarityColor(card.rarity)}`}>
+                  {card.rarity}
+                </Badge>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background font-body">
