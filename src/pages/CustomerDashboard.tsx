@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useDecks, MTG_FORMATS } from "@/hooks/use-decks";
@@ -19,8 +19,11 @@ import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Glob
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
+const accountTabs = ["favorites", "decks", "collections", "orders"] as const;
+
 const CustomerDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading, signOut } = useCustomerAuth();
   const { favorites, isLoading: favLoading } = useFavorites();
   const { data: inventory = [] } = useInventory();
@@ -38,6 +41,9 @@ const CustomerDashboard = () => {
   const [newColDesc, setNewColDesc] = useState("");
 
   const favoriteItems = useMemo(() => inventory.filter((i) => favorites.includes(i.id)), [inventory, favorites]);
+  const currentTab = accountTabs.includes((searchParams.get("tab") ?? "") as typeof accountTabs[number])
+    ? (searchParams.get("tab") as typeof accountTabs[number])
+    : "favorites";
 
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -87,7 +93,10 @@ const CustomerDashboard = () => {
           <span className="text-gradient">Minha Conta</span>
         </h1>
 
-        <Tabs defaultValue="favorites">
+        <Tabs
+          value={currentTab}
+          onValueChange={(value) => setSearchParams(value === "favorites" ? {} : { tab: value })}
+        >
           <TabsList className="bg-muted/50 mb-6">
             <TabsTrigger value="favorites" className="gap-1 font-display"><Heart className="h-3.5 w-3.5" /> Favoritos ({favorites.length})</TabsTrigger>
             <TabsTrigger value="decks" className="gap-1 font-display"><Layers className="h-3.5 w-3.5" /> Decks ({decks.length})</TabsTrigger>
