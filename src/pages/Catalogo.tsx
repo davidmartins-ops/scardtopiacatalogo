@@ -112,6 +112,16 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
             ))}
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
+          <Input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          <span className="text-xs text-muted-foreground">—</span>
+          <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          {(priceMin || priceMax) && (
+            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground">{filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados</p>
