@@ -85,12 +85,22 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome, categoria ou tipo..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
-          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 shrink-0" onClick={() => setActiveCategory(null)}>Todos</Badge>
-          {categories.map((cat) => (
-            <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 shrink-0 whitespace-nowrap" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
-          ))}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground font-medium">Categorias ({categories.length})</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(null)}>Todas</Badge>
+            {(showAllCategories ? categories : categories.slice(0, MAX_VISIBLE_CATEGORIES)).map((cat) => (
+              <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
+            ))}
+            {categories.length > MAX_VISIBLE_CATEGORIES && (
+              <Badge variant="outline" className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowAllCategories(!showAllCategories)}>
+                {showAllCategories ? "Ver menos ▲" : `+${categories.length - MAX_VISIBLE_CATEGORIES} mais ▼`}
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
