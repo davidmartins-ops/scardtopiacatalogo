@@ -61,7 +61,7 @@ const TrendingCards = () => {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"default" | "price_asc" | "price_desc">("default");
+  const [sortOrder, setSortOrder] = useState<"price_asc" | "price_desc">("price_desc");
 
   const fetchExchangeRate = async () => {
     try {
