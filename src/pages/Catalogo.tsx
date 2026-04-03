@@ -324,6 +324,26 @@ const Catalogo = () => {
     syncCartToDb([]);
   }, [syncCartToDb]);
 
+  const handleOrderPlaced = useCallback((items: CartItem[], total: number) => {
+    if (!user) return;
+    const orderItems: OrderItem[] = items.map((ci) => {
+      const discount = ci.item.discount ?? 0;
+      const unitPrice = ci.item.price * (1 - discount / 100);
+      return {
+        id: ci.item.id,
+        name: ci.item.name,
+        description: ci.item.description,
+        language: ci.item.language,
+        condition: ci.item.condition,
+        quantity: ci.qty,
+        unit_price: unitPrice,
+        total_price: unitPrice * ci.qty,
+      };
+    });
+    createOrder.mutate({ items: orderItems, total });
+    toast.success("Pedido registrado no seu histórico!");
+  }, [user, createOrder]);
+
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
 
