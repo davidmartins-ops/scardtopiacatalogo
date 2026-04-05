@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -51,11 +51,11 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/50 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex items-end justify-between h-full px-4 sm:px-6 pb-4 sm:pb-6 max-w-full mx-auto">
-          <div className="animate-fade-in">
+          <div className="animate-fade-in shrink-0">
             <img src={logo} alt="Spencer's Cardtopia" className="h-20 sm:h-28 md:h-36 lg:h-44 drop-shadow-2xl" />
             <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium">Painel de Gerenciamento</p>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 animate-fade-in flex-wrap justify-end" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <ScryfallSearchDialog />
             <AddItemDialog />
             <Button
