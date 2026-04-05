@@ -20,6 +20,7 @@ import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { useOrders, type OrderItem } from "@/hooks/use-orders";
+import { supabase } from "@/integrations/supabase/client";
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
@@ -88,7 +89,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
       <div className="glass-card p-4 space-y-4 animate-fade-in-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome, categoria ou tipo..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
+          <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -199,9 +200,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                     </div>
 
                     <div className="relative z-10 p-3 pt-2">
-                      <div className="flex items-start gap-1 mb-1">
-                        <h3 className="font-body font-medium text-foreground leading-snug text-sm group-hover:text-primary transition-colors duration-300 flex-1 min-w-0 line-clamp-2">{item.name}</h3>
-                        <Badge variant="outline" className={`shrink-0 gap-1 text-[10px] ${config?.className ?? ""}`}>
+                      <div className="flex flex-col gap-1 mb-1">
+                        <h3 className="font-body font-medium text-foreground leading-snug text-sm group-hover:text-primary transition-colors duration-300 line-clamp-2">{item.name}</h3>
+                        <Badge variant="outline" className={`self-start gap-1 text-[10px] ${config?.className ?? ""}`}>
                           <Icon className="h-2.5 w-2.5" />
                           {config?.label ?? item.description}
                         </Badge>
@@ -281,6 +282,23 @@ const Catalogo = () => {
   const cartLoadedFromDb = useRef(false);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // FABs visibility: hide when near bottom
+  const [fabsVisible, setFabsVisible] = useState(true);
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = bottomSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setFabsVisible(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
   // Load cart from DB when user logs in and inventory is ready
   useEffect(() => {
     if (!user || savedCartLoading || cartLoadedFromDb.current || inventoryData.length === 0) return;
@@ -292,7 +310,6 @@ const Catalogo = () => {
       });
       if (restored.length > 0) {
         setCartItems((prev) => {
-          // Merge: keep existing local items, add DB items that aren't already present
           const merged = [...prev];
           restored.forEach((r) => {
             if (!merged.find((m) => m.item.id === r.item.id)) merged.push(r);
@@ -353,7 +370,7 @@ const Catalogo = () => {
     syncCartToDb([]);
   }, [syncCartToDb]);
 
-  const handleOrderPlaced = useCallback((items: CartItem[], total: number) => {
+  const handleOrderPlaced = useCallback(async (items: CartItem[], total: number) => {
     if (!user) return;
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
@@ -370,7 +387,14 @@ const Catalogo = () => {
       };
     });
     createOrder.mutate({ items: orderItems, total });
-    toast.success("Pedido registrado no seu histórico!");
+
+    // Deduct stock for each item
+    for (const ci of items) {
+      const newQty = Math.max(0, ci.item.quantity - ci.qty);
+      await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+    }
+
+    toast.success("Pedido registrado e estoque atualizado!");
   }, [user, createOrder]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
@@ -509,8 +533,11 @@ const Catalogo = () => {
         </Tabs>
       </div>
 
-      {/* Social FABs */}
-      <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3">
+      {/* Bottom sentinel for hiding FABs */}
+      <div ref={bottomSentinelRef} className="h-1 w-full" />
+
+      {/* Social FABs - hide near bottom */}
+      <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
         <a href="https://www.instagram.com/scardtopia/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300">
           <Instagram className="h-5 w-5 text-accent" />Instagram
         </a>
@@ -519,8 +546,8 @@ const Catalogo = () => {
         </a>
       </div>
 
-      {/* Shopping Cart */}
-      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} />
+      {/* Shopping Cart - also hide near bottom */}
+      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} fabsVisible={fabsVisible} />
     </div>
   );
 };

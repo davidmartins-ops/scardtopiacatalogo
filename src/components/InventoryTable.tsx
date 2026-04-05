@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign, CheckSquare, Square } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -62,6 +62,11 @@ const InventoryTable = ({ data }: Props) => {
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
   const [discountValue, setDiscountValue] = useState("");
+
+  // Batch discount state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchDiscountOpen, setBatchDiscountOpen] = useState(false);
+  const [batchDiscountValue, setBatchDiscountValue] = useState("");
 
   const [imageDialogItem, setImageDialogItem] = useState<InventoryItem | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -146,6 +151,42 @@ const InventoryTable = ({ data }: Props) => {
     toast.success(`Desconto de ${discount}% aplicado!`);
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     setDiscountEditId(null);
+  };
+
+  // Batch discount
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((i) => i.id)));
+    }
+  };
+
+  const applyBatchDiscount = async () => {
+    const discount = parseFloat(batchDiscountValue || "0");
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+      toast.error("Desconto deve ser entre 0% e 100%.");
+      return;
+    }
+    setSaving(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("inventory").update({ discount }).in("id", ids);
+    setSaving(false);
+    if (error) { toast.error("Erro ao aplicar desconto em lote."); return; }
+    toast.success(`Desconto de ${discount}% aplicado a ${ids.length} produto(s)!`);
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    setBatchDiscountOpen(false);
+    setBatchDiscountValue("");
+    setSelectedIds(new Set());
   };
 
   const confirmDelete = async () => {
@@ -241,7 +282,7 @@ const InventoryTable = ({ data }: Props) => {
                 </button>
               )}
             </div>
-            <div className={`flex flex-wrap gap-1.5 overflow-hidden transition-all duration-300 ${showAllCategories ? "max-h-[500px]" : "max-h-[30px]"}`}>
+            <div className={`flex flex-wrap gap-1.5 transition-all duration-300 ${showAllCategories ? "max-h-[40vh] overflow-y-auto" : "max-h-[30px] overflow-hidden"}`}>
               <button onClick={() => setFilterCategory("all")} className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all ${filterCategory === "all" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
                 Todas
               </button>
@@ -262,12 +303,32 @@ const InventoryTable = ({ data }: Props) => {
               <button className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
             )}
           </div>
+
+          {/* Batch discount bar */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <CheckSquare className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-xs text-foreground font-medium">{selectedIds.size} selecionado(s)</span>
+              <div className="flex-1" />
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-primary/30 hover:border-primary/60" onClick={() => { setBatchDiscountOpen(true); setBatchDiscountValue(""); }}>
+                <Percent className="h-3 w-3" /> Aplicar Desconto
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => setSelectedIds(new Set())}>
+                Limpar seleção
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full font-body text-sm min-w-[700px]">
             <thead className="bg-muted/50">
               <tr>
+                <th className="px-2 py-3 text-center w-8">
+                  <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-primary transition-colors">
+                    {selectedIds.size === filtered.length && filtered.length > 0 ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
+                  </button>
+                </th>
                 <SortHeader label="ID" k="id" />
                 <th className="px-2 sm:px-3 py-3 text-center text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Img</th>
                 <SortHeader label="Nome" k="name" />
@@ -287,8 +348,14 @@ const InventoryTable = ({ data }: Props) => {
               {filtered.map((item) => {
                 const discount = item.discount ?? 0;
                 const finalPrice = item.price * (1 - discount / 100);
+                const isSelected = selectedIds.has(item.id);
                 return (
-                  <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+                  <tr key={item.id} className={`hover:bg-muted/30 transition-colors ${isSelected ? "bg-primary/5" : ""}`}>
+                    <td className="px-2 py-2.5 text-center">
+                      <button onClick={() => toggleSelect(item.id)} className="text-muted-foreground hover:text-primary transition-colors">
+                        {isSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
+                      </button>
+                    </td>
                     <td className="px-2 sm:px-3 py-2.5 font-mono text-primary text-xs max-w-[120px]"><span className="line-clamp-2 break-all">{item.id}</span></td>
                     <td className="px-2 sm:px-3 py-2.5 text-center">
                       {item.image_url ? (
@@ -433,6 +500,43 @@ const InventoryTable = ({ data }: Props) => {
           {filtered.length} de {data.length} itens
         </div>
       </div>
+
+      {/* Batch discount dialog */}
+      <Dialog open={batchDiscountOpen} onOpenChange={setBatchDiscountOpen}>
+        <DialogContent className="sm:max-w-sm bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground text-base flex items-center gap-2">
+              <Percent className="h-5 w-5 text-primary" />
+              Desconto em Lote
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Aplicar desconto a <strong className="text-foreground">{selectedIds.size}</strong> produto(s) selecionado(s).
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="0"
+                value={batchDiscountValue}
+                onChange={(e) => setBatchDiscountValue(e.target.value)}
+                className="flex-1 bg-muted border-border text-center text-lg font-bold"
+                autoFocus
+              />
+              <span className="text-lg font-bold text-muted-foreground">%</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBatchDiscountOpen(false)}>Cancelar</Button>
+            <Button onClick={applyBatchDiscount} disabled={saving} className="gap-1">
+              <Check className="h-4 w-4" /> Aplicar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Image management dialog */}
       <Dialog open={!!imageDialogItem} onOpenChange={(open) => !open && setImageDialogItem(null)}>
