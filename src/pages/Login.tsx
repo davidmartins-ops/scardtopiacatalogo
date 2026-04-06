@@ -56,6 +56,35 @@ const Login = () => {
   const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
   const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % banners.length);
 
+  const shareBanner = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const banner = banners[currentBanner];
+    const text = `${banner.label} ${banner.title}\n${banner.subtitle}\n\nConfira em Spencer's Cardtopia!`;
+    const url = window.location.origin + "/login";
+
+    try {
+      const response = await fetch(banner.src);
+      const blob = await response.blob();
+      const file = new File([blob], `${banner.title.replace(/\s+/g, "-")}.jpg`, { type: blob.type });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: banner.title, text, url, files: [file] });
+        return;
+      }
+    } catch {}
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: banner.title, text, url });
+        return;
+      } catch {}
+    }
+
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    toast.success("Link copiado para a area de transferencia!");
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
       {/* Background */}
