@@ -366,6 +366,7 @@ const Catalogo = () => {
 
   const addToCart = useCallback((item: InventoryItem) => {
     if (item.quantity <= 0) { toast.error("Item esgotado."); return; }
+    trackEvent("add_to_cart", item);
     setCartItems((prev) => {
       const existing = prev.find((ci) => ci.item.id === item.id);
       let next: CartItem[];
