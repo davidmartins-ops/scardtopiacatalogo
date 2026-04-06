@@ -181,7 +181,7 @@ const Login = () => {
               {/* Share button */}
               <button
                 onClick={shareBanner}
-                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-10"
+                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all sm:opacity-0 sm:group-hover:opacity-100 z-10"
                 title="Compartilhar banner"
               >
                 <Share2 className="h-4 w-4" />
