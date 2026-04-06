@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -10,6 +10,7 @@ import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
 import AddItemDialog from "@/components/AddItemDialog";
 import ScryfallSearchDialog from "@/components/ScryfallSearchDialog";
+import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -99,9 +100,12 @@ const Index = () => {
           </div>
           <div className="xl:col-span-3">
             <Tabs defaultValue="drops" className="w-full">
-              <TabsList className="w-full max-w-sm mb-4 bg-muted/50 backdrop-blur-sm">
+              <TabsList className="w-full max-w-md mb-4 bg-muted/50 backdrop-blur-sm">
                 <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
                 <TabsTrigger value="singles" className="flex-1 font-display text-xs sm:text-sm">Singles ({singles.length})</TabsTrigger>
+                <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <BarChart3 className="h-3.5 w-3.5" /> Analytics
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="drops">
@@ -109,6 +113,9 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="singles">
                 <InventoryTable data={singles} />
+              </TabsContent>
+              <TabsContent value="analytics">
+                <AnalyticsDashboard />
               </TabsContent>
             </Tabs>
           </div>

@@ -39,6 +39,7 @@ const LANGUAGES = [
 const CONDITIONS = [
   { value: "NM", label: "NM - Near Mint" },
   { value: "SP", label: "SP - Slightly Played" },
+  { value: "MP", label: "MP - Moderately Played" },
   { value: "HP", label: "HP - Heavily Played" },
   { value: "D", label: "D - Damaged" },
 ];
@@ -56,7 +57,7 @@ const ScryfallSearchDialog = () => {
   const [selected, setSelected] = useState<ScryfallCard | null>(null);
   const [priceBRL, setPriceBRL] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [description, setDescription] = useState<"Foil" | "Non-Foil">("Non-Foil");
+  const [description, setDescription] = useState<string>("Non-Foil");
   const [language, setLanguage] = useState("PT");
   const [condition, setCondition] = useState("NM");
   const [status, setStatus] = useState<"none" | "pre_sale" | "launch">("none");
@@ -139,7 +140,7 @@ const ScryfallSearchDialog = () => {
       return;
     }
 
-    const foilSuffix = description === "Foil" ? "F" : "NF";
+    const foilSuffix = description.includes("Foil") && description !== "Non-Foil" ? "F" : "NF";
     const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}-${language}-${foilSuffix}-${condition}`;
     const imageUrl = getCardImage(selected);
 
@@ -332,10 +333,17 @@ const ScryfallSearchDialog = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Tipo</Label>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <Button type="button" size="sm" variant={description === "Non-Foil" ? "default" : "outline"} onClick={() => setDescription("Non-Foil")} className="text-xs">Non-Foil</Button>
-                    <Button type="button" size="sm" variant={description === "Foil" ? "default" : "outline"} onClick={() => setDescription("Foil")} className="text-xs">Foil</Button>
-                  </div>
+                  <Select value={description} onValueChange={setDescription}>
+                    <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Non-Foil">Non-Foil</SelectItem>
+                      <SelectItem value="Foil">Foil</SelectItem>
+                      <SelectItem value="Rainbow Foil">Rainbow Foil</SelectItem>
+                      <SelectItem value="Holo Foil">Holo Foil</SelectItem>
+                      <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
+                      <SelectItem value="Confetti Foil">Confetti Foil</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Idioma</Label>

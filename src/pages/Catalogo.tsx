@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
+import UpcomingBanner from "@/components/UpcomingBanner";
 import { useInventory } from "@/hooks/use-inventory";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,27 +27,61 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Non-Foil": { label: "Non-Foil", icon: Circle, className: "bg-non-foil/15 text-non-foil border-non-foil/30" },
   "Rainbow Foil": { label: "Rainbow Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
+  "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
+  "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
+  "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
 };
 
-const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", HP: "Heavily Played", D: "Damaged" };
+const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", MP: "Moderately Played", HP: "Heavily Played", D: "Damaged" };
+
+const trackEvent = async (eventType: string, item?: InventoryItem) => {
+  try {
+    const sessionId = sessionStorage.getItem("analytics_session") || (() => {
+      const id = crypto.randomUUID();
+      sessionStorage.setItem("analytics_session", id);
+      return id;
+    })();
+    await supabase.from("analytics_events").insert({
+      event_type: eventType,
+      inventory_item_id: item?.id ?? null,
+      item_name: item?.name ?? null,
+      category: item?.category ?? null,
+      session_id: sessionId,
+    });
+  } catch { /* silent */ }
+};
 
 const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
   const finalPrice = item.price * (1 - discount / 100);
   const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  const text = `🎴 ${item.name} — ${priceStr}\n${item.description}${item.language ? ` · ${item.language}` : ""}${item.condition ? ` · ${item.condition}` : ""}\n\nConfira no catálogo da Spencer's Cardtopia!`;
+  const text = `${item.name} - ${priceStr}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
   const url = window.location.href;
+  const imageUrl = item.image_url ?? "";
+
+  trackEvent("share", item);
+
+  // Try Web Share API with image if available
+  if (method === "copy" && navigator.share && imageUrl) {
+    navigator.share({ title: item.name, text: text, url }).catch(() => {
+      navigator.clipboard.writeText(text + "\n" + url);
+      toast.success("Link copiado!");
+    });
+    return;
+  }
+
+  const shareText = imageUrl ? `${text}\n\nImagem: ${imageUrl}\n${url}` : `${text}\n${url}`;
 
   if (method === "whatsapp") {
-    window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
   } else if (method === "twitter") {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
   } else if (method === "instagram") {
-    navigator.clipboard.writeText(text + "\n" + url);
-    toast.success("Texto copiado! Cole no seu Instagram Stories 📸");
+    navigator.clipboard.writeText(shareText);
+    toast.success("Texto copiado! Cole no seu Instagram Stories");
     window.open("https://www.instagram.com/", "_blank");
   } else {
-    navigator.clipboard.writeText(text + "\n" + url);
+    navigator.clipboard.writeText(shareText);
     toast.success("Link copiado!");
   }
 };
@@ -332,6 +367,7 @@ const Catalogo = () => {
 
   const addToCart = useCallback((item: InventoryItem) => {
     if (item.quantity <= 0) { toast.error("Item esgotado."); return; }
+    trackEvent("add_to_cart", item);
     setCartItems((prev) => {
       const existing = prev.find((ci) => ci.item.id === item.id);
       let next: CartItem[];
@@ -516,7 +552,10 @@ const Catalogo = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12 space-y-6">
+        {/* Upcoming Releases Banner */}
+        <UpcomingBanner />
+
         <Tabs defaultValue="drops" className="w-full">
           <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
             <TabsTrigger value="drops" className="flex-1 font-display">Drops ({drops.length})</TabsTrigger>

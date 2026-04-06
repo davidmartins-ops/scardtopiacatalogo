@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-const DESCRIPTIONS = ["Foil", "Non-Foil", "Rainbow Foil"] as const;
+const DESCRIPTIONS = ["Foil", "Non-Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil"] as const;
 const LANGUAGES = [
   { value: "PT", label: "Português" },
   { value: "EN", label: "English" },
@@ -23,6 +23,7 @@ const LANGUAGES = [
 const CONDITIONS = [
   { value: "NM", label: "NM - Near Mint" },
   { value: "SP", label: "SP - Slightly Played" },
+  { value: "MP", label: "MP - Moderately Played" },
   { value: "HP", label: "HP - Heavily Played" },
   { value: "D", label: "D - Damaged" },
 ];
