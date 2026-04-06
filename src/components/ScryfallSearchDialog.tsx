@@ -39,6 +39,7 @@ const LANGUAGES = [
 const CONDITIONS = [
   { value: "NM", label: "NM - Near Mint" },
   { value: "SP", label: "SP - Slightly Played" },
+  { value: "MP", label: "MP - Moderately Played" },
   { value: "HP", label: "HP - Heavily Played" },
   { value: "D", label: "D - Damaged" },
 ];

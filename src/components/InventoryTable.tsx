@@ -251,7 +251,7 @@ const InventoryTable = ({ data }: Props) => {
     </th>
   );
 
-  const typeFilters = ["all", "Foil", "Non-Foil", "Rainbow Foil"];
+  const typeFilters = ["all", "Foil", "Non-Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil"];
 
   return (
     <>
