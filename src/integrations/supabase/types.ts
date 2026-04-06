@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          category: string | null
+          created_at: string
+          event_type: string
+          id: string
+          inventory_item_id: string | null
+          item_name: string | null
+          metadata: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string | null
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string | null
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       authorized_emails: {
         Row: {
           created_at: string
@@ -303,6 +339,45 @@ export type Database = {
           status?: string
           total?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      price_history: {
+        Row: {
+          captured_at: string
+          card_name: string
+          collector_number: string | null
+          created_at: string
+          format: string
+          id: string
+          price_usd: number | null
+          price_usd_foil: number | null
+          scryfall_id: string | null
+          set_code: string | null
+        }
+        Insert: {
+          captured_at?: string
+          card_name: string
+          collector_number?: string | null
+          created_at?: string
+          format?: string
+          id?: string
+          price_usd?: number | null
+          price_usd_foil?: number | null
+          scryfall_id?: string | null
+          set_code?: string | null
+        }
+        Update: {
+          captured_at?: string
+          card_name?: string
+          collector_number?: string | null
+          created_at?: string
+          format?: string
+          id?: string
+          price_usd?: number | null
+          price_usd_foil?: number | null
+          scryfall_id?: string | null
+          set_code?: string | null
         }
         Relationships: []
       }
