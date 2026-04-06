@@ -552,7 +552,10 @@ const Catalogo = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12 space-y-6">
+        {/* Upcoming Releases Banner */}
+        <UpcomingBanner />
+
         <Tabs defaultValue="drops" className="w-full">
           <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
             <TabsTrigger value="drops" className="flex-1 font-display">Drops ({drops.length})</TabsTrigger>
