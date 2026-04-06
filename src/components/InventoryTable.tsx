@@ -70,7 +70,7 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
