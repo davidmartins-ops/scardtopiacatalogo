@@ -345,8 +345,6 @@ const ScryfallSearchDialog = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                  </div>
-                </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Idioma</Label>
                   <Select value={language} onValueChange={setLanguage}>
