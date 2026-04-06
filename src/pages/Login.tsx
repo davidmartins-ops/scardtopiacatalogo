@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
 import bannerDandan from "@/assets/banner-dandan.jpg";
@@ -55,6 +55,35 @@ const Login = () => {
 
   const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
   const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % banners.length);
+
+  const shareBanner = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const banner = banners[currentBanner];
+    const text = `${banner.label} ${banner.title}\n${banner.subtitle}\n\nConfira em Spencer's Cardtopia!`;
+    const url = window.location.origin + "/login";
+
+    try {
+      const response = await fetch(banner.src);
+      const blob = await response.blob();
+      const file = new File([blob], `${banner.title.replace(/\s+/g, "-")}.jpg`, { type: blob.type });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: banner.title, text, url, files: [file] });
+        return;
+      }
+    } catch {}
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: banner.title, text, url });
+        return;
+      } catch {}
+    }
+
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    toast.success("Link copiado para a area de transferencia!");
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
@@ -147,6 +176,15 @@ const Login = () => {
                 className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
               >
                 <ChevronRight className="h-5 w-5" />
+              </button>
+
+              {/* Share button */}
+              <button
+                onClick={shareBanner}
+                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-10"
+                title="Compartilhar banner"
+              >
+                <Share2 className="h-4 w-4" />
               </button>
 
               {/* Dots */}
