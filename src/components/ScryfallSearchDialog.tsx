@@ -333,9 +333,18 @@ const ScryfallSearchDialog = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Tipo</Label>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <Button type="button" size="sm" variant={description === "Non-Foil" ? "default" : "outline"} onClick={() => setDescription("Non-Foil")} className="text-xs">Non-Foil</Button>
-                    <Button type="button" size="sm" variant={description === "Foil" ? "default" : "outline"} onClick={() => setDescription("Foil")} className="text-xs">Foil</Button>
+                  <Select value={description} onValueChange={setDescription}>
+                    <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Non-Foil">Non-Foil</SelectItem>
+                      <SelectItem value="Foil">Foil</SelectItem>
+                      <SelectItem value="Rainbow Foil">Rainbow Foil</SelectItem>
+                      <SelectItem value="Holo Foil">Holo Foil</SelectItem>
+                      <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
+                      <SelectItem value="Confetti Foil">Confetti Foil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                   </div>
                 </div>
                 <div className="space-y-1.5">
