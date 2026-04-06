@@ -12,8 +12,10 @@ import bannerDpSolring from "@/assets/banner-dp-solring.jpg";
 import bannerDpPlunder from "@/assets/banner-dp-plunder.jpg";
 import bannerDpBolt from "@/assets/banner-dp-bolt.jpg";
 import bannerDpGreaves from "@/assets/banner-dp-greaves.jpg";
+import bannerFestivalVegas from "@/assets/banner-festival-box-vegas.jpeg";
 
 const banners = [
+  { src: bannerFestivalVegas, alt: "Festival in a Box: Las Vegas 2026", label: "📅 Próximo Lançamento", title: "Festival in a Box: Las Vegas 2026", subtitle: "Lançamento em 13 de Abril de 2026 — MagicCon Las Vegas!" },
   { src: bannerDpThrill, alt: "Thrill of Possibility – Deadpool", label: "🔥 Lançamento", title: "Thrill of Possibility", subtitle: "Quando o Deadpool resolve dar aquela repensada... com estilo!" },
   { src: bannerDpSolring, alt: "Worn Powerstone (Sol Ring) – Deadpool", label: "🔥 Lançamento", title: "Worn Powerstone — Sol Ring", subtitle: "Mana infinita? Deadpool aprova esse tipo de poder!" },
   { src: bannerDpPlunder, alt: "Costly Plunder / Deadly Dispute – Deadpool", label: "🔥 Lançamento", title: "Costly Plunder / Deadly Dispute", subtitle: "Roubar tesouros e causar caos — a especialidade do Merc!" },
