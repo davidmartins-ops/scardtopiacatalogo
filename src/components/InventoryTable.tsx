@@ -42,6 +42,15 @@ const CONDITIONS = [
   { value: "D", label: "D" },
 ];
 
+const FOIL_TYPES = [
+  { value: "Foil", label: "Foil" },
+  { value: "Non-Foil", label: "Non-Foil" },
+  { value: "Rainbow Foil", label: "Rainbow Foil" },
+  { value: "Holo Foil", label: "Holo Foil" },
+  { value: "Galaxy Foil", label: "Galaxy Foil" },
+  { value: "Confetti Foil", label: "Confetti Foil" },
+];
+
 const STATUSES = [
   { value: "none", label: "—" },
   { value: "pre_sale", label: "Pré Venda" },
@@ -61,7 +70,7 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil" });
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
@@ -112,7 +121,7 @@ const InventoryTable = ({ data }: Props) => {
       name: item.name, price: String(item.price), quantity: String(item.quantity),
       category: item.category, discount: String(item.discount ?? 0),
       language: item.language ?? "PT", condition: item.condition ?? "NM",
-      status: item.status ?? "none",
+      status: item.status ?? "none", description: item.description ?? "Foil",
     });
   };
 
@@ -132,7 +141,7 @@ const InventoryTable = ({ data }: Props) => {
         name: editForm.name.trim(), price, quantity,
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
-        status: editForm.status,
+        status: editForm.status, description: editForm.description,
       })
       .eq("id", id);
     setSaving(false);
@@ -374,8 +383,13 @@ const InventoryTable = ({ data }: Props) => {
                         <td className="px-2 sm:px-3 py-2">
                           <Input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="h-8 text-sm bg-muted border-border" />
                         </td>
-                        <td className="px-2 sm:px-3 py-2.5">
-                          <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
+                        <td className="px-2 sm:px-3 py-2">
+                          <Select value={editForm.description} onValueChange={(v) => setEditForm((p) => ({ ...p, description: v }))}>
+                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-28"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {FOIL_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
                           <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-24" />
