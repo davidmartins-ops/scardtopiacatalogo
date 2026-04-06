@@ -23,6 +23,9 @@ const descriptionStyles: Record<string, string> = {
   "Foil": "bg-foil/15 text-foil border-foil/30",
   "Non-Foil": "bg-non-foil/15 text-non-foil border-non-foil/30",
   "Rainbow Foil": "bg-rainbow/15 text-rainbow border-rainbow/30",
+  "Holo Foil": "bg-foil/15 text-foil border-foil/30",
+  "Galaxy Foil": "bg-rainbow/15 text-rainbow border-rainbow/30",
+  "Confetti Foil": "bg-accent/15 text-accent border-accent/30",
 };
 
 const LANGUAGES = [
