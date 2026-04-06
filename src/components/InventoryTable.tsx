@@ -34,6 +34,7 @@ const LANGUAGES = [
 const CONDITIONS = [
   { value: "NM", label: "NM" },
   { value: "SP", label: "SP" },
+  { value: "MP", label: "MP" },
   { value: "HP", label: "HP" },
   { value: "D", label: "D" },
 ];
