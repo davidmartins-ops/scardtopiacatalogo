@@ -42,6 +42,15 @@ const CONDITIONS = [
   { value: "D", label: "D" },
 ];
 
+const FOIL_TYPES = [
+  { value: "Foil", label: "Foil" },
+  { value: "Non-Foil", label: "Non-Foil" },
+  { value: "Rainbow Foil", label: "Rainbow Foil" },
+  { value: "Holo Foil", label: "Holo Foil" },
+  { value: "Galaxy Foil", label: "Galaxy Foil" },
+  { value: "Confetti Foil", label: "Confetti Foil" },
+];
+
 const STATUSES = [
   { value: "none", label: "—" },
   { value: "pre_sale", label: "Pré Venda" },
