@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
 import bannerDandan from "@/assets/banner-dandan.jpg";
