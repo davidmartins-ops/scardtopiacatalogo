@@ -57,7 +57,7 @@ const ScryfallSearchDialog = () => {
   const [selected, setSelected] = useState<ScryfallCard | null>(null);
   const [priceBRL, setPriceBRL] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [description, setDescription] = useState<"Foil" | "Non-Foil">("Non-Foil");
+  const [description, setDescription] = useState<string>("Non-Foil");
   const [language, setLanguage] = useState("PT");
   const [condition, setCondition] = useState("NM");
   const [status, setStatus] = useState<"none" | "pre_sale" | "launch">("none");
