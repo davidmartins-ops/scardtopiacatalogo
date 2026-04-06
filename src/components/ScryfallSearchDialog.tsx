@@ -140,7 +140,7 @@ const ScryfallSearchDialog = () => {
       return;
     }
 
-    const foilSuffix = description === "Foil" ? "F" : "NF";
+    const foilSuffix = description.includes("Foil") && description !== "Non-Foil" ? "F" : "NF";
     const cardId = `${selected.set.toUpperCase()}-${selected.collector_number}-${language}-${foilSuffix}-${condition}`;
     const imageUrl = getCardImage(selected);
 
