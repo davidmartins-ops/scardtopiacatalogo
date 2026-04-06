@@ -383,8 +383,13 @@ const InventoryTable = ({ data }: Props) => {
                         <td className="px-2 sm:px-3 py-2">
                           <Input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="h-8 text-sm bg-muted border-border" />
                         </td>
-                        <td className="px-2 sm:px-3 py-2.5">
-                          <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
+                        <td className="px-2 sm:px-3 py-2">
+                          <Select value={editForm.description} onValueChange={(v) => setEditForm((p) => ({ ...p, description: v }))}>
+                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-28"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {FOIL_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
                           <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-24" />
