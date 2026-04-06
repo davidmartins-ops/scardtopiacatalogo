@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
+import UpcomingBanner from "@/components/UpcomingBanner";
 import { useInventory } from "@/hooks/use-inventory";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
