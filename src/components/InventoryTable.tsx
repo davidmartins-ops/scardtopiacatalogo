@@ -121,7 +121,7 @@ const InventoryTable = ({ data }: Props) => {
       name: item.name, price: String(item.price), quantity: String(item.quantity),
       category: item.category, discount: String(item.discount ?? 0),
       language: item.language ?? "PT", condition: item.condition ?? "NM",
-      status: item.status ?? "none",
+      status: item.status ?? "none", description: item.description ?? "Foil",
     });
   };
 
