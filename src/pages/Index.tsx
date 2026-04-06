@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -10,6 +10,7 @@ import InventoryTable from "@/components/InventoryTable";
 import CategoryChart from "@/components/CategoryChart";
 import AddItemDialog from "@/components/AddItemDialog";
 import ScryfallSearchDialog from "@/components/ScryfallSearchDialog";
+import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
