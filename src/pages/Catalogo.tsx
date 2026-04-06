@@ -33,23 +33,54 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
 
 const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", MP: "Moderately Played", HP: "Heavily Played", D: "Damaged" };
 
+const trackEvent = async (eventType: string, item?: InventoryItem) => {
+  try {
+    const sessionId = sessionStorage.getItem("analytics_session") || (() => {
+      const id = crypto.randomUUID();
+      sessionStorage.setItem("analytics_session", id);
+      return id;
+    })();
+    await supabase.from("analytics_events").insert({
+      event_type: eventType,
+      inventory_item_id: item?.id ?? null,
+      item_name: item?.name ?? null,
+      category: item?.category ?? null,
+      session_id: sessionId,
+    });
+  } catch { /* silent */ }
+};
+
 const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
   const finalPrice = item.price * (1 - discount / 100);
   const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  const text = `🎴 ${item.name} — ${priceStr}\n${item.description}${item.language ? ` · ${item.language}` : ""}${item.condition ? ` · ${item.condition}` : ""}\n\nConfira no catálogo da Spencer's Cardtopia!`;
+  const text = `${item.name} - ${priceStr}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
   const url = window.location.href;
+  const imageUrl = item.image_url ?? "";
+
+  trackEvent("share", item);
+
+  // Try Web Share API with image if available
+  if (method === "copy" && navigator.share && imageUrl) {
+    navigator.share({ title: item.name, text: text, url }).catch(() => {
+      navigator.clipboard.writeText(text + "\n" + url);
+      toast.success("Link copiado!");
+    });
+    return;
+  }
+
+  const shareText = imageUrl ? `${text}\n\nImagem: ${imageUrl}\n${url}` : `${text}\n${url}`;
 
   if (method === "whatsapp") {
-    window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "_blank");
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
   } else if (method === "twitter") {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
   } else if (method === "instagram") {
-    navigator.clipboard.writeText(text + "\n" + url);
-    toast.success("Texto copiado! Cole no seu Instagram Stories 📸");
+    navigator.clipboard.writeText(shareText);
+    toast.success("Texto copiado! Cole no seu Instagram Stories");
     window.open("https://www.instagram.com/", "_blank");
   } else {
-    navigator.clipboard.writeText(text + "\n" + url);
+    navigator.clipboard.writeText(shareText);
     toast.success("Link copiado!");
   }
 };
