@@ -129,8 +129,7 @@ const Login = () => {
 
         {/* Banner carousel — hero prominence */}
         <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-          <Link to="/catalogo" className="block group">
-            <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 group-hover:shadow-primary/30 group-hover:scale-[1.01]">
+          <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 hover:shadow-primary/30 group">
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: "3 / 4" }}>
                 <div
                   className="flex h-full transition-transform duration-700 ease-in-out"
@@ -149,10 +148,10 @@ const Login = () => {
               </div>
 
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent pointer-events-none" />
 
               {/* Banner info */}
-              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 pointer-events-none">
                 <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold font-body uppercase tracking-wider mb-2 animate-fade-in">
                   {banners[currentBanner].label}
                 </span>
@@ -166,29 +165,29 @@ const Login = () => {
 
               {/* Navigation arrows */}
               <button
-                onClick={(e) => { e.preventDefault(); prevBanner(); }}
+                onClick={prevBanner}
                 className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
-                onClick={(e) => { e.preventDefault(); nextBanner(); }}
+                onClick={nextBanner}
                 className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
 
-              {/* Share button */}
+              {/* Share button — always visible, positioned above login button area */}
               <button
                 onClick={shareBanner}
-                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all sm:opacity-0 sm:group-hover:opacity-100 z-10"
+                className="absolute top-3 right-3 h-10 w-10 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/90 transition-all z-20 shadow-lg"
                 title="Compartilhar banner"
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-5 w-5" />
               </button>
 
               {/* Dots */}
-              <div className="absolute bottom-3 right-4 flex gap-2">
+              <div className="absolute bottom-3 right-4 flex gap-2 z-10">
                 {banners.map((_, idx) => (
                   <button
                     key={idx}
@@ -200,7 +199,11 @@ const Login = () => {
 
               <div className="absolute inset-0 foil-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             </div>
-          </Link>
+
+            {/* Link to catalog below banner */}
+            <Link to="/catalogo" className="block mt-2 text-center">
+              <span className="text-xs text-muted-foreground hover:text-primary transition-colors">Ver no catálogo →</span>
+            </Link>
         </div>
 
         {/* CTA */}

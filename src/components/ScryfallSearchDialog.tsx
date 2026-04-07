@@ -338,6 +338,7 @@ const ScryfallSearchDialog = () => {
                     <SelectContent>
                       <SelectItem value="Non-Foil">Non-Foil</SelectItem>
                       <SelectItem value="Foil">Foil</SelectItem>
+                      <SelectItem value="Surge Foil">Surge Foil</SelectItem>
                       <SelectItem value="Rainbow Foil">Rainbow Foil</SelectItem>
                       <SelectItem value="Holo Foil">Holo Foil</SelectItem>
                       <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
