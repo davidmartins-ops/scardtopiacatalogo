@@ -331,6 +331,11 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                             <span className="text-sm font-bold text-gradient font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                           )}
                         </div>
+                        {!isOutOfStock && (
+                          <p className="text-[10px] text-muted-foreground mb-1">
+                            {item.quantity === 1 ? "Última unidade!" : `${item.quantity} em estoque`}
+                          </p>
+                        )}
                         <div className="flex items-center gap-1">
                           {isOutOfStock ? (
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
