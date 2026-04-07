@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Non-Foil": { label: "Non-Foil", icon: Circle, className: "bg-non-foil/15 text-non-foil border-non-foil/30" },
+  "Surge Foil": { label: "Surge Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Rainbow Foil": { label: "Rainbow Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
   "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
@@ -51,7 +52,7 @@ const trackEvent = async (eventType: string, item?: InventoryItem) => {
   } catch { /* silent */ }
 };
 
-const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
+const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
   const finalPrice = item.price * (1 - discount / 100);
   const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
@@ -61,16 +62,33 @@ const shareItem = (item: InventoryItem, method: "whatsapp" | "twitter" | "instag
 
   trackEvent("share", item);
 
-  // Try Web Share API with image if available
-  if (method === "copy" && navigator.share && imageUrl) {
-    navigator.share({ title: item.name, text: text, url }).catch(() => {
-      navigator.clipboard.writeText(text + "\n" + url);
-      toast.success("Link copiado!");
-    });
+  // Try to fetch image as file for sharing
+  let imageFile: File | null = null;
+  if (imageUrl) {
+    try {
+      const res = await fetch(imageUrl);
+      const blob = await res.blob();
+      imageFile = new File([blob], `${item.name.replace(/\s+/g, "-")}.jpg`, { type: blob.type });
+    } catch { /* silent */ }
+  }
+
+  if (method === "copy") {
+    if (navigator.share) {
+      try {
+        const shareData: ShareData = { title: item.name, text, url };
+        if (imageFile && navigator.canShare?.({ files: [imageFile] })) {
+          shareData.files = [imageFile];
+        }
+        await navigator.share(shareData);
+        return;
+      } catch { /* fallback */ }
+    }
+    navigator.clipboard.writeText(`${text}\n${url}`);
+    toast.success("Link copiado!");
     return;
   }
 
-  const shareText = imageUrl ? `${text}\n\nImagem: ${imageUrl}\n${url}` : `${text}\n${url}`;
+  const shareText = `${text}\n${url}`;
 
   if (method === "whatsapp") {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
