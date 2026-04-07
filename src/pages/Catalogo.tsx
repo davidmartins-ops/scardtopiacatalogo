@@ -105,13 +105,27 @@ const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "
   }
 };
 
+const MTG_COLORS = [
+  { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
+  { value: "U", label: "Azul", className: "bg-blue-100 text-blue-800 border-blue-300" },
+  { value: "B", label: "Preto", className: "bg-neutral-800 text-neutral-100 border-neutral-600" },
+  { value: "R", label: "Vermelho", className: "bg-red-100 text-red-800 border-red-300" },
+  { value: "G", label: "Verde", className: "bg-green-100 text-green-800 border-green-300" },
+];
+
 const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const categories = useMemo(() => [...new Set((items ?? []).map((i) => i.category))].sort(), [items]);
-  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  const toggleColor = (color: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
+  };
 
   const filteredItems = useMemo(() => {
     const minP = priceMin ? parseFloat(priceMin) : null;
@@ -125,9 +139,23 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
       const matchesCategory = !activeCategory || item.category === activeCategory;
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
-      return matchesSearch && matchesCategory && matchesPrice;
+      // Color filter: match by name keywords (heuristic)
+      const matchesColor = selectedColors.length === 0 || (() => {
+        const nameLower = item.name.toLowerCase();
+        const catLower = item.category.toLowerCase();
+        const combined = nameLower + " " + catLower;
+        return selectedColors.every((c) => {
+          if (c === "W") return /white|branco|plains/.test(combined);
+          if (c === "U") return /blue|azul|island/.test(combined);
+          if (c === "B") return /black|preto|swamp/.test(combined);
+          if (c === "R") return /red|vermelho|mountain/.test(combined);
+          if (c === "G") return /green|verde|forest/.test(combined);
+          return false;
+        });
+      })();
+      return matchesSearch && matchesCategory && matchesPrice && matchesColor;
     });
-  }, [items, search, activeCategory, priceMin, priceMax]);
+  }, [items, search, activeCategory, priceMin, priceMax, selectedColors]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof filteredItems> = {};
@@ -145,28 +173,50 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground font-medium">Categorias ({categories.length})</span>
-            </div>
-            {categories.length > 0 && (
-              <button
-                className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
-                onClick={() => setShowAllCategories(!showAllCategories)}
-              >
-                {showAllCategories ? "Recolher ▲" : "Expandir ▼"}
-              </button>
-            )}
-          </div>
-          <div className={`flex flex-wrap gap-1.5 transition-all duration-300 ${showAllCategories ? "max-h-[40vh] overflow-y-auto" : "max-h-[34px] overflow-hidden"}`}>
-            <Badge variant={activeCategory === null ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(null)}>Todas</Badge>
-            {categories.map((cat) => (
-              <Badge key={cat} variant={activeCategory === cat ? "default" : "outline"} className="cursor-pointer transition-all duration-200 hover:scale-105 text-xs" onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}>{cat}</Badge>
-            ))}
-          </div>
+
+        {/* Category select box */}
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
+          <Select value={activeCategory ?? "all"} onValueChange={(v) => setActiveCategory(v === "all" ? null : v)}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[250px]">
+              <SelectValue placeholder="Todas" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              <SelectItem value="all">Todas ({categories.length})</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {activeCategory && (
+            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setActiveCategory(null)}>Limpar</button>
+          )}
         </div>
+
+        {/* Color filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Palette className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Cores:</span>
+          {MTG_COLORS.map((color) => (
+            <button
+              key={color.value}
+              onClick={() => toggleColor(color.value)}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                selectedColors.includes(color.value) ? color.className + " ring-1 ring-primary scale-105" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
+              }`}
+            >
+              {color.label}
+            </button>
+          ))}
+          {selectedColors.length > 1 && (
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Combinadas</Badge>
+          )}
+          {selectedColors.length > 0 && (
+            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setSelectedColors([])}>Limpar</button>
+          )}
+        </div>
+
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
