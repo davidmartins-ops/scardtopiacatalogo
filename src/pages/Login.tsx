@@ -94,18 +94,18 @@ const Login = () => {
       </div>
 
       {/* Login button */}
-      <header className="relative z-50 flex items-center justify-between p-4 sm:p-6">
+      <header className="relative z-50 flex items-center justify-between p-4 sm:p-6 pointer-events-none">
         <img
           src={logo}
           alt="Spencer's Cardtopia"
-          className="w-28 sm:w-36 md:w-40 drop-shadow-2xl animate-float"
+          className="w-28 sm:w-36 md:w-40 drop-shadow-2xl animate-float pointer-events-auto"
         />
         <Button
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
           variant="outline"
-          className="gap-2 font-body glass-card px-5 py-2 text-foreground hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 disabled:opacity-60"
+          className="gap-2 font-body glass-card px-5 py-2 text-foreground hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 disabled:opacity-60 pointer-events-auto"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -118,7 +118,7 @@ const Login = () => {
       </header>
 
       {/* Main content */}
-      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-32">
+      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-24 sm:-mt-28 md:-mt-32">
         {/* Slogan */}
         <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in w-full max-w-3xl text-center" style={{ animationDelay: "0.2s" }}>
           Sua loja de Secret Lair!
@@ -179,9 +179,11 @@ const Login = () => {
 
               {/* Share button — always visible, positioned above login button area */}
               <button
+                type="button"
                 onClick={shareBanner}
-                className="absolute top-3 right-3 h-10 w-10 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/90 transition-all z-20 shadow-lg"
+                className="absolute bottom-14 right-4 h-11 w-11 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-foreground/90 hover:bg-background transition-all z-30 shadow-lg border border-border/50"
                 title="Compartilhar banner"
+                aria-label="Compartilhar banner"
               >
                 <Share2 className="h-5 w-5" />
               </button>
