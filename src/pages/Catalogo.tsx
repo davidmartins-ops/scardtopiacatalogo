@@ -113,13 +113,119 @@ const MTG_COLORS = [
   { value: "G", label: "Verde", className: "bg-green-100 text-green-800 border-green-300" },
 ];
 
+const MANA_SYMBOLS = ["W", "U", "B", "R", "G"] as const;
+
+type ManaProfile = {
+  manaCost: string | null;
+  colors: string[];
+};
+
+const getScryfallIdentifier = (item: InventoryItem) => {
+  if ((item.product_type ?? "drop") !== "single") return null;
+
+  const parts = item.id.split("-");
+  if (parts.length < 5) return null;
+
+  const [set, collectorNumber] = parts;
+  if (!set || !collectorNumber) return null;
+
+  return {
+    key: `${set.toLowerCase()}:${collectorNumber.toLowerCase()}`,
+    set: set.toLowerCase(),
+    collector_number: collectorNumber.toLowerCase(),
+  };
+};
+
+const getManaColors = (manaCost?: string | null) => {
+  if (!manaCost) return [];
+
+  return MANA_SYMBOLS.filter((symbol) => new RegExp(symbol, "i").test(manaCost));
+};
+
 const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [manaProfiles, setManaProfiles] = useState<Record<string, ManaProfile>>({});
   const categories = useMemo(() => [...new Set((items ?? []).map((i) => i.category))].sort(), [items]);
+
+  useEffect(() => {
+    if (!isSingles || !items?.length) {
+      setManaProfiles({});
+      return;
+    }
+
+    const identifiers = items
+      .map((item) => ({ itemId: item.id, identifier: getScryfallIdentifier(item) }))
+      .filter((entry): entry is { itemId: string; identifier: NonNullable<ReturnType<typeof getScryfallIdentifier>> } => Boolean(entry.identifier));
+
+    if (!identifiers.length) {
+      setManaProfiles({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadManaProfiles = async () => {
+      try {
+        const batches: typeof identifiers[] = [];
+        for (let i = 0; i < identifiers.length; i += 75) {
+          batches.push(identifiers.slice(i, i + 75));
+        }
+
+        const nextProfiles: Record<string, ManaProfile> = {};
+
+        for (const batch of batches) {
+          const response = await fetch("https://api.scryfall.com/cards/collection", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              identifiers: batch.map(({ identifier }) => ({
+                set: identifier.set,
+                collector_number: identifier.collector_number,
+              })),
+            }),
+          });
+
+          if (!response.ok) continue;
+
+          const payload = await response.json();
+          const cards = Array.isArray(payload.data) ? payload.data : [];
+          const byKey = new Map<string, { mana_cost?: string | null }>();
+
+          cards.forEach((card: { set?: string; collector_number?: string; mana_cost?: string | null }) => {
+            if (!card.set || !card.collector_number) return;
+            byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
+          });
+
+          batch.forEach(({ itemId, identifier }) => {
+            const card = byKey.get(identifier.key);
+            const manaCost = card?.mana_cost ?? null;
+            nextProfiles[itemId] = {
+              manaCost,
+              colors: getManaColors(manaCost),
+            };
+          });
+        }
+
+        if (!cancelled) {
+          setManaProfiles(nextProfiles);
+        }
+      } catch {
+        if (!cancelled) {
+          setManaProfiles({});
+        }
+      }
+    };
+
+    loadManaProfiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items, isSingles]);
 
   const toggleColor = (color: string) => {
     setSelectedColors((prev) =>
@@ -139,23 +245,19 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
       const matchesCategory = !activeCategory || item.category === activeCategory;
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
-      // Color filter: match by name keywords (heuristic)
-      const matchesColor = selectedColors.length === 0 || (() => {
-        const nameLower = item.name.toLowerCase();
-        const catLower = item.category.toLowerCase();
-        const combined = nameLower + " " + catLower;
-        return selectedColors.every((c) => {
-          if (c === "W") return /white|branco|plains/.test(combined);
-          if (c === "U") return /blue|azul|island/.test(combined);
-          if (c === "B") return /black|preto|swamp/.test(combined);
-          if (c === "R") return /red|vermelho|mountain/.test(combined);
-          if (c === "G") return /green|verde|forest/.test(combined);
-          return false;
-        });
+      const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
+        const profile = manaProfiles[item.id];
+        if (!profile) return false;
+
+        const itemColors = [...profile.colors].sort();
+        const activeColors = [...selectedColors].sort();
+
+        if (itemColors.length !== activeColors.length) return false;
+        return activeColors.every((color, index) => itemColors[index] === color);
       })();
       return matchesSearch && matchesCategory && matchesPrice && matchesColor;
     });
-  }, [items, search, activeCategory, priceMin, priceMax, selectedColors]);
+  }, [items, search, activeCategory, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof filteredItems> = {};
@@ -194,28 +296,30 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
           )}
         </div>
 
-        {/* Color filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Palette className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-xs text-muted-foreground font-medium shrink-0">Cores:</span>
-          {MTG_COLORS.map((color) => (
-            <button
-              key={color.value}
-              onClick={() => toggleColor(color.value)}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
-                selectedColors.includes(color.value) ? color.className + " ring-1 ring-primary scale-105" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
-              }`}
-            >
-              {color.label}
-            </button>
-          ))}
-          {selectedColors.length > 1 && (
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Combinadas</Badge>
-          )}
-          {selectedColors.length > 0 && (
-            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setSelectedColors([])}>Limpar</button>
-          )}
-        </div>
+        {isSingles && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Palette className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground font-medium shrink-0">Cores no custo:</span>
+            {MTG_COLORS.map((color) => (
+              <button
+                key={color.value}
+                onClick={() => toggleColor(color.value)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                  selectedColors.includes(color.value) ? color.className + " ring-1 ring-primary scale-105" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
+                }`}
+                title={`Filtrar por ${color.value} no custo de mana`}
+              >
+                {color.label} ({color.value})
+              </button>
+            ))}
+            {selectedColors.length > 1 && (
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Cores combinadas</Badge>
+            )}
+            {selectedColors.length > 0 && (
+              <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setSelectedColors([])}>Limpar</button>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
