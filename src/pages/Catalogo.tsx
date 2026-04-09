@@ -149,7 +149,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   const [priceMax, setPriceMax] = useState("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [manaProfiles, setManaProfiles] = useState<Record<string, ManaProfile>>({});
-  const categories = useMemo(() => [...new Set((items ?? []).map((i) => i.category))].sort(), [items]);
+  const [sortOrder, setSortOrder] = useState<string>("default");
 
   useEffect(() => {
     if (!isSingles || !items?.length) {
