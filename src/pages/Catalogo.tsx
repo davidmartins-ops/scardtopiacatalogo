@@ -299,8 +299,8 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   }, [filteredItems, sortOrder]);
 
   return (
-    <div className="space-y-6">
-      <div className="glass-card p-4 space-y-4 animate-fade-in-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
+    <div className="space-y-6 overflow-visible">
+      <div className="glass-card p-4 space-y-4 animate-fade-in-up overflow-visible" style={{ animationDelay: "0.2s", opacity: 0 }}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
