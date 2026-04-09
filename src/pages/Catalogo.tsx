@@ -267,7 +267,6 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         item.name.toLowerCase().includes(search.toLowerCase()) ||
         item.category.toLowerCase().includes(search.toLowerCase()) ||
         item.description.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = !activeCategory || item.category === activeCategory;
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
@@ -280,18 +279,24 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesCategory && matchesPrice && matchesColor;
+      return matchesSearch && matchesPrice && matchesColor;
     });
-  }, [items, search, activeCategory, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
 
   const groupedItems = useMemo(() => {
+    if (activeCategory === "az" || activeCategory === "za") {
+      const sorted = [...filteredItems].sort((a, b) =>
+        activeCategory === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+      );
+      return [["Todas as cartas", sorted]] as [string, typeof filteredItems][];
+    }
     const groups: Record<string, typeof filteredItems> = {};
     filteredItems.forEach((item) => {
       if (!groups[item.category]) groups[item.category] = [];
       groups[item.category].push(item);
     });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredItems]);
+  }, [filteredItems, activeCategory]);
 
   return (
     <div className="space-y-6">
