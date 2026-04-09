@@ -284,9 +284,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
 
   const groupedItems = useMemo(() => {
-    if (activeCategory === "az" || activeCategory === "za") {
+    if (sortOrder === "az" || sortOrder === "za") {
       const sorted = [...filteredItems].sort((a, b) =>
-        activeCategory === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+        sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
       );
       return [["Todas as cartas", sorted]] as [string, typeof filteredItems][];
     }
@@ -296,7 +296,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
       groups[item.category].push(item);
     });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredItems, activeCategory]);
+  }, [filteredItems, sortOrder]);
 
   return (
     <div className="space-y-6">
@@ -310,7 +310,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Ordem:</span>
-          <Select value={activeCategory ?? "default"} onValueChange={(v) => setActiveCategory(v === "default" ? null : v)}>
+          <Select value={sortOrder} onValueChange={setSortOrder}>
             <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[250px]">
               <SelectValue placeholder="Padrão" />
             </SelectTrigger>
