@@ -168,46 +168,71 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 
     let cancelled = false;
 
+    const CACHE_KEY = "mana_profiles_cache";
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
+
     const loadManaProfiles = async () => {
       try {
-        const batches: typeof identifiers[] = [];
-        for (let i = 0; i < identifiers.length; i += 75) {
-          batches.push(identifiers.slice(i, i + 75));
+        // Try loading from localStorage cache first
+        const cached = localStorage.getItem(CACHE_KEY);
+        let cachedProfiles: Record<string, ManaProfile & { ts: number }> = {};
+        if (cached) {
+          try { cachedProfiles = JSON.parse(cached); } catch { /* ignore */ }
         }
 
+        const now = Date.now();
         const nextProfiles: Record<string, ManaProfile> = {};
+        const needsFetch: typeof identifiers = [];
 
-        for (const batch of batches) {
-          const response = await fetch("https://api.scryfall.com/cards/collection", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              identifiers: batch.map(({ identifier }) => ({
-                set: identifier.set,
-                collector_number: identifier.collector_number,
-              })),
-            }),
-          });
+        identifiers.forEach((entry) => {
+          const cachedEntry = cachedProfiles[entry.identifier.key];
+          if (cachedEntry && (now - cachedEntry.ts) < CACHE_TTL) {
+            nextProfiles[entry.itemId] = { manaCost: cachedEntry.manaCost, colors: cachedEntry.colors };
+          } else {
+            needsFetch.push(entry);
+          }
+        });
 
-          if (!response.ok) continue;
+        if (needsFetch.length > 0) {
+          const batches: typeof needsFetch[] = [];
+          for (let i = 0; i < needsFetch.length; i += 75) {
+            batches.push(needsFetch.slice(i, i + 75));
+          }
 
-          const payload = await response.json();
-          const cards = Array.isArray(payload.data) ? payload.data : [];
-          const byKey = new Map<string, { mana_cost?: string | null }>();
+          for (const batch of batches) {
+            const response = await fetch("https://api.scryfall.com/cards/collection", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                identifiers: batch.map(({ identifier }) => ({
+                  set: identifier.set,
+                  collector_number: identifier.collector_number,
+                })),
+              }),
+            });
 
-          cards.forEach((card: { set?: string; collector_number?: string; mana_cost?: string | null }) => {
-            if (!card.set || !card.collector_number) return;
-            byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
-          });
+            if (!response.ok) continue;
 
-          batch.forEach(({ itemId, identifier }) => {
-            const card = byKey.get(identifier.key);
-            const manaCost = card?.mana_cost ?? null;
-            nextProfiles[itemId] = {
-              manaCost,
-              colors: getManaColors(manaCost),
-            };
-          });
+            const payload = await response.json();
+            const cards = Array.isArray(payload.data) ? payload.data : [];
+            const byKey = new Map<string, { mana_cost?: string | null }>();
+
+            cards.forEach((card: { set?: string; collector_number?: string; mana_cost?: string | null }) => {
+              if (!card.set || !card.collector_number) return;
+              byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
+            });
+
+            batch.forEach(({ itemId, identifier }) => {
+              const card = byKey.get(identifier.key);
+              const manaCost = card?.mana_cost ?? null;
+              const colors = getManaColors(manaCost);
+              nextProfiles[itemId] = { manaCost, colors };
+              cachedProfiles[identifier.key] = { manaCost, colors, ts: now };
+            });
+          }
+
+          // Persist updated cache
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(cachedProfiles)); } catch { /* quota */ }
         }
 
         if (!cancelled) {
@@ -276,24 +301,20 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
           <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
 
-        {/* Category select box */}
+        {/* Alphabetical sort */}
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
-          <Select value={activeCategory ?? "all"} onValueChange={(v) => setActiveCategory(v === "all" ? null : v)}>
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Ordem:</span>
+          <Select value={activeCategory ?? "default"} onValueChange={(v) => setActiveCategory(v === "default" ? null : v)}>
             <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[250px]">
-              <SelectValue placeholder="Todas" />
+              <SelectValue placeholder="Padrão" />
             </SelectTrigger>
             <SelectContent className="max-h-60">
-              <SelectItem value="all">Todas ({categories.length})</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
+              <SelectItem value="default">Padrão (por coleção)</SelectItem>
+              <SelectItem value="az">A → Z</SelectItem>
+              <SelectItem value="za">Z → A</SelectItem>
             </SelectContent>
           </Select>
-          {activeCategory && (
-            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setActiveCategory(null)}>Limpar</button>
-          )}
         </div>
 
         {isSingles && (
