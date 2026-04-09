@@ -1,12 +1,16 @@
 import { useState, useRef } from "react";
-import { ShoppingCart as CartIcon, X, Trash2, Plus, Minus, Send, QrCode, CreditCard, Upload, Loader2, Check } from "lucide-react";
+import { ShoppingCart as CartIcon, X, Trash2, Plus, Minus, Send, QrCode, Upload, Loader2, Check, Truck, Store, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type InventoryItem } from "@/data/inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCustomerAuth } from "@/hooks/use-customer-auth";
 
 export interface CartItem {
   item: InventoryItem;
@@ -26,15 +30,33 @@ interface ShoppingCartProps {
 const WHATSAPP_NUMBER = "5511947154555";
 const PIX_KEY = "david-donizeti-martins@jim.com";
 
+interface ShippingInfo {
+  street: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  cep: string;
+  shippingMethod: "pac" | "sedex" | "transportadora" | "";
+}
+
 const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fabsVisible = true }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"whatsapp" | "pix" | null>(null);
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [receiptSent, setReceiptSent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Delivery dialog
+  const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | null>(null);
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
+    street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "",
+  });
+
+  const { profile } = useCustomerAuth();
 
   const total = items.reduce((s, ci) => {
     const discount = ci.item.discount ?? 0;
@@ -56,8 +78,42 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += `\n   Qtd: ${ci.qty} x R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} = R$ ${(finalPrice * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     });
     msg += `Total: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
+
+    if (deliveryMethod === "pickup") {
+      msg += `📦 Entrega: RETIRADA NO LOCAL\n\n`;
+    } else if (deliveryMethod === "shipping") {
+      const methodLabel = shippingInfo.shippingMethod === "pac" ? "PAC" : shippingInfo.shippingMethod === "sedex" ? "SEDEX" : "Transportadora";
+      msg += `📦 Entrega: ENVIO - ${methodLabel}\n`;
+      msg += `👤 Nome: ${profile?.display_name ?? "—"}\n`;
+      msg += `📍 Endereço: ${shippingInfo.street}, ${shippingInfo.neighborhood}\n`;
+      msg += `🏙️ ${shippingInfo.city} - ${shippingInfo.state}\n`;
+      msg += `📮 CEP: ${shippingInfo.cep}\n\n`;
+    }
+
     msg += "Gostaria de fechar esse pedido!";
     return msg;
+  };
+
+  const openDeliveryDialog = (action: "whatsapp" | "pix") => {
+    setPendingAction(action);
+    setDeliveryMethod(null);
+    setShippingInfo({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+    setDeliveryDialogOpen(true);
+  };
+
+  const confirmDeliveryAndProceed = () => {
+    if (deliveryMethod === "shipping") {
+      if (!shippingInfo.street || !shippingInfo.neighborhood || !shippingInfo.city || !shippingInfo.state || !shippingInfo.cep || !shippingInfo.shippingMethod) {
+        toast.error("Preencha todos os campos de endereço.");
+        return;
+      }
+    }
+    setDeliveryDialogOpen(false);
+    if (pendingAction === "whatsapp") {
+      handleBuyWhatsApp();
+    } else if (pendingAction === "pix") {
+      handlePixSelect();
+    }
   };
 
   const handleBuyWhatsApp = () => {
@@ -103,7 +159,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
     setUploadingReceipt(true);
     try {
-      // Upload receipt to storage
       const ext = receiptFile.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, receiptFile);
@@ -111,7 +166,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
       const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
 
-      // Send order info + receipt via WhatsApp
       let msg = buildMessage();
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
       const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
@@ -210,11 +264,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                     R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <Button className="w-full gap-2 font-body" size="lg" onClick={handleBuyWhatsApp}>
+                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("whatsapp")}>
                   <Send className="h-4 w-4" />
                   Comprar via WhatsApp
                 </Button>
-                <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={handlePixSelect}>
+                <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("pix")}>
                   <QrCode className="h-4 w-4" />
                   Pagar com PIX
                 </Button>
@@ -228,6 +282,101 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </SheetContent>
       </Sheet>
 
+      {/* Delivery Method Dialog */}
+      <Dialog open={deliveryDialogOpen} onOpenChange={setDeliveryDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              <Truck className="h-5 w-5 text-primary" />
+              Forma de Entrega
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Delivery method selection */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setDeliveryMethod("pickup")}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${deliveryMethod === "pickup" ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+              >
+                <Store className="h-6 w-6 text-primary" />
+                <span className="text-sm font-medium text-foreground">Retirada</span>
+                <span className="text-[10px] text-muted-foreground text-center">Retirar no local</span>
+              </button>
+              <button
+                onClick={() => setDeliveryMethod("shipping")}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${deliveryMethod === "shipping" ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+              >
+                <Truck className="h-6 w-6 text-primary" />
+                <span className="text-sm font-medium text-foreground">Envio</span>
+                <span className="text-[10px] text-muted-foreground text-center">Correios / Transportadora</span>
+              </button>
+            </div>
+
+            {/* Shipping form */}
+            {deliveryMethod === "shipping" && (
+              <div className="space-y-3 animate-fade-in">
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Endereço de Entrega</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Nome</Label>
+                      <Input value={profile?.display_name ?? ""} disabled className="h-8 text-sm bg-muted/30" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Rua / Endereço</Label>
+                      <Input placeholder="Rua, número, complemento" value={shippingInfo.street} onChange={(e) => setShippingInfo((p) => ({ ...p, street: e.target.value }))} className="h-8 text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Bairro</Label>
+                      <Input placeholder="Bairro" value={shippingInfo.neighborhood} onChange={(e) => setShippingInfo((p) => ({ ...p, neighborhood: e.target.value }))} className="h-8 text-sm" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Cidade</Label>
+                        <Input placeholder="Cidade" value={shippingInfo.city} onChange={(e) => setShippingInfo((p) => ({ ...p, city: e.target.value }))} className="h-8 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Estado</Label>
+                        <Input placeholder="SP" maxLength={2} value={shippingInfo.state} onChange={(e) => setShippingInfo((p) => ({ ...p, state: e.target.value.toUpperCase() }))} className="h-8 text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">CEP</Label>
+                      <Input placeholder="00000-000" value={shippingInfo.cep} onChange={(e) => setShippingInfo((p) => ({ ...p, cep: e.target.value }))} className="h-8 text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Forma de Envio</Label>
+                      <Select value={shippingInfo.shippingMethod} onValueChange={(v) => setShippingInfo((p) => ({ ...p, shippingMethod: v as ShippingInfo["shippingMethod"] }))}>
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pac">Correios - PAC</SelectItem>
+                          <SelectItem value="sedex">Correios - SEDEX</SelectItem>
+                          <SelectItem value="transportadora">Transportadora</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {deliveryMethod && (
+              <Button className="w-full gap-2" size="lg" onClick={confirmDeliveryAndProceed}>
+                <Send className="h-4 w-4" />
+                Confirmar e Continuar
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* PIX Payment Dialog */}
       <Dialog open={pixDialogOpen} onOpenChange={setPixDialogOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
@@ -239,7 +388,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* PIX Key */}
             <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chave PIX (E-mail)</p>
               <div className="flex items-center gap-2">
@@ -250,7 +398,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               </div>
             </div>
 
-            {/* Total */}
             <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
               <p className="text-xs text-muted-foreground">Valor a transferir</p>
               <p className="text-2xl font-bold text-primary font-display">
@@ -258,7 +405,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               </p>
             </div>
 
-            {/* Receipt Upload */}
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Anexar comprovante de pagamento</p>
               {receiptPreview ? (
