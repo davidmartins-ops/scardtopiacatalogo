@@ -8,7 +8,7 @@ export const useInventory = () => {
     queryFn: async (): Promise<InventoryItem[]> => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, name, description, price, quantity, category, discount, image_url, product_type, language, condition, status");
+        .select("id, name, description, price, quantity, category, discount, image_url, product_type, language, condition, status, drop_description");
 
       if (error) throw error;
 
@@ -25,6 +25,7 @@ export const useInventory = () => {
         language: (item as any).language ?? "PT",
         condition: (item as any).condition ?? "NM",
         status: (item as any).status ?? "none",
+        drop_description: (item as any).drop_description ?? "",
       }));
     },
   });

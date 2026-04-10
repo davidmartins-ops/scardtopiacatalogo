@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
+import DropDetail from "./pages/DropDetail.tsx";
 import CustomerLogin from "./pages/CustomerLogin.tsx";
 import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
@@ -64,6 +65,7 @@ const App = () => (
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
           <Route path="/conta/login" element={<CustomerLogin />} />
           <Route path="/conta" element={<CustomerDashboard />} />
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
