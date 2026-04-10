@@ -139,8 +139,10 @@ const getScryfallIdentifier = (item: InventoryItem) => {
 
 const getManaColors = (manaCost?: string | null) => {
   if (!manaCost) return [];
-
-  return MANA_SYMBOLS.filter((symbol) => new RegExp(symbol, "i").test(manaCost));
+  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) => new RegExp(symbol, "i").test(manaCost));
+  // If no colored symbols found but mana cost exists (e.g. {3}, {C}), it's colorless
+  if (colors.length === 0 && manaCost.length > 0) return ["C"];
+  return colors;
 };
 
 const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
