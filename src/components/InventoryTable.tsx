@@ -74,7 +74,18 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil", drop_description: "" });
+
+  // Drop description dialog
+  const [descDialogItem, setDescDialogItem] = useState<InventoryItem | null>(null);
+  const [descValue, setDescValue] = useState("");
+  const [savingDesc, setSavingDesc] = useState(false);
+
+  // Singles images dialog
+  const [singlesDialogItem, setSinglesDialogItem] = useState<InventoryItem | null>(null);
+  const [singlesImages, setSinglesImages] = useState<any[]>([]);
+  const [uploadingSingles, setUploadingSingles] = useState(false);
+  const singlesInputRef = useRef<HTMLInputElement>(null);
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
