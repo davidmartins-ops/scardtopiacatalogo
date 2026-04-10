@@ -746,22 +746,12 @@ const Catalogo = () => {
         </div>
       </div>
 
-      {/* Hero Banner */}
-      <div className="relative h-32 sm:h-40 overflow-hidden">
-        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
-        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
-            <span className="text-gradient">Catálogo</span>
-          </h1>
-          <div className="premium-divider max-w-[80px] mt-2" />
-        </div>
-      </div>
+      {/* Hero Banner with rotating banners from DB */}
+      <CatalogBanner />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12 space-y-6">
-        {/* Upcoming Releases Banner */}
-        <UpcomingBanner />
+        {/* Promo Highlights */}
+        <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
 
         <Tabs defaultValue="drops" className="w-full">
           <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
