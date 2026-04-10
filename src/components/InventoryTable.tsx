@@ -271,6 +271,58 @@ const InventoryTable = ({ data }: Props) => {
     }
   };
 
+  // Drop description save
+  const saveDropDescription = async () => {
+    if (!descDialogItem) return;
+    setSavingDesc(true);
+    const { error } = await supabase.from("inventory").update({ drop_description: descValue } as any).eq("id", descDialogItem.id);
+    setSavingDesc(false);
+    if (error) { toast.error("Erro ao salvar descrição."); return; }
+    toast.success("Descrição atualizada!");
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    setDescDialogItem(null);
+  };
+
+  // Load singles images
+  const openSinglesDialog = async (item: InventoryItem) => {
+    setSinglesDialogItem(item);
+    const { data } = await supabase.from("drop_singles_images").select("*").eq("inventory_item_id", item.id).order("sort_order");
+    setSinglesImages(data ?? []);
+  };
+
+  const handleSinglesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !singlesDialogItem) return;
+    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem."); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB."); return; }
+
+    setUploadingSingles(true);
+    try {
+      const url = await uploadProductImage(file);
+      const { error } = await supabase.from("drop_singles_images").insert({
+        inventory_item_id: singlesDialogItem.id,
+        image_url: url,
+        sort_order: singlesImages.length,
+      } as any);
+      if (error) throw error;
+      const { data } = await supabase.from("drop_singles_images").select("*").eq("inventory_item_id", singlesDialogItem.id).order("sort_order");
+      setSinglesImages(data ?? []);
+      toast.success("Imagem adicionada!");
+    } catch {
+      toast.error("Erro ao adicionar imagem.");
+    } finally {
+      setUploadingSingles(false);
+      if (singlesInputRef.current) singlesInputRef.current.value = "";
+    }
+  };
+
+  const removeSinglesImage = async (imageId: string) => {
+    const { error } = await supabase.from("drop_singles_images").delete().eq("id", imageId);
+    if (error) { toast.error("Erro ao remover."); return; }
+    setSinglesImages((prev) => prev.filter((img) => img.id !== imageId));
+    toast.success("Imagem removida!");
+  };
+
   const SortHeader = ({ label, k }: { label: string; k: SortKey }) => (
     <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none whitespace-nowrap" onClick={() => handleSort(k)}>
       <span className="inline-flex items-center gap-1">{label}<ArrowUpDown className={`h-3 w-3 ${sortKey === k ? "text-primary" : ""}`} /></span>
