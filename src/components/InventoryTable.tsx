@@ -683,6 +683,49 @@ const InventoryTable = ({ data }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Drop Description Dialog */}
+      <Dialog open={!!descDialogItem} onOpenChange={(open) => !open && setDescDialogItem(null)}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground text-base flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Descrição — {descDialogItem?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea value={descValue} onChange={(e) => setDescValue(e.target.value)} placeholder="Descrição detalhada do drop..." className="min-h-[120px] bg-muted border-border resize-y" maxLength={2000} />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDescDialogItem(null)}>Cancelar</Button>
+              <Button onClick={saveDropDescription} disabled={savingDesc}>{savingDesc ? "Salvando..." : "Salvar"}</Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Singles Images Dialog */}
+      <Dialog open={!!singlesDialogItem} onOpenChange={(open) => !open && setSinglesDialogItem(null)}>
+        <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground text-base">Singles — {singlesDialogItem?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {singlesImages.map((img) => (
+                <div key={img.id} className="relative rounded-lg overflow-hidden border border-border group">
+                  <img src={img.image_url} alt={img.caption || ""} className="w-full aspect-[2.5/3.5] object-cover" />
+                  <button onClick={() => removeSinglesImage(img.id)} className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive/80 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <input ref={singlesInputRef} type="file" accept="image/*" className="hidden" onChange={handleSinglesUpload} />
+            <Button variant="outline" className="w-full gap-2" onClick={() => singlesInputRef.current?.click()} disabled={uploadingSingles}>
+              <ImagePlus className="h-4 w-4" /> {uploadingSingles ? "Enviando..." : "Adicionar Imagem"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
