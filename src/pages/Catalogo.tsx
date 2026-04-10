@@ -514,6 +514,134 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   );
 };
 
+/* Catalog Banner Carousel - uses DB banners */
+const CatalogBanner = () => {
+  const { data: banners = [] } = useActiveBanners();
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, 7000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
+  if (banners.length === 0) {
+    return (
+      <div className="relative h-32 sm:h-40 overflow-hidden">
+        <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
+        <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
+            <span className="text-gradient">Catálogo</span>
+          </h1>
+          <div className="premium-divider max-w-[80px] mt-2" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden group">
+      <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
+        {banners.map((b, idx) => (
+          <div key={idx} className="relative w-full h-full flex-shrink-0" style={{ minWidth: "100%" }}>
+            <img src={b.image_url} alt={b.alt} className="absolute inset-0 w-full h-full object-cover" />
+          </div>
+        ))}
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/40 to-background pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-10">
+        <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-1">
+          {banners[currentBanner]?.label}
+        </span>
+        <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{banners[currentBanner]?.title}</h2>
+        <p className="text-xs text-foreground/60 mt-0.5">{banners[currentBanner]?.subtitle}</p>
+      </div>
+      {banners.length > 1 && (
+        <>
+          <button onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)} className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <div className="absolute bottom-2 right-4 flex gap-1.5 z-20">
+            {banners.map((_, idx) => (
+              <button key={idx} onClick={() => setCurrentBanner(idx)} className={`h-1.5 rounded-full transition-all ${idx === currentBanner ? "w-5 bg-primary" : "w-1.5 bg-foreground/30"}`} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+/* Promo Highlights - items with discounts */
+const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[]; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
+  const promoItems = useMemo(() => items.filter((i) => (i.discount ?? 0) > 0 && i.quantity > 0), [items]);
+
+  if (promoItems.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <h2 className="font-display text-xl font-semibold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif" }}>
+          <span className="text-gradient">🔥 Em Promoção</span>
+        </h2>
+        <div className="flex-1 premium-divider" />
+        <span className="text-xs text-muted-foreground">{promoItems.length} itens</span>
+      </div>
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+        {promoItems.map((item) => {
+          const discount = item.discount ?? 0;
+          const finalPrice = item.price * (1 - discount / 100);
+          const isSingle = item.product_type === "single";
+          const config = descriptionConfig[item.description];
+          const Icon = config?.icon ?? Circle;
+
+          return (
+            <div key={item.id} className="flex-shrink-0 w-40 sm:w-48 glass-card glow-hover overflow-hidden snap-start relative group">
+              <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <div className="absolute top-2 left-2 z-30">
+                <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-[10px] font-bold">-{discount}%</Badge>
+              </div>
+              <button
+                className={`absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center backdrop-blur-sm transition-all ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/60 text-muted-foreground hover:text-destructive"}`}
+                onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
+              >
+                <Heart className={`h-3 w-3 ${isFavorite(item.id) ? "fill-current" : ""}`} />
+              </button>
+              <div className="relative z-10 px-2 pt-2">
+                <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20">
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} object-cover`} />
+                  ) : (
+                    <div className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} flex items-center justify-center bg-muted/10`}>
+                      <Package className="h-8 w-8 text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="relative z-10 p-2 pt-1.5">
+                <h3 className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{item.name}</h3>
+                <div className="flex items-center gap-1 mt-1 flex-wrap">
+                  <span className="text-[9px] text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-sm font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <Button size="sm" variant="outline" className="w-full mt-1.5 h-7 text-[10px] gap-1 hover:border-primary/40" onClick={() => onAddToCart(item)}>
+                  <Plus className="h-3 w-3" /> Adicionar
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
