@@ -158,7 +158,8 @@ const InventoryTable = ({ data }: Props) => {
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
         status: editForm.status, description: editForm.description,
-      })
+        drop_description: editForm.drop_description,
+      } as any)
       .eq("id", id);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar."); return; }
