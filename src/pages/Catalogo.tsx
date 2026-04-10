@@ -469,7 +469,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                             {item.quantity === 1 ? "Última unidade!" : `${item.quantity} em estoque`}
                           </p>
                         )}
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-wrap">
                           {isOutOfStock ? (
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
                               <span className="h-1.5 w-1.5 rounded-full bg-destructive" />Esgotado
@@ -478,6 +478,13 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                             <Button size="sm" variant="outline" className="h-7 text-xs gap-1 hover:border-primary/40" onClick={() => onAddToCart(item)}>
                               <Plus className="h-3 w-3" /> Adicionar
                             </Button>
+                          )}
+                          {!isSingles && (
+                            <Link to={`/catalogo/drop/${item.id}`}>
+                              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-primary hover:text-primary/80">
+                                Detalhes →
+                              </Button>
+                            </Link>
                           )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
