@@ -111,9 +111,10 @@ const MTG_COLORS = [
   { value: "B", label: "Preto", className: "bg-neutral-800 text-neutral-100 border-neutral-600" },
   { value: "R", label: "Vermelho", className: "bg-red-100 text-red-800 border-red-300" },
   { value: "G", label: "Verde", className: "bg-green-100 text-green-800 border-green-300" },
+  { value: "C", label: "Incolor", className: "bg-gray-200 text-gray-700 border-gray-400" },
 ];
 
-const MANA_SYMBOLS = ["W", "U", "B", "R", "G"] as const;
+const MANA_SYMBOLS = ["W", "U", "B", "R", "G", "C"] as const;
 
 type ManaProfile = {
   manaCost: string | null;
