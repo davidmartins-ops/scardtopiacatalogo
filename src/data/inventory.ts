@@ -12,6 +12,7 @@ export interface InventoryItem {
   language?: string;
   condition?: string;
   status?: "none" | "pre_sale" | "launch";
+  drop_description?: string;
 }
 
 export const inventoryData: InventoryItem[] = [];

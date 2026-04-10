@@ -6,34 +6,20 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
-import bannerDandan from "@/assets/banner-dandan.jpg";
-import bannerDpThrill from "@/assets/banner-dp-thrill.jpg";
-import bannerDpSolring from "@/assets/banner-dp-solring.jpg";
-import bannerDpPlunder from "@/assets/banner-dp-plunder.jpg";
-import bannerDpBolt from "@/assets/banner-dp-bolt.jpg";
-import bannerDpGreaves from "@/assets/banner-dp-greaves.jpg";
-import bannerFestivalVegas from "@/assets/banner-festival-box-vegas.jpeg";
-
-const banners = [
-  { src: bannerFestivalVegas, alt: "Festival in a Box: Las Vegas 2026", label: "📅 Próximo Lançamento", title: "Festival in a Box: Las Vegas 2026", subtitle: "Lançamento em 13 de Abril de 2026 — MagicCon Las Vegas!" },
-  { src: bannerDpThrill, alt: "Thrill of Possibility – Deadpool", label: "🔥 Lançamento", title: "Thrill of Possibility", subtitle: "Quando o Deadpool resolve dar aquela repensada... com estilo!" },
-  { src: bannerDpSolring, alt: "Worn Powerstone (Sol Ring) – Deadpool", label: "🔥 Lançamento", title: "Worn Powerstone — Sol Ring", subtitle: "Mana infinita? Deadpool aprova esse tipo de poder!" },
-  { src: bannerDpPlunder, alt: "Costly Plunder / Deadly Dispute – Deadpool", label: "🔥 Lançamento", title: "Costly Plunder / Deadly Dispute", subtitle: "Roubar tesouros e causar caos — a especialidade do Merc!" },
-  { src: bannerDpBolt, alt: "Lightning Bolt – Deadpool", label: "🔥 Lançamento", title: "Lightning Bolt", subtitle: "3 de dano na cara e de cabeça pra baixo. Clássico Deadpool!" },
-  { src: bannerDpGreaves, alt: "Lightning Greaves – Deadpool", label: "🔥 Lançamento", title: "Lightning Greaves", subtitle: "Velocidade e proteção — até o Deadpool precisa de um bom calçado!" },
-  { src: bannerDandan, alt: "Secret Lair x Dandân Deck", label: "🔥 Novidade", title: "Secret Lair x Dandân Deck", subtitle: "Monte seu deck com estilo!" },
-];
+import { useActiveBanners } from "@/hooks/use-banners";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
+  const { data: banners = [] } = useActiveBanners();
 
   useEffect(() => {
+    if (banners.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 8000);
+    }, 7000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   const handleGoogleLogin = async () => {
     if (loading) return;
@@ -59,12 +45,13 @@ const Login = () => {
   const shareBanner = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!banners.length) return;
     const banner = banners[currentBanner];
     const text = `${banner.label} ${banner.title}\n${banner.subtitle}\n\nConfira em Spencer's Cardtopia!`;
     const url = window.location.origin + "/login";
 
     try {
-      const response = await fetch(banner.src);
+      const response = await fetch(banner.image_url);
       const blob = await response.blob();
       const file = new File([blob], `${banner.title.replace(/\s+/g, "-")}.jpg`, { type: blob.type });
 
@@ -93,19 +80,19 @@ const Login = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background/95" />
       </div>
 
-      {/* Login button */}
-      <header className="relative z-50 flex items-center justify-between p-4 sm:p-6 pointer-events-none">
+      {/* Header with logo and login */}
+      <header className="relative z-50 flex items-center justify-between p-4 sm:p-6">
         <img
           src={logo}
           alt="Spencer's Cardtopia"
-          className="w-28 sm:w-36 md:w-40 drop-shadow-2xl animate-float pointer-events-auto"
+          className="w-28 sm:w-36 md:w-40 drop-shadow-2xl animate-float"
         />
         <Button
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
           variant="outline"
-          className="gap-2 font-body glass-card px-5 py-2 text-foreground hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 disabled:opacity-60 pointer-events-auto"
+          className="gap-2 font-body glass-card px-5 py-2 text-foreground hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 disabled:opacity-60"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -118,7 +105,7 @@ const Login = () => {
       </header>
 
       {/* Main content */}
-      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-24 sm:-mt-28 md:-mt-32">
+      <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-8 sm:-mt-12">
         {/* Slogan */}
         <p className="text-foreground/50 text-xs sm:text-sm font-body tracking-[0.25em] uppercase animate-fade-in w-full max-w-3xl text-center" style={{ animationDelay: "0.2s" }}>
           Sua loja de Secret Lair!
@@ -127,9 +114,10 @@ const Login = () => {
         {/* Divider */}
         <div className="w-full max-w-3xl mx-auto h-[2px] my-3" style={{ background: "linear-gradient(90deg, transparent, hsl(43 74% 49% / 0.7), hsl(43 74% 60% / 0.9), hsl(43 74% 49% / 0.7), transparent)" }} />
 
-        {/* Banner carousel — hero prominence */}
-        <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-          <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 hover:shadow-primary/30 group">
+        {/* Banner carousel */}
+        {banners.length > 0 && (
+          <div className="w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+            <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-primary/10 transition-all duration-500 hover:shadow-primary/30 group">
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: "3 / 4" }}>
                 <div
                   className="flex h-full transition-transform duration-700 ease-in-out"
@@ -138,7 +126,7 @@ const Login = () => {
                   {banners.map((banner, idx) => (
                     <img
                       key={idx}
-                      src={banner.src}
+                      src={banner.image_url}
                       alt={banner.alt}
                       className="w-full h-full object-cover flex-shrink-0"
                       style={{ minWidth: "100%" }}
@@ -153,31 +141,35 @@ const Login = () => {
               {/* Banner info */}
               <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 pointer-events-none">
                 <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold font-body uppercase tracking-wider mb-2 animate-fade-in">
-                  {banners[currentBanner].label}
+                  {banners[currentBanner]?.label}
                 </span>
                 <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">
-                  {banners[currentBanner].title}
+                  {banners[currentBanner]?.title}
                 </h2>
                 <p className="text-sm text-foreground/60 font-body mt-1">
-                  {banners[currentBanner].subtitle}
+                  {banners[currentBanner]?.subtitle}
                 </p>
               </div>
 
               {/* Navigation arrows */}
-              <button
-                onClick={prevBanner}
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                onClick={nextBanner}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
+              {banners.length > 1 && (
+                <>
+                  <button
+                    onClick={prevBanner}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={nextBanner}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
 
-              {/* Share button — always visible, positioned above login button area */}
+              {/* Share button */}
               <button
                 type="button"
                 onClick={shareBanner}
@@ -189,26 +181,24 @@ const Login = () => {
               </button>
 
               {/* Dots */}
-              <div className="absolute bottom-3 right-4 flex gap-2 z-10">
-                {banners.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={(e) => { e.preventDefault(); setCurrentBanner(idx); }}
-                    className={`h-2 rounded-full transition-all duration-300 ${idx === currentBanner ? "w-6 bg-primary" : "w-2 bg-foreground/30 hover:bg-foreground/50"}`}
-                  />
-                ))}
-              </div>
+              {banners.length > 1 && (
+                <div className="absolute bottom-3 right-4 flex gap-2 z-10">
+                  {banners.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => { e.preventDefault(); setCurrentBanner(idx); }}
+                      className={`h-2 rounded-full transition-all duration-300 ${idx === currentBanner ? "w-6 bg-primary" : "w-2 bg-foreground/30 hover:bg-foreground/50"}`}
+                    />
+                  ))}
+                </div>
+              )}
 
               <div className="absolute inset-0 foil-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             </div>
+          </div>
+        )}
 
-            {/* Link to catalog below banner */}
-            <Link to="/catalogo" className="block mt-2 text-center">
-              <span className="text-xs text-muted-foreground hover:text-primary transition-colors">Ver no catálogo →</span>
-            </Link>
-        </div>
-
-        {/* CTA */}
+        {/* Single CTA */}
         <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
           <Link to="/catalogo">
             <Button
@@ -216,7 +206,7 @@ const Login = () => {
               className="relative text-base sm:text-lg px-10 sm:px-12 py-6 sm:py-7 font-bold font-body rounded-xl shadow-2xl shadow-primary/20 animate-glow-pulse transition-all duration-300 hover:scale-105 hover:shadow-primary/40 group overflow-hidden"
             >
               <span className="absolute inset-0 foil-shimmer pointer-events-none" />
-              <span className="relative flex items-center gap-2">🔥 Ver Catálogo de Drops</span>
+              <span className="relative flex items-center gap-2">🔥 Ver Catálogo</span>
             </Button>
           </Link>
         </div>

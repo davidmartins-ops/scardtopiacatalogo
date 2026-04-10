@@ -68,6 +68,45 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          alt: string
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alt?: string
+          created_at?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          alt?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_cards: {
         Row: {
           card_name: string
@@ -243,6 +282,33 @@ export type Database = {
         }
         Relationships: []
       }
+      drop_singles_images: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_url: string
+          inventory_item_id: string
+          sort_order: number
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          inventory_item_id: string
+          sort_order?: number
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          inventory_item_id?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -271,6 +337,7 @@ export type Database = {
           created_at: string
           description: string
           discount: number
+          drop_description: string | null
           id: string
           image_url: string | null
           language: string
@@ -287,6 +354,7 @@ export type Database = {
           created_at?: string
           description: string
           discount?: number
+          drop_description?: string | null
           id: string
           image_url?: string | null
           language?: string
@@ -303,6 +371,7 @@ export type Database = {
           created_at?: string
           description?: string
           discount?: number
+          drop_description?: string | null
           id?: string
           image_url?: string | null
           language?: string

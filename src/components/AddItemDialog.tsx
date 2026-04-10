@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-const DESCRIPTIONS = ["Foil", "Non-Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil"] as const;
+const DESCRIPTIONS = ["Foil", "Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil"] as const;
 const LANGUAGES = [
   { value: "PT", label: "Português" },
   { value: "EN", label: "English" },
@@ -38,7 +39,7 @@ const AddItemDialog = () => {
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", quantity: "1", category: "",
-    language: "PT", condition: "NM", status: "none" as string,
+    language: "PT", condition: "NM", status: "none" as string, drop_description: "",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -61,7 +62,7 @@ const AddItemDialog = () => {
   };
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none" });
+    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
     clearImage();
   };
 
@@ -99,7 +100,8 @@ const AddItemDialog = () => {
       language: form.language,
       condition: form.condition,
       status: form.status,
-    });
+      drop_description: form.drop_description,
+    } as any);
 
     setLoading(false);
 
@@ -143,6 +145,19 @@ const AddItemDialog = () => {
           <div className="space-y-2">
             <Label htmlFor="name">Nome *</Label>
             <Input id="name" placeholder="Secret Lair x ..." value={form.name} onChange={(e) => handleChange("name", e.target.value)} maxLength={200} className="bg-muted border-border" />
+          </div>
+
+          {/* Drop Description */}
+          <div className="space-y-2">
+            <Label htmlFor="drop_description">Descrição do Drop</Label>
+            <Textarea
+              id="drop_description"
+              placeholder="Descrição detalhada do produto (exibida na página do drop)..."
+              value={form.drop_description}
+              onChange={(e) => handleChange("drop_description", e.target.value)}
+              className="bg-muted border-border min-h-[80px] resize-y"
+              maxLength={2000}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-3">

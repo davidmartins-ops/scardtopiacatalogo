@@ -362,6 +362,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-1">
+                      <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                        ⚠️ Os valores de frete para <strong>PAC</strong> e <strong>SEDEX</strong> serão informados no ato do envio e devem ser pagos antes da postagem.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign, CheckSquare, Square } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign, CheckSquare, Square, FileText, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { type InventoryItem } from "@/data/inventory";
 
 const descriptionStyles: Record<string, string> = {
@@ -72,7 +74,18 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil", drop_description: "" });
+
+  // Drop description dialog
+  const [descDialogItem, setDescDialogItem] = useState<InventoryItem | null>(null);
+  const [descValue, setDescValue] = useState("");
+  const [savingDesc, setSavingDesc] = useState(false);
+
+  // Singles images dialog
+  const [singlesDialogItem, setSinglesDialogItem] = useState<InventoryItem | null>(null);
+  const [singlesImages, setSinglesImages] = useState<any[]>([]);
+  const [uploadingSingles, setUploadingSingles] = useState(false);
+  const singlesInputRef = useRef<HTMLInputElement>(null);
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
@@ -124,6 +137,7 @@ const InventoryTable = ({ data }: Props) => {
       category: item.category, discount: String(item.discount ?? 0),
       language: item.language ?? "PT", condition: item.condition ?? "NM",
       status: item.status ?? "none", description: item.description ?? "Foil",
+      drop_description: (item as any).drop_description ?? "",
     });
   };
 
@@ -144,7 +158,8 @@ const InventoryTable = ({ data }: Props) => {
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
         status: editForm.status, description: editForm.description,
-      })
+        drop_description: editForm.drop_description,
+      } as any)
       .eq("id", id);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar."); return; }
@@ -254,6 +269,58 @@ const InventoryTable = ({ data }: Props) => {
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  // Drop description save
+  const saveDropDescription = async () => {
+    if (!descDialogItem) return;
+    setSavingDesc(true);
+    const { error } = await supabase.from("inventory").update({ drop_description: descValue } as any).eq("id", descDialogItem.id);
+    setSavingDesc(false);
+    if (error) { toast.error("Erro ao salvar descrição."); return; }
+    toast.success("Descrição atualizada!");
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    setDescDialogItem(null);
+  };
+
+  // Load singles images
+  const openSinglesDialog = async (item: InventoryItem) => {
+    setSinglesDialogItem(item);
+    const { data } = await supabase.from("drop_singles_images").select("*").eq("inventory_item_id", item.id).order("sort_order");
+    setSinglesImages(data ?? []);
+  };
+
+  const handleSinglesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !singlesDialogItem) return;
+    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem."); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB."); return; }
+
+    setUploadingSingles(true);
+    try {
+      const url = await uploadProductImage(file);
+      const { error } = await supabase.from("drop_singles_images").insert({
+        inventory_item_id: singlesDialogItem.id,
+        image_url: url,
+        sort_order: singlesImages.length,
+      } as any);
+      if (error) throw error;
+      const { data } = await supabase.from("drop_singles_images").select("*").eq("inventory_item_id", singlesDialogItem.id).order("sort_order");
+      setSinglesImages(data ?? []);
+      toast.success("Imagem adicionada!");
+    } catch {
+      toast.error("Erro ao adicionar imagem.");
+    } finally {
+      setUploadingSingles(false);
+      if (singlesInputRef.current) singlesInputRef.current.value = "";
+    }
+  };
+
+  const removeSinglesImage = async (imageId: string) => {
+    const { error } = await supabase.from("drop_singles_images").delete().eq("id", imageId);
+    if (error) { toast.error("Erro ao remover."); return; }
+    setSinglesImages((prev) => prev.filter((img) => img.id !== imageId));
+    toast.success("Imagem removida!");
   };
 
   const SortHeader = ({ label, k }: { label: string; k: SortKey }) => (
@@ -495,9 +562,15 @@ const InventoryTable = ({ data }: Props) => {
                           R$ {(finalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-2 sm:px-3 py-2.5">
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1 flex-wrap">
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/10" onClick={() => setImageDialogItem(item)} title="Gerenciar imagem">
                               <ImagePlus className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-blue-400 hover:bg-blue-400/10" onClick={() => { setDescDialogItem(item); setDescValue((item as any).drop_description ?? ""); }} title="Descrição do drop">
+                              <FileText className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-emerald-400 hover:bg-emerald-400/10" onClick={() => openSinglesDialog(item)} title="Singles do drop">
+                              <Plus className="h-3.5 w-3.5" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => startEdit(item)}>
                               <Pencil className="h-3.5 w-3.5" />
@@ -610,6 +683,49 @@ const InventoryTable = ({ data }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Drop Description Dialog */}
+      <Dialog open={!!descDialogItem} onOpenChange={(open) => !open && setDescDialogItem(null)}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground text-base flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Descrição — {descDialogItem?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea value={descValue} onChange={(e) => setDescValue(e.target.value)} placeholder="Descrição detalhada do drop..." className="min-h-[120px] bg-muted border-border resize-y" maxLength={2000} />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDescDialogItem(null)}>Cancelar</Button>
+              <Button onClick={saveDropDescription} disabled={savingDesc}>{savingDesc ? "Salvando..." : "Salvar"}</Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Singles Images Dialog */}
+      <Dialog open={!!singlesDialogItem} onOpenChange={(open) => !open && setSinglesDialogItem(null)}>
+        <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground text-base">Singles — {singlesDialogItem?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {singlesImages.map((img) => (
+                <div key={img.id} className="relative rounded-lg overflow-hidden border border-border group">
+                  <img src={img.image_url} alt={img.caption || ""} className="w-full aspect-[2.5/3.5] object-cover" />
+                  <button onClick={() => removeSinglesImage(img.id)} className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive/80 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <input ref={singlesInputRef} type="file" accept="image/*" className="hidden" onChange={handleSinglesUpload} />
+            <Button variant="outline" className="w-full gap-2" onClick={() => singlesInputRef.current?.click()} disabled={uploadingSingles}>
+              <ImagePlus className="h-4 w-4" /> {uploadingSingles ? "Enviando..." : "Adicionar Imagem"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
