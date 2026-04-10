@@ -562,9 +562,15 @@ const InventoryTable = ({ data }: Props) => {
                           R$ {(finalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-2 sm:px-3 py-2.5">
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1 flex-wrap">
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/10" onClick={() => setImageDialogItem(item)} title="Gerenciar imagem">
                               <ImagePlus className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-blue-400 hover:bg-blue-400/10" onClick={() => { setDescDialogItem(item); setDescValue((item as any).drop_description ?? ""); }} title="Descrição do drop">
+                              <FileText className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-emerald-400 hover:bg-emerald-400/10" onClick={() => openSinglesDialog(item)} title="Singles do drop">
+                              <Plus className="h-3.5 w-3.5" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => startEdit(item)}>
                               <Pencil className="h-3.5 w-3.5" />
