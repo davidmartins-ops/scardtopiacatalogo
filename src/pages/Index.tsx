@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -11,6 +12,7 @@ import CategoryChart from "@/components/CategoryChart";
 import AddItemDialog from "@/components/AddItemDialog";
 import ScryfallSearchDialog from "@/components/ScryfallSearchDialog";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
+import BannerManager from "@/components/BannerManager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -53,10 +55,12 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex items-end justify-between h-full px-4 sm:px-6 pb-4 sm:pb-6 max-w-full mx-auto">
           <div className="animate-fade-in shrink-0">
-            <img src={logo} alt="Spencer's Cardtopia" className="h-20 sm:h-28 md:h-36 lg:h-44 drop-shadow-2xl" />
+            <Link to="/login">
+              <img src={logo} alt="Spencer's Cardtopia" className="h-20 sm:h-28 md:h-36 lg:h-44 drop-shadow-2xl hover:scale-105 transition-transform cursor-pointer" />
+            </Link>
             <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium">Painel de Gerenciamento</p>
           </div>
-          <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center gap-2 animate-fade-in flex-wrap justify-end" style={{ animationDelay: '0.2s' }}>
             <ScryfallSearchDialog />
             <AddItemDialog />
             <Button
@@ -100,9 +104,12 @@ const Index = () => {
           </div>
           <div className="xl:col-span-3">
             <Tabs defaultValue="drops" className="w-full">
-              <TabsList className="w-full max-w-md mb-4 bg-muted/50 backdrop-blur-sm">
+              <TabsList className="w-full max-w-lg mb-4 bg-muted/50 backdrop-blur-sm flex-wrap h-auto gap-1 p-1">
                 <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
                 <TabsTrigger value="singles" className="flex-1 font-display text-xs sm:text-sm">Singles ({singles.length})</TabsTrigger>
+                <TabsTrigger value="banners" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <ImageIcon className="h-3.5 w-3.5" /> Banners
+                </TabsTrigger>
                 <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <BarChart3 className="h-3.5 w-3.5" /> Analytics
                 </TabsTrigger>
@@ -113,6 +120,9 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="singles">
                 <InventoryTable data={singles} />
+              </TabsContent>
+              <TabsContent value="banners">
+                <BannerManager />
               </TabsContent>
               <TabsContent value="analytics">
                 <AnalyticsDashboard />
