@@ -1,13 +1,13 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag, Palette } from "lucide-react";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag, Palette, ChevronLeft, ChevronRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
 import logo from "@/assets/logo.png";
-import UpcomingBanner from "@/components/UpcomingBanner";
+import { useActiveBanners } from "@/hooks/use-banners";
 import { useInventory } from "@/hooks/use-inventory";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
