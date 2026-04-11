@@ -6,9 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+
+const DISPLAY_PAGES = [
+  { value: "all", label: "Login + Catálogo" },
+  { value: "login", label: "Apenas Login" },
+  { value: "catalogo", label: "Apenas Catálogo" },
+];
 
 const BannerManager = () => {
   const { data: banners = [], isLoading } = useBanners();
@@ -21,11 +28,11 @@ const BannerManager = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0" });
+  const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo" });
 
   const openNew = () => {
     setEditingBanner(null);
-    setForm({ alt: "", label: "🔥 Lançamento", title: "", subtitle: "", sort_order: String(banners.length) });
+    setForm({ alt: "", label: "🔥 Lançamento", title: "", subtitle: "", sort_order: String(banners.length), display_page: "all" });
     setImagePreview(null);
     setImageFile(null);
     setDialogOpen(true);
@@ -33,7 +40,7 @@ const BannerManager = () => {
 
   const openEdit = (b: Banner) => {
     setEditingBanner(b);
-    setForm({ alt: b.alt, label: b.label, title: b.title, subtitle: b.subtitle, sort_order: String(b.sort_order) });
+    setForm({ alt: b.alt, label: b.label, title: b.title, subtitle: b.subtitle, sort_order: String(b.sort_order), display_page: b.display_page ?? "all" });
     setImagePreview(b.image_url);
     setImageFile(null);
     setDialogOpen(true);
@@ -67,13 +74,14 @@ const BannerManager = () => {
         subtitle: form.subtitle,
         sort_order: parseInt(form.sort_order) || 0,
         is_active: true,
+        display_page: form.display_page,
       };
 
       if (editingBanner) {
         await updateBanner.mutateAsync({ id: editingBanner.id, ...payload });
         toast.success("Banner atualizado!");
       } else {
-        await addBanner.mutateAsync(payload);
+        await addBanner.mutateAsync(payload as any);
         toast.success("Banner adicionado!");
       }
       setDialogOpen(false);
@@ -99,6 +107,8 @@ const BannerManager = () => {
     await updateBanner.mutateAsync({ id: b.id, is_active: !b.is_active });
     toast.success(b.is_active ? "Banner desativado." : "Banner ativado.");
   };
+
+  const pageLabel = (dp: string) => DISPLAY_PAGES.find((p) => p.value === dp)?.label ?? dp;
 
   return (
     <div className="glass-card p-4 space-y-4">
@@ -131,7 +141,10 @@ const BannerManager = () => {
                 <p className="text-sm font-medium text-foreground truncate">{b.title}</p>
                 <p className="text-[10px] text-muted-foreground truncate">{b.subtitle}</p>
               </div>
-              <Badge variant="outline" className={`text-[10px] shrink-0 ${b.is_active ? "bg-green-500/10 text-green-500 border-green-500/30" : "bg-muted text-muted-foreground"}`}>
+              <Badge variant="outline" className="text-[9px] shrink-0">
+                {pageLabel(b.display_page)}
+              </Badge>
+              <Badge variant="outline" className={`text-[10px] shrink-0 ${b.is_active ? "bg-success/10 text-success border-success/30" : "bg-muted text-muted-foreground"}`}>
                 {b.is_active ? "Ativo" : "Inativo"}
               </Badge>
               <div className="flex items-center gap-1 shrink-0">
@@ -181,6 +194,17 @@ const BannerManager = () => {
             <div className="space-y-2">
               <Label>Subtítulo</Label>
               <Input value={form.subtitle} onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))} placeholder="Descrição curta" className="bg-muted border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label>Exibir em</Label>
+              <Select value={form.display_page} onValueChange={(v) => setForm((p) => ({ ...p, display_page: v as "all" | "login" | "catalogo" }))}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DISPLAY_PAGES.map((dp) => (
+                    <SelectItem key={dp.value} value={dp.value}>{dp.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

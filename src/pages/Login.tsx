@@ -11,7 +11,7 @@ import { useActiveBanners } from "@/hooks/use-banners";
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
-  const { data: banners = [] } = useActiveBanners();
+  const { data: banners = [] } = useActiveBanners("login");
 
   useEffect(() => {
     if (banners.length <= 1) return;

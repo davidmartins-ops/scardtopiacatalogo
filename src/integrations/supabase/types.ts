@@ -72,6 +72,7 @@ export type Database = {
         Row: {
           alt: string
           created_at: string
+          display_page: string
           id: string
           image_url: string
           is_active: boolean
@@ -84,6 +85,7 @@ export type Database = {
         Insert: {
           alt?: string
           created_at?: string
+          display_page?: string
           id?: string
           image_url: string
           is_active?: boolean
@@ -96,6 +98,7 @@ export type Database = {
         Update: {
           alt?: string
           created_at?: string
+          display_page?: string
           id?: string
           image_url?: string
           is_active?: boolean
@@ -470,6 +473,30 @@ export type Database = {
           id?: string
           inventory_item_id?: string
           quantity?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stock_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          notified: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          notified?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          notified?: boolean
           user_id?: string
         }
         Relationships: []

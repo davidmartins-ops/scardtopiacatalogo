@@ -10,6 +10,7 @@ export interface Banner {
   subtitle: string;
   sort_order: number;
   is_active: boolean;
+  display_page: "all" | "login" | "catalogo";
 }
 
 export const useBanners = () => {
@@ -21,14 +22,14 @@ export const useBanners = () => {
         .select("*")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as Banner[];
+      return (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all" })) as Banner[];
     },
   });
 };
 
-export const useActiveBanners = () => {
+export const useActiveBanners = (page?: "login" | "catalogo") => {
   return useQuery({
-    queryKey: ["banners", "active"],
+    queryKey: ["banners", "active", page],
     queryFn: async (): Promise<Banner[]> => {
       const { data, error } = await supabase
         .from("banners")
@@ -36,7 +37,9 @@ export const useActiveBanners = () => {
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as Banner[];
+      const all = (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all" })) as Banner[];
+      if (!page) return all;
+      return all.filter((b) => b.display_page === "all" || b.display_page === page);
     },
   });
 };
