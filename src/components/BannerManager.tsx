@@ -197,7 +197,7 @@ const BannerManager = () => {
             </div>
             <div className="space-y-2">
               <Label>Exibir em</Label>
-              <Select value={form.display_page} onValueChange={(v) => setForm((p) => ({ ...p, display_page: v }))}>
+              <Select value={form.display_page} onValueChange={(v) => setForm((p) => ({ ...p, display_page: v as "all" | "login" | "catalogo" }))}>
                 <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {DISPLAY_PAGES.map((dp) => (
