@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag, Palette, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag, Palette, ChevronLeft, ChevronRight, SearchIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import ImageZoom from "@/components/ImageZoom";
 import ShoppingCart, { type CartItem } from "@/components/ShoppingCart";
 import { type InventoryItem } from "@/data/inventory";
@@ -63,7 +64,6 @@ const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "
 
   trackEvent("share", item);
 
-  // Try to fetch image as file for sharing
   let imageFile: File | null = null;
   if (imageUrl) {
     try {
@@ -108,7 +108,7 @@ const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "
 const MTG_COLORS = [
   { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
   { value: "U", label: "Azul", className: "bg-blue-100 text-blue-800 border-blue-300" },
-  { value: "B", label: "Preto", className: "bg-neutral-800 text-neutral-100 border-neutral-600" },
+  { value: "B", label: "Preto", className: "bg-neutral-700 text-neutral-100 border-neutral-500" },
   { value: "R", label: "Vermelho", className: "bg-red-100 text-red-800 border-red-300" },
   { value: "G", label: "Verde", className: "bg-green-100 text-green-800 border-green-300" },
   { value: "C", label: "Incolor", className: "bg-gray-200 text-gray-700 border-gray-400" },
@@ -137,15 +137,80 @@ const getScryfallIdentifier = (item: InventoryItem) => {
   };
 };
 
-const getManaColors = (manaCost?: string | null) => {
-  if (!manaCost) return [];
-  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) => new RegExp(symbol, "i").test(manaCost));
-  // If no colored symbols found but mana cost exists (e.g. {3}, {C}), it's colorless
+const getManaColors = (manaCost?: string | null, colorIdentity?: string[] | null) => {
+  if (!manaCost && (!colorIdentity || colorIdentity.length === 0)) return ["C"];
+  if (!manaCost) return colorIdentity && colorIdentity.length === 0 ? ["C"] : (colorIdentity ?? []);
+  
+  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) => new RegExp(`\\{[^}]*${symbol}[^}]*\\}`, "i").test(manaCost));
   if (colors.length === 0 && manaCost.length > 0) return ["C"];
   return colors;
 };
 
-const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
+/* Notify Me Dialog */
+const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isLoggedIn: boolean; userId?: string }) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleNotify = async () => {
+    if (!isLoggedIn || !userId) {
+      toast.error("Faça login para receber notificações.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from("stock_notifications").insert({
+      user_id: userId,
+      inventory_item_id: item.id,
+    } as any);
+    setLoading(false);
+    if (error) {
+      if (error.code === "23505") {
+        toast.info("Você já está cadastrado para este produto!");
+      } else {
+        toast.error("Erro ao cadastrar notificação.");
+      }
+      setOpen(false);
+      return;
+    }
+    toast.success("Você será notificado quando o produto estiver disponível!");
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8 text-xs gap-1.5 border-primary/30 hover:border-primary/50 text-primary font-semibold"
+        onClick={() => {
+          if (!isLoggedIn) { toast.error("Faça login para receber notificações."); return; }
+          setOpen(true);
+        }}
+      >
+        <Bell className="h-3.5 w-3.5" /> Me avise!
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-sm bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-base">Receber Notificação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Deseja ser notificado quando <strong className="text-foreground">{item.name}</strong> estiver disponível novamente?
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button onClick={handleNotify} disabled={loading} className="gap-1.5">
+                <Bell className="h-4 w-4" /> {loading ? "Cadastrando..." : "Me avise!"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean; userId?: string }) => {
   const [search, setSearch] = useState("");
   
   const [priceMin, setPriceMin] = useState("");
@@ -172,13 +237,12 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
     let cancelled = false;
 
     const CACHE_KEY = "mana_profiles_cache";
-    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
+    const CACHE_TTL = 24 * 60 * 60 * 1000;
 
     const loadManaProfiles = async () => {
       try {
-        // Try loading from localStorage cache first
         const cached = localStorage.getItem(CACHE_KEY);
-        let cachedProfiles: Record<string, ManaProfile & { ts: number }> = {};
+        let cachedProfiles: Record<string, ManaProfile & { ts: number; colorIdentity?: string[] }> = {};
         if (cached) {
           try { cachedProfiles = JSON.parse(cached); } catch { /* ignore */ }
         }
@@ -218,9 +282,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 
             const payload = await response.json();
             const cards = Array.isArray(payload.data) ? payload.data : [];
-            const byKey = new Map<string, { mana_cost?: string | null }>();
+            const byKey = new Map<string, { mana_cost?: string | null; color_identity?: string[] }>();
 
-            cards.forEach((card: { set?: string; collector_number?: string; mana_cost?: string | null }) => {
+            cards.forEach((card: { set?: string; collector_number?: string; mana_cost?: string | null; color_identity?: string[] }) => {
               if (!card.set || !card.collector_number) return;
               byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
             });
@@ -228,13 +292,13 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
             batch.forEach(({ itemId, identifier }) => {
               const card = byKey.get(identifier.key);
               const manaCost = card?.mana_cost ?? null;
-              const colors = getManaColors(manaCost);
+              const colorIdentity = card?.color_identity ?? [];
+              const colors = getManaColors(manaCost, colorIdentity);
               nextProfiles[itemId] = { manaCost, colors };
-              cachedProfiles[identifier.key] = { manaCost, colors, ts: now };
+              cachedProfiles[identifier.key] = { manaCost, colors, ts: now, colorIdentity };
             });
           }
 
-          // Persist updated cache
           try { localStorage.setItem(CACHE_KEY, JSON.stringify(cachedProfiles)); } catch { /* quota */ }
         }
 
@@ -265,11 +329,13 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
     const minP = priceMin ? parseFloat(priceMin) : null;
     const maxP = priceMax ? parseFloat(priceMax) : null;
     return (items ?? []).filter((item) => {
+      // Hide out-of-stock singles from catalog
+      if (isSingles && item.quantity <= 0) return false;
+
       const matchesSearch =
         !search ||
         item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.category.toLowerCase().includes(search.toLowerCase()) ||
-        item.description.toLowerCase().includes(search.toLowerCase());
+        item.category.toLowerCase().includes(search.toLowerCase());
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
@@ -306,7 +372,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
       <div className="glass-card p-4 space-y-4 animate-fade-in-up overflow-visible" style={{ animationDelay: "0.2s", opacity: 0 }}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
+          <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
 
         {/* Alphabetical sort */}
@@ -333,7 +399,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
               <button
                 key={color.value}
                 onClick={() => toggleColor(color.value)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
                   selectedColors.includes(color.value) ? color.className + " ring-1 ring-primary scale-105" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
                 }`}
                 title={`Filtrar por ${color.value} no custo de mana`}
@@ -342,10 +408,10 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
               </button>
             ))}
             {selectedColors.length > 1 && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Cores combinadas</Badge>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Cores combinadas</Badge>
             )}
             {selectedColors.length > 0 && (
-              <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setSelectedColors([])}>Limpar</button>
+              <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setSelectedColors([])}>Limpar</button>
             )}
           </div>
         )}
@@ -357,7 +423,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
           <span className="text-xs text-muted-foreground">—</span>
           <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
           {(priceMin || priceMax) && (
-            <button className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
           )}
         </div>
       </div>
@@ -387,15 +453,14 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                 const isOutOfStock = item.quantity <= 0;
 
                 return (
-                  <div key={item.id} className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-60" : ""}`} style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
-                    <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                  <div key={item.id} className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-70" : ""}`} style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
 
                     {/* Favorite button */}
                     <button
-                      className={`absolute top-2 right-2 z-30 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/60 text-muted-foreground hover:text-destructive"}`}
+                      className={`absolute top-2 right-2 z-30 h-8 w-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
                       onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
                     >
-                      <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
+                      <Heart className={`h-4 w-4 ${isFavorite(item.id) ? "fill-current" : ""}`} />
                     </button>
 
                     {/* Status Badge */}
@@ -414,6 +479,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                       </div>
                     )}
 
+                    {/* Image */}
                     <div className="relative z-10 px-3 pt-3">
                       <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative">
                         {item.image_url ? (
@@ -429,85 +495,83 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                           </div>
                         )}
                         {isOutOfStock && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] z-20">
-                            <Badge className="bg-destructive/90 text-destructive-foreground text-sm font-bold px-4 py-1.5 shadow-lg">ESGOTADO</Badge>
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[2px] z-20">
+                            <span className="text-sm font-semibold text-muted-foreground">Indisponível</span>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="relative z-10 p-3 pt-2">
-                      <div className="flex flex-col gap-1 mb-1">
-                        <h3 className="font-body font-medium text-foreground leading-snug text-sm group-hover:text-primary transition-colors duration-300 line-clamp-2">{item.name}</h3>
-                        <Badge variant="outline" className={`self-start gap-1 text-[10px] ${config?.className ?? ""}`}>
-                          <Icon className="h-2.5 w-2.5" />
-                          {config?.label ?? item.description}
-                        </Badge>
+                    {/* Card Info - CLEAN layout */}
+                    <div className="relative z-10 p-3 pt-2 space-y-2">
+                      {/* Name */}
+                      <h3 className="font-body font-semibold text-foreground leading-snug text-[15px] group-hover:text-primary transition-colors duration-300 line-clamp-2">{item.name}</h3>
+                      
+                      {/* Foil type badge */}
+                      <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
+                        <Icon className="h-2.5 w-2.5" />
+                        {config?.label ?? item.description}
+                      </Badge>
+
+                      {/* Price section - PROMINENT */}
+                      <div className="pt-1">
+                        {discount > 0 ? (
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-bold text-primary font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                              <span className="text-xs font-semibold text-destructive bg-destructive/10 rounded px-1.5 py-0.5">-{discount}%</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        ) : (
+                          <span className="text-lg font-bold text-primary font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        )}
                       </div>
-                      <p className="text-[10px] text-muted-foreground font-mono truncate" title={item.id}>{item.id}</p>
-                      {isSingles && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {item.language && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.language}</Badge>}
-                          {item.condition && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{item.condition}</Badge>}
-                        </div>
+
+                      {/* Stock info - PROMINENT */}
+                      {!isOutOfStock && (
+                        <p className="text-sm font-medium text-foreground/70">
+                          {item.quantity === 1 ? "🔥 Última unidade!" : `${item.quantity} em estoque`}
+                        </p>
                       )}
 
-                      <div className="mt-2">
-                        <div className="mb-2">
-                          {discount > 0 ? (
-                            <div className="flex items-center gap-1 flex-wrap">
-                              <span className="text-[10px] text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                              <span className="text-sm font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                              <Badge variant="outline" className="text-[9px] bg-accent/15 text-accent border-accent/30">-{discount}%</Badge>
-                            </div>
-                          ) : (
-                            <span className="text-sm font-bold text-gradient font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                          )}
-                        </div>
-                        {!isOutOfStock && (
-                          <p className="text-[10px] text-muted-foreground mb-1">
-                            {item.quantity === 1 ? "Última unidade!" : `${item.quantity} em estoque`}
-                          </p>
+                      {/* Actions */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                        {isOutOfStock ? (
+                          <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
+                        ) : (
+                          <Button size="sm" variant="default" className="h-8 text-xs gap-1.5 font-semibold" onClick={() => onAddToCart(item)}>
+                            <Plus className="h-3.5 w-3.5" /> Adicionar
+                          </Button>
                         )}
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {isOutOfStock ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive">
-                              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />Esgotado
-                            </span>
-                          ) : (
-                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1 hover:border-primary/40" onClick={() => onAddToCart(item)}>
-                              <Plus className="h-3 w-3" /> Adicionar
+                        {!isSingles && (
+                          <Link to={`/catalogo/drop/${item.id}`}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs text-primary hover:text-primary/80 font-medium">
+                              Conteúdo do Drop →
                             </Button>
-                          )}
-                          {!isSingles && (
-                            <Link to={`/catalogo/drop/${item.id}`}>
-                              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-primary hover:text-primary/80">
-                                Detalhes →
-                              </Button>
-                            </Link>
-                          )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                                <Share2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="min-w-[160px]">
-                              <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
-                                <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
-                                <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
-                                <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
-                                <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                          </Link>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="min-w-[160px]">
+                            <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
+                              <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
+                              <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
+                              <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
+                              <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
@@ -523,7 +587,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 
 /* Catalog Banner Carousel - uses DB banners */
 const CatalogBanner = () => {
-  const { data: banners = [] } = useActiveBanners();
+  const { data: banners = [] } = useActiveBanners("catalogo");
   const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
@@ -564,7 +628,7 @@ const CatalogBanner = () => {
           {banners[currentBanner]?.label}
         </span>
         <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{banners[currentBanner]?.title}</h2>
-        <p className="text-xs text-foreground/60 mt-0.5">{banners[currentBanner]?.subtitle}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{banners[currentBanner]?.subtitle}</p>
       </div>
       {banners.length > 1 && (
         <>
@@ -605,20 +669,17 @@ const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isL
           const discount = item.discount ?? 0;
           const finalPrice = item.price * (1 - discount / 100);
           const isSingle = item.product_type === "single";
-          const config = descriptionConfig[item.description];
-          const Icon = config?.icon ?? Circle;
 
           return (
-            <div key={item.id} className="flex-shrink-0 w-40 sm:w-48 glass-card glow-hover overflow-hidden snap-start relative group">
-              <div className="absolute inset-0 foil-shimmer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            <div key={item.id} className="flex-shrink-0 w-44 sm:w-52 glass-card glow-hover overflow-hidden snap-start relative group">
               <div className="absolute top-2 left-2 z-30">
-                <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-[10px] font-bold">-{discount}%</Badge>
+                <span className="text-xs font-bold text-destructive bg-destructive/10 rounded px-2 py-0.5">-{discount}%</span>
               </div>
               <button
-                className={`absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center backdrop-blur-sm transition-all ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/60 text-muted-foreground hover:text-destructive"}`}
+                className={`absolute top-2 right-2 z-30 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
                 onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
               >
-                <Heart className={`h-3 w-3 ${isFavorite(item.id) ? "fill-current" : ""}`} />
+                <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
               </button>
               <div className="relative z-10 px-2 pt-2">
                 <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20">
@@ -631,14 +692,14 @@ const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isL
                   )}
                 </div>
               </div>
-              <div className="relative z-10 p-2 pt-1.5">
-                <h3 className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{item.name}</h3>
-                <div className="flex items-center gap-1 mt-1 flex-wrap">
-                  <span className="text-[9px] text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  <span className="text-sm font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+              <div className="relative z-10 p-2.5 pt-2">
+                <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight">{item.name}</h3>
+                <div className="mt-1.5 space-y-0.5">
+                  <span className="text-base font-bold text-primary font-display block">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-xs text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <Button size="sm" variant="outline" className="w-full mt-1.5 h-7 text-[10px] gap-1 hover:border-primary/40" onClick={() => onAddToCart(item)}>
-                  <Plus className="h-3 w-3" /> Adicionar
+                <Button size="sm" variant="default" className="w-full mt-2 h-8 text-xs gap-1 font-semibold" onClick={() => onAddToCart(item)}>
+                  <Plus className="h-3.5 w-3.5" /> Adicionar
                 </Button>
               </div>
             </div>
@@ -659,7 +720,6 @@ const Catalogo = () => {
   const cartLoadedFromDb = useRef(false);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // FABs visibility: hide when near bottom
   const [fabsVisible, setFabsVisible] = useState(true);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -676,7 +736,6 @@ const Catalogo = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Load cart from DB when user logs in and inventory is ready
   useEffect(() => {
     if (!user || savedCartLoading || cartLoadedFromDb.current || inventoryData.length === 0) return;
     if (savedItems.length > 0) {
@@ -698,7 +757,6 @@ const Catalogo = () => {
     cartLoadedFromDb.current = true;
   }, [user, savedItems, savedCartLoading, inventoryData]);
 
-  // Auto-sync cart to DB with debounce
   const syncCartToDb = useCallback((items: CartItem[]) => {
     if (!user) return;
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -766,7 +824,6 @@ const Catalogo = () => {
     });
     createOrder.mutate({ items: orderItems, total });
 
-    // Deduct stock for each item
     for (const ci of items) {
       const newQty = Math.max(0, ci.item.quantity - ci.qty);
       await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
@@ -895,11 +952,11 @@ const Catalogo = () => {
           </TabsList>
 
           <TabsContent value="drops">
-            <ItemGrid items={drops} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
+            <ItemGrid items={drops} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} userId={user?.id} />
           </TabsContent>
 
           <TabsContent value="singles">
-            <ItemGrid items={singles} isSingles onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
+            <ItemGrid items={singles} isSingles onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} userId={user?.id} />
           </TabsContent>
         </Tabs>
       </div>
@@ -907,17 +964,17 @@ const Catalogo = () => {
       {/* Bottom sentinel for hiding FABs */}
       <div ref={bottomSentinelRef} className="h-1 w-full" />
 
-      {/* Social FABs - hide near bottom */}
+      {/* Social FABs */}
       <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
         <a href="https://www.instagram.com/scardtopia/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300">
           <Instagram className="h-5 w-5 text-accent" />Instagram
         </a>
-        <a href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis." target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-background shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300">
+        <a href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis." target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-white shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300">
           <MessageCircle className="h-5 w-5" />Pedir via WhatsApp
         </a>
       </div>
 
-      {/* Shopping Cart - also hide near bottom */}
+      {/* Shopping Cart */}
       <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} fabsVisible={fabsVisible} />
     </div>
   );
