@@ -28,7 +28,7 @@ const BannerManager = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as string });
+  const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo" });
 
   const openNew = () => {
     setEditingBanner(null);
