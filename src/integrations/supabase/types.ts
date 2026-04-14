@@ -346,6 +346,7 @@ export type Database = {
           language: string
           name: string
           price: number
+          price_pix: number
           product_type: string
           quantity: number
           status: string
@@ -363,6 +364,7 @@ export type Database = {
           language?: string
           name: string
           price?: number
+          price_pix?: number
           product_type?: string
           quantity?: number
           status?: string
@@ -380,6 +382,7 @@ export type Database = {
           language?: string
           name?: string
           price?: number
+          price_pix?: number
           product_type?: string
           quantity?: number
           status?: string

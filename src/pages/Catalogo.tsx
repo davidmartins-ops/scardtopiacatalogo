@@ -524,7 +524,20 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                             <span className="text-sm text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                           </div>
                         ) : (
-                          <span className="text-lg font-bold text-primary font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          <>
+                            <span className="text-lg font-bold text-primary font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            {(item.price_pix ?? 0) > 0 && (
+                              <p className="text-sm font-semibold text-green-600">
+                                PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </p>
+                            )}
+                            {!isSingles && item.price >= 50 && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">💳 até 3x de R$ {(item.price / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} s/ juros</p>
+                            )}
+                          </>
+                        )}
+                        {discount > 0 && (
+                          <p className="text-[9px] text-muted-foreground italic mt-0.5">* Parcelamento s/ juros apenas para valores não promocionais</p>
                         )}
                       </div>
 
@@ -856,7 +869,7 @@ const Catalogo = () => {
       {/* Sticky Header Bar */}
       <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-          <Link to="/login">
+          <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
           </Link>
 

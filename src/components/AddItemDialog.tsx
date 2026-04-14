@@ -38,7 +38,7 @@ const AddItemDialog = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    id: "", name: "", description: "Foil" as string, price: "", quantity: "1", category: "",
+    id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
     language: "PT", condition: "NM", status: "none" as string, drop_description: "",
   });
 
@@ -62,7 +62,7 @@ const AddItemDialog = () => {
   };
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
+    setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
     clearImage();
   };
 
@@ -90,11 +90,13 @@ const AddItemDialog = () => {
       }
     }
 
+    const pricePix = parseFloat(form.price_pix || "0");
+
     const { error } = await supabase.from("inventory").insert({
       id: form.id.trim().toUpperCase(),
       name: form.name.trim(),
       description: form.description,
-      price, quantity,
+      price, price_pix: pricePix, quantity,
       category: form.category,
       image_url,
       language: form.language,
@@ -226,15 +228,25 @@ const AddItemDialog = () => {
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (R$) *</Label>
+              <Label htmlFor="price">Cartão (R$) *</Label>
               <Input id="price" type="number" min="0" step="0.01" placeholder="0,00" value={form.price} onChange={(e) => handleChange("price", e.target.value)} className="bg-muted border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price_pix">PIX (R$)</Label>
+              <Input id="price_pix" type="number" min="0" step="0.01" placeholder="0,00" value={form.price_pix} onChange={(e) => handleChange("price_pix", e.target.value)} className="bg-muted border-border" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantidade</Label>
               <Input id="quantity" type="number" min="0" step="1" value={form.quantity} onChange={(e) => handleChange("quantity", e.target.value)} className="bg-muted border-border" />
             </div>
+          </div>
+
+          {/* Installment info */}
+          <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-1">
+            <p className="text-xs font-semibold text-primary">💳 Parcelamos em até 3x sem juros no cartão!</p>
+            <p className="text-[10px] text-muted-foreground italic">* Parcelamento sem juros apenas para valores não promocionais.</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
