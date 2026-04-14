@@ -7,22 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 
 interface ScryfallCard {
   name: string;
+  id: string;
   image_uris?: { normal: string; small: string };
   card_faces?: { image_uris?: { normal: string; small: string } }[];
   prices: { usd?: string; usd_foil?: string };
   set_name: string;
+  set: string;
+  collector_number: string;
   rarity: string;
   uri: string;
   scryfall_uri: string;
 }
 
+interface CardWithChange extends ScryfallCard {
+  priceChange?: number;
+  priceChangePct?: number;
+  previousPrice?: number;
+}
+
 interface FormatData {
-  rising: ScryfallCard[];
-  falling: ScryfallCard[];
+  rising: CardWithChange[];
+  falling: CardWithChange[];
 }
 
 const EXCHANGE_API = "https://economia.awesomeapi.com.br/last/USD-BRL";
@@ -74,6 +84,39 @@ const TrendingCards = () => {
     }
   };
 
+  const fetchPriceHistory = async (cards: ScryfallCard[], format: string): Promise<Map<string, number>> => {
+    const priceMap = new Map<string, number>();
+    try {
+      const scryfallIds = cards.map(c => c.id).filter(Boolean);
+      if (scryfallIds.length === 0) return priceMap;
+
+      // Get yesterday's date
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+      const { data } = await supabase
+        .from("price_history")
+        .select("scryfall_id, price_usd")
+        .in("scryfall_id", scryfallIds)
+        .eq("format", format)
+        .lte("captured_at", yesterdayStr)
+        .order("captured_at", { ascending: false });
+
+      if (data) {
+        // Keep only the most recent entry per scryfall_id
+        const seen = new Set<string>();
+        for (const row of data) {
+          if (row.scryfall_id && !seen.has(row.scryfall_id) && row.price_usd != null) {
+            priceMap.set(row.scryfall_id, Number(row.price_usd));
+            seen.add(row.scryfall_id);
+          }
+        }
+      }
+    } catch { /* silent */ }
+    return priceMap;
+  };
+
   const fetchFormatCards = async (format: string) => {
     const q = FORMAT_QUERIES[format];
     if (!q) return;
@@ -91,7 +134,38 @@ const TrendingCards = () => {
       const fallingData = await fallingRes.json();
       const fallingList: ScryfallCard[] = (fallingData.data ?? []).slice(0, 50);
 
-      setFormatData(prev => ({ ...prev, [format]: { rising: risingList, falling: fallingList } }));
+      // Fetch historical prices to compute changes
+      const allCards = [...risingList, ...fallingList];
+      const historyMap = await fetchPriceHistory(allCards, format);
+
+      const enrichCards = (cards: ScryfallCard[]): CardWithChange[] => {
+        return cards.map(card => {
+          const currentPrice = parseFloat(card.prices.usd ?? card.prices.usd_foil ?? "0");
+          const previousPrice = historyMap.get(card.id);
+          const priceChange = previousPrice != null ? currentPrice - previousPrice : undefined;
+          const priceChangePct = previousPrice != null && previousPrice > 0 ? ((currentPrice - previousPrice) / previousPrice) * 100 : undefined;
+          return { ...card, priceChange, priceChangePct, previousPrice };
+        });
+      };
+
+      const enrichedRising = enrichCards(risingList);
+      const enrichedFalling = enrichCards(fallingList);
+
+      // Sort falling by biggest price DROP (most negative change first)
+      enrichedFalling.sort((a, b) => {
+        const aChange = a.priceChangePct ?? 0;
+        const bChange = b.priceChangePct ?? 0;
+        return aChange - bChange; // most negative first
+      });
+
+      // Sort rising by biggest price RISE
+      enrichedRising.sort((a, b) => {
+        const aChange = a.priceChangePct ?? 0;
+        const bChange = b.priceChangePct ?? 0;
+        return bChange - aChange; // most positive first
+      });
+
+      setFormatData(prev => ({ ...prev, [format]: { rising: enrichedRising, falling: enrichedFalling } }));
       setLastUpdate(new Date());
     } catch (err) {
       console.error("Error fetching trending cards:", err);
@@ -118,7 +192,7 @@ const TrendingCards = () => {
     return p ? parseFloat(p) : 0;
   };
 
-  const applyFilterAndSort = (cards: ScryfallCard[]) => {
+  const applyFilterAndSort = (cards: CardWithChange[]) => {
     let filtered = cards;
     if (search) {
       const q = search.toLowerCase();
@@ -150,9 +224,9 @@ const TrendingCards = () => {
 
   const rarityColor = (rarity: string) => {
     switch (rarity) {
-      case "mythic": return "text-orange-400";
-      case "rare": return "text-yellow-400";
-      case "uncommon": return "text-slate-300";
+      case "mythic": return "text-orange-500";
+      case "rare": return "text-yellow-500";
+      case "uncommon": return "text-muted-foreground";
       default: return "text-muted-foreground";
     }
   };
@@ -176,8 +250,8 @@ const TrendingCards = () => {
     if (chartData.length === 0) return null;
 
     const gradientId = `bar-gradient-${type}`;
-    const colorStart = type === "rising" ? "hsl(45, 80%, 55%)" : "hsl(0, 45%, 50%)";
-    const colorEnd = type === "rising" ? "hsl(45, 60%, 40%)" : "hsl(0, 35%, 35%)";
+    const colorStart = type === "rising" ? "hsl(43, 74%, 49%)" : "hsl(0, 50%, 55%)";
+    const colorEnd = type === "rising" ? "hsl(43, 60%, 35%)" : "hsl(0, 40%, 40%)";
     const maxCount = Math.max(...chartData.map(d => d.count));
 
     return (
@@ -201,29 +275,29 @@ const TrendingCards = () => {
               </defs>
               <XAxis
                 dataKey="range"
-                tick={{ fontSize: 10, fill: "hsl(45, 20%, 90%)", fontFamily: "'Cinzel', serif" }}
-                axisLine={{ stroke: "hsl(240, 8%, 25%)" }}
+                tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fontFamily: "'Cinzel', serif" }}
+                axisLine={{ stroke: "hsl(var(--border))" }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "hsl(240, 5%, 55%)" }}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
                 allowDecimals={false}
               />
               <Tooltip
-                cursor={{ fill: "hsl(240, 8%, 20%)", opacity: 0.5 }}
+                cursor={{ fill: "hsl(var(--muted) / 0.5)" }}
                 contentStyle={{
-                  background: "hsl(240, 10%, 14%)",
-                  border: "1px solid hsl(45, 40%, 30%)",
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "12px",
-                  fontFamily: "Inter",
+                  fontFamily: "'Open Sans', sans-serif",
                   backdropFilter: "blur(12px)",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
                   padding: "10px 14px",
                 }}
-                labelStyle={{ color: "hsl(45, 80%, 70%)", fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 600, marginBottom: 6 }}
-                itemStyle={{ color: "hsl(45, 20%, 90%)", fontSize: 12 }}
+                labelStyle={{ color: "hsl(var(--primary))", fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 600, marginBottom: 6 }}
+                itemStyle={{ color: "hsl(var(--foreground))", fontSize: 12 }}
                 formatter={(value: number) => [`${value} carta${value !== 1 ? 's' : ''}`, 'Quantidade']}
               />
               <Bar dataKey="count" name="Cartas" radius={[6, 6, 0, 0]} barSize={40}>
@@ -245,7 +319,7 @@ const TrendingCards = () => {
     );
   };
 
-  const CardList = ({ cards, type }: { cards: ScryfallCard[]; type: "rising" | "falling" }) => {
+  const CardList = ({ cards, type }: { cards: CardWithChange[]; type: "rising" | "falling" }) => {
     const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
 
     useEffect(() => {
@@ -273,6 +347,9 @@ const TrendingCards = () => {
           const img = getImage(card);
           const price = card.prices.usd ?? card.prices.usd_foil;
           const isVisible = visibleCards.has(idx);
+          const changeStr = card.priceChangePct != null
+            ? `${card.priceChangePct >= 0 ? "+" : ""}${card.priceChangePct.toFixed(1)}%`
+            : null;
           return (
             <a
               key={`${card.name}-${idx}`}
@@ -292,6 +369,13 @@ const TrendingCards = () => {
                     #{idx + 1}
                   </Badge>
                 </div>
+                {changeStr && (
+                  <div className="absolute top-1.5 right-1.5 z-10">
+                    <Badge className={`text-[9px] font-bold px-1.5 py-0.5 ${type === "rising" ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300"}`}>
+                      {changeStr}
+                    </Badge>
+                  </div>
+                )}
                 {img ? (
                   <img src={img} alt={card.name} className="w-full aspect-[2.5/3.5] object-cover" loading="lazy" />
                 ) : (
@@ -307,15 +391,20 @@ const TrendingCards = () => {
                 <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
                 <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className={`text-sm font-bold ${type === "rising" ? "text-green-400" : "text-red-400"}`}>
+                    <span className={`text-sm font-bold ${type === "rising" ? "text-green-600" : "text-red-500"}`}>
                       {formatUSD(price)}
                     </span>
                     <span className="block text-[10px] text-muted-foreground">{formatBRL(price)}</span>
+                    {card.previousPrice != null && (
+                      <span className="block text-[9px] text-muted-foreground">
+                        Anterior: ${card.previousPrice.toFixed(2)}
+                      </span>
+                    )}
                   </div>
                   {type === "rising" ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-green-400" />
+                    <TrendingUp className="h-3.5 w-3.5 text-green-500" />
                   ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+                    <TrendingDown className="h-3.5 w-3.5 text-red-500" />
                   )}
                 </div>
                 <Badge variant="outline" className={`text-[9px] ${rarityColor(card.rarity)}`}>
@@ -363,12 +452,12 @@ const TrendingCards = () => {
         {/* Title */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center justify-center gap-2" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
-            <TrendingUp className="h-6 w-6 text-green-400" />
+            <TrendingUp className="h-6 w-6 text-green-500" />
             <span className="text-gradient">Tendências de Mercado</span>
-            <TrendingDown className="h-6 w-6 text-red-400" />
+            <TrendingDown className="h-6 w-6 text-red-500" />
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-            Top 50 cartas em alta e em baixa — valores atualizados via Scryfall
+            Top 50 cartas em alta e em baixa — valores e variações baseados no histórico de preços
           </p>
           {lastUpdate && (
             <p className="text-[11px] text-muted-foreground">
@@ -419,10 +508,10 @@ const TrendingCards = () => {
 
         {/* Disclaimer + Exchange in row */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          <div className="glass-card p-3 flex items-start gap-2 border-yellow-500/30 flex-1">
-            <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+          <div className="glass-card p-3 flex items-start gap-2 border-primary/20 flex-1">
+            <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
-              <strong className="text-foreground">Aviso:</strong> Valores em USD (Scryfall). Conversão BRL é <strong>ilustrativa</strong>.
+              <strong className="text-foreground">Aviso:</strong> Valores em USD (Scryfall). Conversão BRL é <strong>ilustrativa</strong>. Variações % calculadas com base no histórico registrado.
             </p>
           </div>
           {exchangeRate && (

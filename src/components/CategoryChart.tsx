@@ -3,12 +3,12 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { type InventoryItem } from "@/data/inventory";
 
 const COLORS = [
-  "hsl(45, 80%, 55%)",
-  "hsl(270, 50%, 45%)",
-  "hsl(200, 60%, 50%)",
-  "hsl(150, 60%, 40%)",
-  "hsl(0, 70%, 50%)",
-  "hsl(300, 60%, 60%)",
+  "hsl(43, 74%, 49%)",
+  "hsl(30, 80%, 55%)",
+  "hsl(50, 70%, 45%)",
+  "hsl(20, 65%, 50%)",
+  "hsl(40, 60%, 40%)",
+  "hsl(35, 75%, 55%)",
 ];
 
 const CategoryChart = ({ data }: { data: InventoryItem[] }) => {
@@ -20,47 +20,42 @@ const CategoryChart = ({ data }: { data: InventoryItem[] }) => {
       existing.count += item.quantity;
       map.set(item.category, existing);
     });
-    return Array.from(map.values()).sort((a, b) => b.value - a.value);
+    return Array.from(map.values()).sort((a, b) => b.value - a.value).slice(0, 10);
   }, [data]);
 
+  const maxVal = Math.max(...chartData.map(d => d.value), 1);
+
   return (
-    <div className="glass-card p-6">
-      <h3 className="font-display font-semibold text-foreground mb-4">Valor por Categoria</h3>
-      <div className="premium-divider mb-4" />
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20 }}>
-          <XAxis
-            type="number"
-            tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`}
-            tick={{ fill: "hsl(240, 5%, 55%)", fontSize: 12, fontFamily: "Inter" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fill: "hsl(45, 20%, 90%)", fontSize: 11, fontFamily: "Cinzel" }}
-            axisLine={false}
-            tickLine={false}
-            width={140}
-          />
-          <Tooltip
-            contentStyle={{
-              background: "hsl(240, 10%, 12%)",
-              border: "1px solid hsl(240, 8%, 25%)",
-              borderRadius: "12px",
-              fontFamily: "Inter",
-              backdropFilter: "blur(12px)",
-            }}
-            formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Valor Total"]}
-          />
-          <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={24}>
-            {chartData.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="glass-card p-4 sm:p-5">
+      <h3 className="font-display font-semibold text-foreground text-sm sm:text-base mb-3">Valor por Categoria</h3>
+      <div className="premium-divider mb-3" />
+      <div className="space-y-2">
+        {chartData.map((item, i) => {
+          const pct = (item.value / maxVal) * 100;
+          return (
+            <div key={item.name} className="space-y-0.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground font-medium truncate max-w-[120px]" title={item.name}>{item.name}</span>
+                <span className="text-primary font-semibold tabular-nums shrink-0 ml-2">
+                  R$ {(item.value / 1000).toFixed(1)}k
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full bg-muted/50 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${pct}%`,
+                    background: COLORS[i % COLORS.length],
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {chartData.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-8">Sem dados</p>
+      )}
     </div>
   );
 };
