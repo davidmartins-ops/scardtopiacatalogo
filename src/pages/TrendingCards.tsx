@@ -340,7 +340,7 @@ const TrendingCards = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/catalogo">
               <img src={logo} alt="Spencer's Cardtopia" className="h-8 hover:scale-105 transition-transform" />
             </Link>
           </div>

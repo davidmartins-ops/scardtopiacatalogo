@@ -78,7 +78,7 @@ const CustomerDashboard = () => {
           <Link to="/catalogo" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
             <ArrowLeft className="h-4 w-4" /> Catálogo
           </Link>
-          <img src={logo} alt="Spencer's Cardtopia" className="h-10" />
+          <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-10 hover:scale-105 transition-transform" /></Link>
           <div className="flex items-center gap-3">
             <span className="text-sm text-foreground">{profile?.display_name ?? user.email}</span>
             <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" onClick={() => { signOut(); navigate("/catalogo"); }}>

@@ -55,7 +55,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex items-end justify-between h-full px-4 sm:px-6 pb-4 sm:pb-6 max-w-full mx-auto">
           <div className="animate-fade-in shrink-0">
-            <Link to="/login">
+            <Link to="/catalogo">
               <img src={logo} alt="Spencer's Cardtopia" className="h-20 sm:h-28 md:h-36 lg:h-44 drop-shadow-2xl hover:scale-105 transition-transform cursor-pointer" />
             </Link>
             <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium">Painel de Gerenciamento</p>
