@@ -1,8 +1,41 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { DollarSign, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Search, Sparkles, Circle, Rainbow, Filter, Package, MessageCircle, Instagram, ShoppingCart as CartIconLucide, Plus, Star, Flame, Share2, Copy, Twitter, Heart, User, Layers, BookOpen, LogOut, ChevronDown, ShoppingBag, Palette, ChevronLeft, ChevronRight, SearchIcon } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Search,
+  Sparkles,
+  Circle,
+  Rainbow,
+  Filter,
+  Package,
+  MessageCircle,
+  Instagram,
+  ShoppingCart as CartIconLucide,
+  Plus,
+  Star,
+  Flame,
+  Share2,
+  Copy,
+  Twitter,
+  Heart,
+  User,
+  Layers,
+  BookOpen,
+  LogOut,
+  ChevronDown,
+  ShoppingBag,
+  Palette,
+  ChevronLeft,
+  ChevronRight,
+  SearchIcon,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -35,15 +68,23 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
 };
 
-const conditionLabels: Record<string, string> = { NM: "Near Mint", SP: "Slightly Played", MP: "Moderately Played", HP: "Heavily Played", D: "Damaged" };
+const conditionLabels: Record<string, string> = {
+  NM: "Near Mint",
+  SP: "Slightly Played",
+  MP: "Moderately Played",
+  HP: "Heavily Played",
+  D: "Damaged",
+};
 
 const trackEvent = async (eventType: string, item?: InventoryItem) => {
   try {
-    const sessionId = sessionStorage.getItem("analytics_session") || (() => {
-      const id = crypto.randomUUID();
-      sessionStorage.setItem("analytics_session", id);
-      return id;
-    })();
+    const sessionId =
+      sessionStorage.getItem("analytics_session") ||
+      (() => {
+        const id = crypto.randomUUID();
+        sessionStorage.setItem("analytics_session", id);
+        return id;
+      })();
     await supabase.from("analytics_events").insert({
       event_type: eventType,
       inventory_item_id: item?.id ?? null,
@@ -51,7 +92,9 @@ const trackEvent = async (eventType: string, item?: InventoryItem) => {
       category: item?.category ?? null,
       session_id: sessionId,
     });
-  } catch { /* silent */ }
+  } catch {
+    /* silent */
+  }
 };
 
 const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
@@ -70,7 +113,9 @@ const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "
       const res = await fetch(imageUrl);
       const blob = await res.blob();
       imageFile = new File([blob], `${item.name.replace(/\s+/g, "-")}.jpg`, { type: blob.type });
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   if (method === "copy") {
@@ -82,7 +127,9 @@ const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "
         }
         await navigator.share(shareData);
         return;
-      } catch { /* fallback */ }
+      } catch {
+        /* fallback */
+      }
     }
     navigator.clipboard.writeText(`${text}\n${url}`);
     toast.success("Link copiado!");
@@ -94,7 +141,10 @@ const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "
   if (method === "whatsapp") {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
   } else if (method === "twitter") {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+      "_blank",
+    );
   } else if (method === "instagram") {
     navigator.clipboard.writeText(shareText);
     toast.success("Texto copiado! Cole no seu Instagram Stories");
@@ -140,14 +190,24 @@ const getScryfallIdentifier = (item: InventoryItem) => {
 const getManaColors = (manaCost?: string | null, colorIdentity?: string[] | null) => {
   if (!manaCost && (!colorIdentity || colorIdentity.length === 0)) return ["C"];
   if (!manaCost) return colorIdentity && colorIdentity.length === 0 ? ["C"] : (colorIdentity ?? []);
-  
-  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) => new RegExp(`\\{[^}]*${symbol}[^}]*\\}`, "i").test(manaCost));
+
+  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) =>
+    new RegExp(`\\{[^}]*${symbol}[^}]*\\}`, "i").test(manaCost),
+  );
   if (colors.length === 0 && manaCost.length > 0) return ["C"];
   return colors;
 };
 
 /* Notify Me Dialog */
-const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isLoggedIn: boolean; userId?: string }) => {
+const NotifyMeDialog = ({
+  item,
+  isLoggedIn,
+  userId,
+}: {
+  item: InventoryItem;
+  isLoggedIn: boolean;
+  userId?: string;
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -182,7 +242,10 @@ const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isL
         variant="outline"
         className="h-8 text-xs gap-1.5 border-primary/30 hover:border-primary/50 text-primary font-semibold"
         onClick={() => {
-          if (!isLoggedIn) { toast.error("Faça login para receber notificações."); return; }
+          if (!isLoggedIn) {
+            toast.error("Faça login para receber notificações.");
+            return;
+          }
           setOpen(true);
         }}
       >
@@ -195,10 +258,13 @@ const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isL
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Deseja ser notificado quando <strong className="text-foreground">{item.name}</strong> estiver disponível novamente?
+              Deseja ser notificado quando <strong className="text-foreground">{item.name}</strong> estiver disponível
+              novamente?
             </p>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
               <Button onClick={handleNotify} disabled={loading} className="gap-1.5">
                 <Bell className="h-4 w-4" /> {loading ? "Cadastrando..." : "Me avise!"}
               </Button>
@@ -210,9 +276,25 @@ const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isL
   );
 };
 
-const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId }: { items: InventoryItem[] | undefined; isSingles?: boolean; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean; userId?: string }) => {
+const ItemGrid = ({
+  items,
+  isSingles,
+  onAddToCart,
+  isFavorite,
+  onToggleFavorite,
+  isLoggedIn,
+  userId,
+}: {
+  items: InventoryItem[] | undefined;
+  isSingles?: boolean;
+  onAddToCart: (item: InventoryItem) => void;
+  isFavorite: (id: string) => boolean;
+  onToggleFavorite: (id: string) => void;
+  isLoggedIn: boolean;
+  userId?: string;
+}) => {
   const [search, setSearch] = useState("");
-  
+
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -227,7 +309,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 
     const identifiers = items
       .map((item) => ({ itemId: item.id, identifier: getScryfallIdentifier(item) }))
-      .filter((entry): entry is { itemId: string; identifier: NonNullable<ReturnType<typeof getScryfallIdentifier>> } => Boolean(entry.identifier));
+      .filter((entry): entry is { itemId: string; identifier: NonNullable<ReturnType<typeof getScryfallIdentifier>> } =>
+        Boolean(entry.identifier),
+      );
 
     if (!identifiers.length) {
       setManaProfiles({});
@@ -244,7 +328,11 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         const cached = localStorage.getItem(CACHE_KEY);
         let cachedProfiles: Record<string, ManaProfile & { ts: number; colorIdentity?: string[] }> = {};
         if (cached) {
-          try { cachedProfiles = JSON.parse(cached); } catch { /* ignore */ }
+          try {
+            cachedProfiles = JSON.parse(cached);
+          } catch {
+            /* ignore */
+          }
         }
 
         const now = Date.now();
@@ -253,7 +341,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 
         identifiers.forEach((entry) => {
           const cachedEntry = cachedProfiles[entry.identifier.key];
-          if (cachedEntry && (now - cachedEntry.ts) < CACHE_TTL) {
+          if (cachedEntry && now - cachedEntry.ts < CACHE_TTL) {
             nextProfiles[entry.itemId] = { manaCost: cachedEntry.manaCost, colors: cachedEntry.colors };
           } else {
             needsFetch.push(entry);
@@ -261,7 +349,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         });
 
         if (needsFetch.length > 0) {
-          const batches: typeof needsFetch[] = [];
+          const batches: (typeof needsFetch)[] = [];
           for (let i = 0; i < needsFetch.length; i += 75) {
             batches.push(needsFetch.slice(i, i + 75));
           }
@@ -284,10 +372,17 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
             const cards = Array.isArray(payload.data) ? payload.data : [];
             const byKey = new Map<string, { mana_cost?: string | null; color_identity?: string[] }>();
 
-            cards.forEach((card: { set?: string; collector_number?: string; mana_cost?: string | null; color_identity?: string[] }) => {
-              if (!card.set || !card.collector_number) return;
-              byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
-            });
+            cards.forEach(
+              (card: {
+                set?: string;
+                collector_number?: string;
+                mana_cost?: string | null;
+                color_identity?: string[];
+              }) => {
+                if (!card.set || !card.collector_number) return;
+                byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
+              },
+            );
 
             batch.forEach(({ itemId, identifier }) => {
               const card = byKey.get(identifier.key);
@@ -299,7 +394,11 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
             });
           }
 
-          try { localStorage.setItem(CACHE_KEY, JSON.stringify(cachedProfiles)); } catch { /* quota */ }
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cachedProfiles));
+          } catch {
+            /* quota */
+          }
         }
 
         if (!cancelled) {
@@ -320,9 +419,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   }, [items, isSingles]);
 
   const toggleColor = (color: string) => {
-    setSelectedColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
-    );
+    setSelectedColors((prev) => (prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]));
   };
 
   const filteredItems = useMemo(() => {
@@ -338,16 +435,19 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         item.category.toLowerCase().includes(search.toLowerCase());
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
-      const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
-        const profile = manaProfiles[item.id];
-        if (!profile) return false;
+      const matchesColor =
+        selectedColors.length === 0 ||
+        !isSingles ||
+        (() => {
+          const profile = manaProfiles[item.id];
+          if (!profile) return false;
 
-        const itemColors = [...profile.colors].sort();
-        const activeColors = [...selectedColors].sort();
+          const itemColors = [...profile.colors].sort();
+          const activeColors = [...selectedColors].sort();
 
-        if (itemColors.length !== activeColors.length) return false;
-        return activeColors.every((color, index) => itemColors[index] === color);
-      })();
+          if (itemColors.length !== activeColors.length) return false;
+          return activeColors.every((color, index) => itemColors[index] === color);
+        })();
       return matchesSearch && matchesPrice && matchesColor;
     });
   }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
@@ -355,7 +455,7 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
   const groupedItems = useMemo(() => {
     if (sortOrder === "az" || sortOrder === "za") {
       const sorted = [...filteredItems].sort((a, b) =>
-        sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+        sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
       );
       return [["Todas as cartas", sorted]] as [string, typeof filteredItems][];
     }
@@ -369,10 +469,18 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
 
   return (
     <div className="space-y-6 overflow-visible">
-      <div className="glass-card p-4 space-y-4 animate-fade-in-up overflow-visible" style={{ animationDelay: "0.2s", opacity: 0 }}>
+      <div
+        className="glass-card p-4 space-y-4 animate-fade-in-up overflow-visible"
+        style={{ animationDelay: "0.2s", opacity: 0 }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
+          <Input
+            placeholder="Buscar por nome..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
+          />
         </div>
 
         {/* Alphabetical sort */}
@@ -400,7 +508,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                 key={color.value}
                 onClick={() => toggleColor(color.value)}
                 className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
-                  selectedColors.includes(color.value) ? color.className + " ring-1 ring-primary scale-105" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
+                  selectedColors.includes(color.value)
+                    ? color.className + " ring-1 ring-primary scale-105"
+                    : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
                 }`}
                 title={`Filtrar por ${color.value} no custo de mana`}
               >
@@ -408,10 +518,17 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
               </button>
             ))}
             {selectedColors.length > 1 && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Cores combinadas</Badge>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">
+                Cores combinadas
+              </Badge>
             )}
             {selectedColors.length > 0 && (
-              <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setSelectedColors([])}>Limpar</button>
+              <button
+                className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold"
+                onClick={() => setSelectedColors([])}
+              >
+                Limpar
+              </button>
             )}
           </div>
         )}
@@ -419,16 +536,40 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
-          <Input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          <Input
+            type="number"
+            placeholder="Mín"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            className="w-24 h-8 text-xs bg-muted/30 border-border/50"
+            min="0"
+          />
           <span className="text-xs text-muted-foreground">—</span>
-          <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          <Input
+            type="number"
+            placeholder="Máx"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            className="w-24 h-8 text-xs bg-muted/30 border-border/50"
+            min="0"
+          />
           {(priceMin || priceMax) && (
-            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>
+            <button
+              className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold"
+              onClick={() => {
+                setPriceMin("");
+                setPriceMax("");
+              }}
+            >
+              Limpar
+            </button>
           )}
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">{filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados</p>
+      <p className="text-sm text-muted-foreground">
+        {filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados
+      </p>
 
       {groupedItems.length === 0 ? (
         <div className="text-center py-16">
@@ -437,14 +578,20 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
         </div>
       ) : (
         groupedItems.map(([category, catItems], groupIdx) => (
-          <div key={category} className="space-y-3 animate-fade-in-up" style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}>
+          <div
+            key={category}
+            className="space-y-3 animate-fade-in-up"
+            style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}
+          >
             <div className="flex items-center gap-3">
               <h2 className="font-display text-xl font-semibold text-foreground">{category}</h2>
               <div className="flex-1 premium-divider" />
               <span className="text-xs text-muted-foreground font-body">{catItems.length} itens</span>
             </div>
 
-            <div className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+            <div
+              className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}
+            >
               {catItems.map((item, i) => {
                 const config = descriptionConfig[item.description];
                 const Icon = config?.icon ?? Circle;
@@ -453,12 +600,21 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                 const isOutOfStock = item.quantity <= 0;
 
                 return (
-                  <div key={item.id} className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-70" : ""}`} style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
-
+                  <div
+                    key={item.id}
+                    className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-70" : ""}`}
+                    style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}
+                  >
                     {/* Favorite button */}
                     <button
                       className={`absolute top-2 right-2 z-30 h-8 w-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
-                      onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          toast.error("Faça login para favoritar.");
+                          return;
+                        }
+                        onToggleFavorite(item.id);
+                      }}
                     >
                       <Heart className={`h-4 w-4 ${isFavorite(item.id) ? "fill-current" : ""}`} />
                     </button>
@@ -467,14 +623,16 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                     {item.status === "pre_sale" && (
                       <div className="absolute top-2 left-2 z-30">
                         <Badge className="bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-badge-glow">
-                          <Star className="h-3 w-3 animate-spin" style={{ animationDuration: '3s' }} />PRÉ VENDA
+                          <Star className="h-3 w-3 animate-spin" style={{ animationDuration: "3s" }} />
+                          PRÉ VENDA
                         </Badge>
                       </div>
                     )}
                     {item.status === "launch" && (
                       <div className="absolute top-2 left-2 z-30">
                         <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-badge-glow-primary">
-                          <Flame className="h-3 w-3 animate-pulse" />LANÇAMENTO
+                          <Flame className="h-3 w-3 animate-pulse" />
+                          LANÇAMENTO
                         </Badge>
                       </div>
                     )}
@@ -490,7 +648,9 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                             containerClassName="w-full"
                           />
                         ) : (
-                          <div className={`w-full ${isSingles ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"} flex items-center justify-center text-sm text-muted-foreground bg-muted/10`}>
+                          <div
+                            className={`w-full ${isSingles ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"} flex items-center justify-center text-sm text-muted-foreground bg-muted/10`}
+                          >
                             Imagem não disponível
                           </div>
                         )}
@@ -505,8 +665,10 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                     {/* Card Info - CLEAN layout */}
                     <div className="relative z-10 p-3 pt-2 space-y-2">
                       {/* Name */}
-                      <h3 className="font-body font-semibold text-foreground leading-snug text-[15px] group-hover:text-primary transition-colors duration-300 line-clamp-2">{item.name}</h3>
-                      
+                      <h3 className="font-body font-semibold text-foreground leading-snug text-[15px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
+                        {item.name}
+                      </h3>
+
                       {/* Foil type badge */}
                       <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
                         <Icon className="h-2.5 w-2.5" />
@@ -518,26 +680,43 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                         {discount > 0 ? (
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-lg font-bold text-primary font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                              <span className="text-xs font-semibold text-destructive bg-destructive/10 rounded px-1.5 py-0.5">-{discount}%</span>
+                              <span className="text-lg font-bold text-primary font-display">
+                                R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </span>
+                              <span className="text-xs font-semibold text-destructive bg-destructive/10 rounded px-1.5 py-0.5">
+                                -{discount}%
+                              </span>
                             </div>
-                            <span className="text-sm text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span className="text-sm text-muted-foreground line-through">
+                              R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
                           </div>
                         ) : (
                           <>
-                            <span className="text-lg font-bold text-primary font-display">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span className="text-lg font-bold text-primary font-display">
+                              R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
                             {(item.price_pix ?? 0) > 0 && (
                               <p className="text-sm font-semibold text-green-600">
                                 PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                               </p>
                             )}
                             {!isSingles && item.price >= 50 && (
-                              <p className="text-[10px] text-muted-foreground mt-0.5">💳 até 3x de R$ {(item.price / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} s/ juros</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                💳 até 3x de R${" "}
+                                {(item.price / 3).toLocaleString("pt-BR", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}{" "}
+                                s/ juros
+                              </p>
                             )}
                           </>
                         )}
                         {discount > 0 && (
-                          <p className="text-[9px] text-muted-foreground italic mt-0.5">* Parcelamento s/ juros apenas para valores não promocionais</p>
+                          <p className="text-[9px] text-muted-foreground italic mt-0.5">
+                            * Parcelamento s/ juros apenas para valores não promocionais
+                          </p>
                         )}
                       </div>
 
@@ -553,31 +732,53 @@ const ItemGrid = ({ items, isSingles, onAddToCart, isFavorite, onToggleFavorite,
                         {isOutOfStock ? (
                           <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
                         ) : (
-                          <Button size="sm" variant="default" className="h-8 text-xs gap-1.5 font-semibold" onClick={() => onAddToCart(item)}>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-8 text-xs gap-1.5 font-semibold"
+                            onClick={() => onAddToCart(item)}
+                          >
                             <Plus className="h-3.5 w-3.5" /> Adicionar
                           </Button>
                         )}
                         {!isSingles && (
                           <Link to={`/catalogo/drop/${item.id}`}>
-                            <Button size="sm" variant="outline" className="h-8 text-xs text-primary hover:text-primary/80 font-medium">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs text-primary hover:text-primary/80 font-medium"
+                            >
                               Conteúdo do Drop →
                             </Button>
                           </Link>
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            >
                               <Share2 className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start" className="min-w-[160px]">
-                            <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
+                            <DropdownMenuItem
+                              onClick={() => shareItem(item, "whatsapp")}
+                              className="gap-2 cursor-pointer"
+                            >
                               <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
+                            <DropdownMenuItem
+                              onClick={() => shareItem(item, "twitter")}
+                              className="gap-2 cursor-pointer"
+                            >
                               <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
+                            <DropdownMenuItem
+                              onClick={() => shareItem(item, "instagram")}
+                              className="gap-2 cursor-pointer"
+                            >
                               <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
@@ -617,7 +818,10 @@ const CatalogBanner = () => {
         <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}>
+          <h1
+            className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in"
+            style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: "0.05em" }}
+          >
             <span className="text-gradient">Catálogo</span>
           </h1>
           <div className="premium-divider max-w-[80px] mt-2" />
@@ -628,7 +832,10 @@ const CatalogBanner = () => {
 
   return (
     <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden group">
-      <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
+      <div
+        className="absolute inset-0 flex transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${currentBanner * 100}%)` }}
+      >
         {banners.map((b, idx) => (
           <div key={idx} className="relative w-full h-full flex-shrink-0" style={{ minWidth: "100%" }}>
             <img src={b.image_url} alt={b.alt} className="absolute inset-0 w-full h-full object-cover" />
@@ -640,20 +847,32 @@ const CatalogBanner = () => {
         <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-1">
           {banners[currentBanner]?.label}
         </span>
-        <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{banners[currentBanner]?.title}</h2>
+        <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">
+          {banners[currentBanner]?.title}
+        </h2>
         <p className="text-xs text-muted-foreground mt-0.5">{banners[currentBanner]?.subtitle}</p>
       </div>
       {banners.length > 1 && (
         <>
-          <button onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)} className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20">
+          <button
+            onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"
+          >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20">
+          <button
+            onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"
+          >
             <ChevronRight className="h-4 w-4" />
           </button>
           <div className="absolute bottom-2 right-4 flex gap-1.5 z-20">
             {banners.map((_, idx) => (
-              <button key={idx} onClick={() => setCurrentBanner(idx)} className={`h-1.5 rounded-full transition-all ${idx === currentBanner ? "w-5 bg-primary" : "w-1.5 bg-foreground/30"}`} />
+              <button
+                key={idx}
+                onClick={() => setCurrentBanner(idx)}
+                className={`h-1.5 rounded-full transition-all ${idx === currentBanner ? "w-5 bg-primary" : "w-1.5 bg-foreground/30"}`}
+              />
             ))}
           </div>
         </>
@@ -663,7 +882,19 @@ const CatalogBanner = () => {
 };
 
 /* Promo Highlights - items with discounts */
-const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn }: { items: InventoryItem[]; onAddToCart: (item: InventoryItem) => void; isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean }) => {
+const PromoHighlights = ({
+  items,
+  onAddToCart,
+  isFavorite,
+  onToggleFavorite,
+  isLoggedIn,
+}: {
+  items: InventoryItem[];
+  onAddToCart: (item: InventoryItem) => void;
+  isFavorite: (id: string) => boolean;
+  onToggleFavorite: (id: string) => void;
+  isLoggedIn: boolean;
+}) => {
   const promoItems = useMemo(() => items.filter((i) => (i.discount ?? 0) > 0 && i.quantity > 0), [items]);
 
   if (promoItems.length === 0) return null;
@@ -671,7 +902,10 @@ const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isL
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <h2 className="font-display text-xl font-semibold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif" }}>
+        <h2
+          className="font-display text-xl font-semibold text-foreground"
+          style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif" }}
+        >
           <span className="text-gradient">🔥 Em Promoção</span>
         </h2>
         <div className="flex-1 premium-divider" />
@@ -684,22 +918,39 @@ const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isL
           const isSingle = item.product_type === "single";
 
           return (
-            <div key={item.id} className="flex-shrink-0 w-44 sm:w-52 glass-card glow-hover overflow-hidden snap-start relative group">
+            <div
+              key={item.id}
+              className="flex-shrink-0 w-44 sm:w-52 glass-card glow-hover overflow-hidden snap-start relative group"
+            >
               <div className="absolute top-2 left-2 z-30">
-                <span className="text-xs font-bold text-destructive bg-destructive/10 rounded px-2 py-0.5">-{discount}%</span>
+                <span className="text-xs font-bold text-destructive bg-destructive/10 rounded px-2 py-0.5">
+                  -{discount}%
+                </span>
               </div>
               <button
                 className={`absolute top-2 right-2 z-30 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
-                onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    toast.error("Faça login para favoritar.");
+                    return;
+                  }
+                  onToggleFavorite(item.id);
+                }}
               >
                 <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
               </button>
               <div className="relative z-10 px-2 pt-2">
                 <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20">
                   {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} object-cover`} />
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} object-cover`}
+                    />
                   ) : (
-                    <div className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} flex items-center justify-center bg-muted/10`}>
+                    <div
+                      className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} flex items-center justify-center bg-muted/10`}
+                    >
                       <Package className="h-8 w-8 text-muted-foreground/30" />
                     </div>
                   )}
@@ -708,10 +959,19 @@ const PromoHighlights = ({ items, onAddToCart, isFavorite, onToggleFavorite, isL
               <div className="relative z-10 p-2.5 pt-2">
                 <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight">{item.name}</h3>
                 <div className="mt-1.5 space-y-0.5">
-                  <span className="text-base font-bold text-primary font-display block">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  <span className="text-xs text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-base font-bold text-primary font-display block">
+                    R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-xs text-muted-foreground line-through">
+                    R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <Button size="sm" variant="default" className="w-full mt-2 h-8 text-xs gap-1 font-semibold" onClick={() => onAddToCart(item)}>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="w-full mt-2 h-8 text-xs gap-1 font-semibold"
+                  onClick={() => onAddToCart(item)}
+                >
                   <Plus className="h-3.5 w-3.5" /> Adicionar
                 </Button>
               </div>
@@ -743,7 +1003,7 @@ const Catalogo = () => {
       ([entry]) => {
         setFabsVisible(!entry.isIntersecting);
       },
-      { threshold: 0 }
+      { threshold: 0 },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -770,80 +1030,104 @@ const Catalogo = () => {
     cartLoadedFromDb.current = true;
   }, [user, savedItems, savedCartLoading, inventoryData]);
 
-  const syncCartToDb = useCallback((items: CartItem[]) => {
-    if (!user) return;
-    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    syncTimeoutRef.current = setTimeout(() => {
-      syncCart.mutate(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty })));
-    }, 1500);
-  }, [user, syncCart]);
+  const syncCartToDb = useCallback(
+    (items: CartItem[]) => {
+      if (!user) return;
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        syncCart.mutate(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty })));
+      }, 1500);
+    },
+    [user, syncCart],
+  );
 
-  const addToCart = useCallback((item: InventoryItem) => {
-    if (item.quantity <= 0) { toast.error("Item esgotado."); return; }
-    trackEvent("add_to_cart", item);
-    setCartItems((prev) => {
-      const existing = prev.find((ci) => ci.item.id === item.id);
-      let next: CartItem[];
-      if (existing) {
-        if (existing.qty >= item.quantity) { toast.error("Quantidade máxima atingida."); return prev; }
-        toast.success(`${item.name} — quantidade atualizada!`);
-        next = prev.map((ci) => ci.item.id === item.id ? { ...ci, qty: ci.qty + 1 } : ci);
-      } else {
-        toast.success(`${item.name} adicionado ao carrinho!`);
-        next = [...prev, { item, qty: 1 }];
+  const addToCart = useCallback(
+    (item: InventoryItem) => {
+      if (item.quantity <= 0) {
+        toast.error("Item esgotado.");
+        return;
       }
-      syncCartToDb(next);
-      return next;
-    });
-  }, [syncCartToDb]);
+      trackEvent("add_to_cart", item);
+      setCartItems((prev) => {
+        const existing = prev.find((ci) => ci.item.id === item.id);
+        let next: CartItem[];
+        if (existing) {
+          if (existing.qty >= item.quantity) {
+            toast.error("Quantidade máxima atingida.");
+            return prev;
+          }
+          toast.success(`${item.name} — quantidade atualizada!`);
+          next = prev.map((ci) => (ci.item.id === item.id ? { ...ci, qty: ci.qty + 1 } : ci));
+        } else {
+          toast.success(`${item.name} adicionado ao carrinho!`);
+          next = [...prev, { item, qty: 1 }];
+        }
+        syncCartToDb(next);
+        return next;
+      });
+    },
+    [syncCartToDb],
+  );
 
-  const removeFromCart = useCallback((itemId: string) => {
-    setCartItems((prev) => {
-      const next = prev.filter((ci) => ci.item.id !== itemId);
-      syncCartToDb(next);
-      return next;
-    });
-  }, [syncCartToDb]);
+  const removeFromCart = useCallback(
+    (itemId: string) => {
+      setCartItems((prev) => {
+        const next = prev.filter((ci) => ci.item.id !== itemId);
+        syncCartToDb(next);
+        return next;
+      });
+    },
+    [syncCartToDb],
+  );
 
-  const updateCartQty = useCallback((itemId: string, qty: number) => {
-    if (qty <= 0) { removeFromCart(itemId); return; }
-    setCartItems((prev) => {
-      const next = prev.map((ci) => ci.item.id === itemId ? { ...ci, qty } : ci);
-      syncCartToDb(next);
-      return next;
-    });
-  }, [removeFromCart, syncCartToDb]);
+  const updateCartQty = useCallback(
+    (itemId: string, qty: number) => {
+      if (qty <= 0) {
+        removeFromCart(itemId);
+        return;
+      }
+      setCartItems((prev) => {
+        const next = prev.map((ci) => (ci.item.id === itemId ? { ...ci, qty } : ci));
+        syncCartToDb(next);
+        return next;
+      });
+    },
+    [removeFromCart, syncCartToDb],
+  );
 
   const clearCart = useCallback(() => {
     setCartItems([]);
     syncCartToDb([]);
   }, [syncCartToDb]);
 
-  const handleOrderPlaced = useCallback(async (items: CartItem[], total: number) => {
-    if (!user) return;
-    const orderItems: OrderItem[] = items.map((ci) => {
-      const discount = ci.item.discount ?? 0;
-      const unitPrice = ci.item.price * (1 - discount / 100);
-      return {
-        id: ci.item.id,
-        name: ci.item.name,
-        description: ci.item.description,
-        language: ci.item.language,
-        condition: ci.item.condition,
-        quantity: ci.qty,
-        unit_price: unitPrice,
-        total_price: unitPrice * ci.qty,
-      };
-    });
-    createOrder.mutate({ items: orderItems, total });
+  const handleOrderPlaced = useCallback(
+    async (items: CartItem[], total: number) => {
+      if (!user) return;
+      const orderItems: OrderItem[] = items.map((ci) => {
+        const discount = ci.item.discount ?? 0;
+        const unitPrice = ci.item.price * (1 - discount / 100);
+        return {
+          id: ci.item.id,
+          name: ci.item.name,
+          description: ci.item.description,
+          language: ci.item.language,
+          condition: ci.item.condition,
+          quantity: ci.qty,
+          unit_price: unitPrice,
+          total_price: unitPrice * ci.qty,
+        };
+      });
+      createOrder.mutate({ items: orderItems, total });
 
-    for (const ci of items) {
-      const newQty = Math.max(0, ci.item.quantity - ci.qty);
-      await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
-    }
+      for (const ci of items) {
+        const newQty = Math.max(0, ci.item.quantity - ci.qty);
+        await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+      }
 
-    toast.success("Pedido registrado e estoque atualizado!");
-  }, [user, createOrder]);
+      toast.success("Pedido registrado e estoque atualizado!");
+    },
+    [user, createOrder],
+  );
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
@@ -919,22 +1203,35 @@ const Catalogo = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta"><User className="h-4 w-4" /> Minha Conta</Link>
+                      <Link to="/conta">
+                        <User className="h-4 w-4" /> Minha Conta
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta"><Heart className="h-4 w-4" /> Favoritos</Link>
+                      <Link to="/conta">
+                        <Heart className="h-4 w-4" /> Favoritos
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta"><Layers className="h-4 w-4" /> Meus Decks</Link>
+                      <Link to="/conta">
+                        <Layers className="h-4 w-4" /> Meus Decks
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta"><BookOpen className="h-4 w-4" /> Minhas Coleções</Link>
+                      <Link to="/conta">
+                        <BookOpen className="h-4 w-4" /> Minhas Coleções
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta?tab=orders"><ShoppingBag className="h-4 w-4" /> Meus Pedidos</Link>
+                      <Link to="/conta?tab=orders">
+                        <ShoppingBag className="h-4 w-4" /> Meus Pedidos
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive" onClick={() => signOut()}>
+                    <DropdownMenuItem
+                      className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                      onClick={() => signOut()}
+                    >
                       <LogOut className="h-4 w-4" /> Sair
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -956,20 +1253,45 @@ const Catalogo = () => {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12 space-y-6">
         {/* Promo Highlights */}
-        <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
+        <PromoHighlights
+          items={inventoryData}
+          onAddToCart={addToCart}
+          isFavorite={isFavorite}
+          onToggleFavorite={(id) => toggleFavorite.mutate(id)}
+          isLoggedIn={!!user}
+        />
 
         <Tabs defaultValue="drops" className="w-full">
           <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
-            <TabsTrigger value="drops" className="flex-1 font-display">Drops ({drops.length})</TabsTrigger>
-            <TabsTrigger value="singles" className="flex-1 font-display">Singles ({singles.length})</TabsTrigger>
+            <TabsTrigger value="drops" className="flex-1 font-display">
+              Drops ({drops.length})
+            </TabsTrigger>
+            <TabsTrigger value="singles" className="flex-1 font-display">
+              Singles ({singles.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="drops">
-            <ItemGrid items={drops} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} userId={user?.id} />
+            <ItemGrid
+              items={drops}
+              onAddToCart={addToCart}
+              isFavorite={isFavorite}
+              onToggleFavorite={(id) => toggleFavorite.mutate(id)}
+              isLoggedIn={!!user}
+              userId={user?.id}
+            />
           </TabsContent>
 
           <TabsContent value="singles">
-            <ItemGrid items={singles} isSingles onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} userId={user?.id} />
+            <ItemGrid
+              items={singles}
+              isSingles
+              onAddToCart={addToCart}
+              isFavorite={isFavorite}
+              onToggleFavorite={(id) => toggleFavorite.mutate(id)}
+              isLoggedIn={!!user}
+              userId={user?.id}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -978,17 +1300,39 @@ const Catalogo = () => {
       <div ref={bottomSentinelRef} className="h-1 w-full" />
 
       {/* Social FABs */}
-      <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
-        <a href="https://www.instagram.com/scardtopia/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300">
-          <Instagram className="h-5 w-5 text-accent" />Instagram
+      <div
+        className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+      >
+        <a
+          href="https://www.instagram.com/scardtopia/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300"
+        >
+          <Instagram className="h-5 w-5 text-accent" />
+          Instagram
         </a>
-        <a href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis." target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-white shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300">
-          <MessageCircle className="h-5 w-5" />Pedir via WhatsApp
+        <a
+          href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-white shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300"
+        >
+          <MessageCircle className="h-5 w-5" />
+          Pedir via WhatsApp
         </a>
       </div>
 
       {/* Shopping Cart */}
-      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} fabsVisible={fabsVisible} />
+      <ShoppingCart
+        items={cartItems}
+        onAdd={addToCart}
+        onRemove={removeFromCart}
+        onClear={clearCart}
+        onUpdateQty={updateCartQty}
+        onOrderPlaced={user ? handleOrderPlaced : undefined}
+        fabsVisible={fabsVisible}
+      />
     </div>
   );
 };
