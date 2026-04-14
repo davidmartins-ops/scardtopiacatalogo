@@ -74,7 +74,7 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil", drop_description: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", price_pix: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil", drop_description: "" });
 
   // Drop description dialog
   const [descDialogItem, setDescDialogItem] = useState<InventoryItem | null>(null);
@@ -133,7 +133,7 @@ const InventoryTable = ({ data }: Props) => {
   const startEdit = (item: InventoryItem) => {
     setEditingId(item.id);
     setEditForm({
-      name: item.name, price: String(item.price), quantity: String(item.quantity),
+      name: item.name, price: String(item.price), price_pix: String(item.price_pix ?? 0), quantity: String(item.quantity),
       category: item.category, discount: String(item.discount ?? 0),
       language: item.language ?? "PT", condition: item.condition ?? "NM",
       status: item.status ?? "none", description: item.description ?? "Foil",
@@ -145,6 +145,7 @@ const InventoryTable = ({ data }: Props) => {
 
   const saveEdit = async (id: string) => {
     const price = parseFloat(editForm.price);
+    const pricePix = parseFloat(editForm.price_pix || "0");
     const quantity = parseInt(editForm.quantity, 10);
     const discount = parseFloat(editForm.discount || "0");
     if (!editForm.name.trim() || isNaN(price) || price < 0 || isNaN(quantity) || quantity < 0 || isNaN(discount) || discount < 0 || discount > 100) {
@@ -154,7 +155,7 @@ const InventoryTable = ({ data }: Props) => {
     setSaving(true);
     const { error } = await supabase.from("inventory")
       .update({
-        name: editForm.name.trim(), price, quantity,
+        name: editForm.name.trim(), price, price_pix: pricePix, quantity,
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
         status: editForm.status, description: editForm.description,
