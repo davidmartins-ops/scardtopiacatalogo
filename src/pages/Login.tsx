@@ -107,8 +107,8 @@ const Login = () => {
       {/* Main content */}
       <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-8 sm:-mt-12">
         {/* Slogan */}
-        <p className="text-foreground/80 text-sm sm:text-base font-body font-semibold tracking-[0.25em] uppercase animate-fade-in w-full max-w-3xl text-center" style={{ animationDelay: "0.2s" }}>
-          Sua loja de Secret Lair!
+        <p className="text-primary text-lg sm:text-xl md:text-2xl font-body font-bold tracking-[0.2em] uppercase animate-fade-in w-full max-w-3xl text-center drop-shadow-md" style={{ animationDelay: "0.2s" }}>
+          ✨ Sua loja de Secret Lair! ✨
         </p>
 
         {/* Divider */}
