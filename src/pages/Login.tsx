@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { lovable } from "@/integrations/lovable/index";
+import useSEO from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
@@ -12,6 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
   const { data: banners = [] } = useActiveBanners("login");
+  useSEO({ title: "Login", description: "Entre na Spencer's Cardtopia — sua loja de Secret Lair, drops exclusivos e singles de Magic: The Gathering.", canonical: `${window.location.origin}/login` });
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -107,8 +109,8 @@ const Login = () => {
       {/* Main content */}
       <main className="relative z-10 flex flex-col items-center px-4 sm:px-6 pb-12 -mt-8 sm:-mt-12">
         {/* Slogan */}
-        <p className="text-foreground/80 text-sm sm:text-base font-body font-semibold tracking-[0.25em] uppercase animate-fade-in w-full max-w-3xl text-center" style={{ animationDelay: "0.2s" }}>
-          Sua loja de Secret Lair!
+        <p className="text-primary text-lg sm:text-xl md:text-2xl font-body font-bold tracking-[0.2em] uppercase animate-fade-in w-full max-w-3xl text-center drop-shadow-md" style={{ animationDelay: "0.2s" }}>
+          ✨ Sua loja de Secret Lair! ✨
         </p>
 
         {/* Divider */}

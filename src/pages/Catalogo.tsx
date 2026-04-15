@@ -47,8 +47,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import ImageZoom from "@/components/ImageZoom";
+import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import ShoppingCart, { type CartItem } from "@/components/ShoppingCart";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
@@ -57,103 +56,6 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { useOrders, type OrderItem } from "@/hooks/use-orders";
 import { supabase } from "@/integrations/supabase/client";
-
-const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Non-Foil": { label: "Non-Foil", icon: Circle, className: "bg-non-foil/15 text-non-foil border-non-foil/30" },
-  "Surge Foil": { label: "Surge Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Rainbow Foil": { label: "Rainbow Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
-  "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
-  "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
-};
-
-const conditionLabels: Record<string, string> = {
-  NM: "Near Mint",
-  SP: "Slightly Played",
-  MP: "Moderately Played",
-  HP: "Heavily Played",
-  D: "Damaged",
-};
-
-const trackEvent = async (eventType: string, item?: InventoryItem) => {
-  try {
-    const sessionId =
-      sessionStorage.getItem("analytics_session") ||
-      (() => {
-        const id = crypto.randomUUID();
-        sessionStorage.setItem("analytics_session", id);
-        return id;
-      })();
-    await supabase.from("analytics_events").insert({
-      event_type: eventType,
-      inventory_item_id: item?.id ?? null,
-      item_name: item?.name ?? null,
-      category: item?.category ?? null,
-      session_id: sessionId,
-    });
-  } catch {
-    /* silent */
-  }
-};
-
-const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
-  const discount = item.discount ?? 0;
-  const finalPrice = item.price * (1 - discount / 100);
-  const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  const text = `${item.name} - ${priceStr}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
-  const url = window.location.href;
-  const imageUrl = item.image_url ?? "";
-
-  trackEvent("share", item);
-
-  let imageFile: File | null = null;
-  if (imageUrl) {
-    try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      imageFile = new File([blob], `${item.name.replace(/\s+/g, "-")}.jpg`, { type: blob.type });
-    } catch {
-      /* silent */
-    }
-  }
-
-  if (method === "copy") {
-    if (navigator.share) {
-      try {
-        const shareData: ShareData = { title: item.name, text, url };
-        if (imageFile && navigator.canShare?.({ files: [imageFile] })) {
-          shareData.files = [imageFile];
-        }
-        await navigator.share(shareData);
-        return;
-      } catch {
-        /* fallback */
-      }
-    }
-    navigator.clipboard.writeText(`${text}\n${url}`);
-    toast.success("Link copiado!");
-    return;
-  }
-
-  const shareText = `${text}\n${url}`;
-
-  if (method === "whatsapp") {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-  } else if (method === "twitter") {
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
-      "_blank",
-    );
-  } else if (method === "instagram") {
-    navigator.clipboard.writeText(shareText);
-    toast.success("Texto copiado! Cole no seu Instagram Stories");
-    window.open("https://www.instagram.com/", "_blank");
-  } else {
-    navigator.clipboard.writeText(shareText);
-    toast.success("Link copiado!");
-  }
-};
 
 const MTG_COLORS = [
   { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
@@ -164,126 +66,34 @@ const MTG_COLORS = [
   { value: "C", label: "Incolor", className: "bg-gray-200 text-gray-700 border-gray-400" },
 ];
 
-const MANA_SYMBOLS = ["W", "U", "B", "R", "G", "C"] as const;
-
-type ManaProfile = {
-  manaCost: string | null;
-  colors: string[];
-};
+type ManaProfile = { manaCost: string | null; colors: string[] };
 
 const getScryfallIdentifier = (item: InventoryItem) => {
   if ((item.product_type ?? "drop") !== "single") return null;
-
   const parts = item.id.split("-");
   if (parts.length < 5) return null;
-
   const [set, collectorNumber] = parts;
   if (!set || !collectorNumber) return null;
-
-  return {
-    key: `${set.toLowerCase()}:${collectorNumber.toLowerCase()}`,
-    set: set.toLowerCase(),
-    collector_number: collectorNumber.toLowerCase(),
-  };
+  return { key: `${set.toLowerCase()}:${collectorNumber.toLowerCase()}`, set: set.toLowerCase(), collector_number: collectorNumber.toLowerCase() };
 };
 
 const getManaColors = (manaCost?: string | null, colorIdentity?: string[] | null) => {
   if (!manaCost && (!colorIdentity || colorIdentity.length === 0)) return ["C"];
   if (!manaCost) return colorIdentity && colorIdentity.length === 0 ? ["C"] : (colorIdentity ?? []);
-
-  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) =>
-    new RegExp(`\\{[^}]*${symbol}[^}]*\\}`, "i").test(manaCost),
-  );
+  const colors = (["W", "U", "B", "R", "G"] as const).filter((symbol) => new RegExp(`\\{[^}]*${symbol}[^}]*\\}`, "i").test(manaCost));
   if (colors.length === 0 && manaCost.length > 0) return ["C"];
   return colors;
 };
 
-/* Notify Me Dialog */
-const NotifyMeDialog = ({
-  item,
-  isLoggedIn,
-  userId,
-}: {
-  item: InventoryItem;
-  isLoggedIn: boolean;
-  userId?: string;
-}) => {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const handleNotify = async () => {
-    if (!isLoggedIn || !userId) {
-      toast.error("Faça login para receber notificações.");
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.from("stock_notifications").insert({
-      user_id: userId,
-      inventory_item_id: item.id,
-    } as any);
-    setLoading(false);
-    if (error) {
-      if (error.code === "23505") {
-        toast.info("Você já está cadastrado para este produto!");
-      } else {
-        toast.error("Erro ao cadastrar notificação.");
-      }
-      setOpen(false);
-      return;
-    }
-    toast.success("Você será notificado quando o produto estiver disponível!");
-    setOpen(false);
-  };
-
-  return (
-    <>
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-8 text-xs gap-1.5 border-primary/30 hover:border-primary/50 text-primary font-semibold"
-        onClick={() => {
-          if (!isLoggedIn) {
-            toast.error("Faça login para receber notificações.");
-            return;
-          }
-          setOpen(true);
-        }}
-      >
-        <Bell className="h-3.5 w-3.5" /> Me avise!
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-sm bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="font-display text-base">Receber Notificação</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Deseja ser notificado quando <strong className="text-foreground">{item.name}</strong> estiver disponível
-              novamente?
-            </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleNotify} disabled={loading} className="gap-1.5">
-                <Bell className="h-4 w-4" /> {loading ? "Cadastrando..." : "Me avise!"}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+const trackEvent = async (eventType: string, item?: InventoryItem) => {
+  try {
+    const sessionId = sessionStorage.getItem("analytics_session") || (() => { const id = crypto.randomUUID(); sessionStorage.setItem("analytics_session", id); return id; })();
+    await supabase.from("analytics_events").insert({ event_type: eventType, inventory_item_id: item?.id ?? null, item_name: item?.name ?? null, category: item?.category ?? null, session_id: sessionId });
+  } catch {}
 };
 
 const ItemGrid = ({
-  items,
-  isSingles,
-  onAddToCart,
-  isFavorite,
-  onToggleFavorite,
-  isLoggedIn,
-  userId,
+  items, isSingles, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId,
 }: {
   items: InventoryItem[] | undefined;
   isSingles?: boolean;
@@ -294,7 +104,6 @@ const ItemGrid = ({
   userId?: string;
 }) => {
   const [search, setSearch] = useState("");
-
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -302,24 +111,12 @@ const ItemGrid = ({
   const [sortOrder, setSortOrder] = useState<string>("default");
 
   useEffect(() => {
-    if (!isSingles || !items?.length) {
-      setManaProfiles({});
-      return;
-    }
-
+    if (!isSingles || !items?.length) { setManaProfiles({}); return; }
     const identifiers = items
       .map((item) => ({ itemId: item.id, identifier: getScryfallIdentifier(item) }))
-      .filter((entry): entry is { itemId: string; identifier: NonNullable<ReturnType<typeof getScryfallIdentifier>> } =>
-        Boolean(entry.identifier),
-      );
-
-    if (!identifiers.length) {
-      setManaProfiles({});
-      return;
-    }
-
+      .filter((e): e is { itemId: string; identifier: NonNullable<ReturnType<typeof getScryfallIdentifier>> } => Boolean(e.identifier));
+    if (!identifiers.length) { setManaProfiles({}); return; }
     let cancelled = false;
-
     const CACHE_KEY = "mana_profiles_cache";
     const CACHE_TTL = 24 * 60 * 60 * 1000;
 
@@ -327,13 +124,7 @@ const ItemGrid = ({
       try {
         const cached = localStorage.getItem(CACHE_KEY);
         let cachedProfiles: Record<string, ManaProfile & { ts: number; colorIdentity?: string[] }> = {};
-        if (cached) {
-          try {
-            cachedProfiles = JSON.parse(cached);
-          } catch {
-            /* ignore */
-          }
-        }
+        if (cached) { try { cachedProfiles = JSON.parse(cached); } catch {} }
 
         const now = Date.now();
         const nextProfiles: Record<string, ManaProfile> = {};
@@ -350,40 +141,19 @@ const ItemGrid = ({
 
         if (needsFetch.length > 0) {
           const batches: (typeof needsFetch)[] = [];
-          for (let i = 0; i < needsFetch.length; i += 75) {
-            batches.push(needsFetch.slice(i, i + 75));
-          }
+          for (let i = 0; i < needsFetch.length; i += 75) batches.push(needsFetch.slice(i, i + 75));
 
           for (const batch of batches) {
             const response = await fetch("https://api.scryfall.com/cards/collection", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                identifiers: batch.map(({ identifier }) => ({
-                  set: identifier.set,
-                  collector_number: identifier.collector_number,
-                })),
-              }),
+              body: JSON.stringify({ identifiers: batch.map(({ identifier }) => ({ set: identifier.set, collector_number: identifier.collector_number })) }),
             });
-
             if (!response.ok) continue;
-
             const payload = await response.json();
             const cards = Array.isArray(payload.data) ? payload.data : [];
             const byKey = new Map<string, { mana_cost?: string | null; color_identity?: string[] }>();
-
-            cards.forEach(
-              (card: {
-                set?: string;
-                collector_number?: string;
-                mana_cost?: string | null;
-                color_identity?: string[];
-              }) => {
-                if (!card.set || !card.collector_number) return;
-                byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card);
-              },
-            );
-
+            cards.forEach((card: any) => { if (!card.set || !card.collector_number) return; byKey.set(`${card.set.toLowerCase()}:${card.collector_number.toLowerCase()}`, card); });
             batch.forEach(({ itemId, identifier }) => {
               const card = byKey.get(identifier.key);
               const manaCost = card?.mana_cost ?? null;
@@ -393,29 +163,15 @@ const ItemGrid = ({
               cachedProfiles[identifier.key] = { manaCost, colors, ts: now, colorIdentity };
             });
           }
-
-          try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(cachedProfiles));
-          } catch {
-            /* quota */
-          }
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(cachedProfiles)); } catch {}
         }
 
-        if (!cancelled) {
-          setManaProfiles(nextProfiles);
-        }
-      } catch {
-        if (!cancelled) {
-          setManaProfiles({});
-        }
-      }
+        if (!cancelled) setManaProfiles(nextProfiles);
+      } catch { if (!cancelled) setManaProfiles({}); }
     };
 
     loadManaProfiles();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [items, isSingles]);
 
   const toggleColor = (color: string) => {
@@ -426,71 +182,44 @@ const ItemGrid = ({
     const minP = priceMin ? parseFloat(priceMin) : null;
     const maxP = priceMax ? parseFloat(priceMax) : null;
     return (items ?? []).filter((item) => {
-      // Hide out-of-stock singles from catalog
       if (isSingles && item.quantity <= 0) return false;
-
-      const matchesSearch =
-        !search ||
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.category.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase()) || item.category.toLowerCase().includes(search.toLowerCase());
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
-      const matchesColor =
-        selectedColors.length === 0 ||
-        !isSingles ||
-        (() => {
-          const profile = manaProfiles[item.id];
-          if (!profile) return false;
-
-          const itemColors = [...profile.colors].sort();
-          const activeColors = [...selectedColors].sort();
-
-          if (itemColors.length !== activeColors.length) return false;
-          return activeColors.every((color, index) => itemColors[index] === color);
-        })();
+      const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
+        const profile = manaProfiles[item.id];
+        if (!profile) return false;
+        const itemColors = [...profile.colors].sort();
+        const activeColors = [...selectedColors].sort();
+        if (itemColors.length !== activeColors.length) return false;
+        return activeColors.every((color, index) => itemColors[index] === color);
+      })();
       return matchesSearch && matchesPrice && matchesColor;
     });
   }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
 
   const groupedItems = useMemo(() => {
     if (sortOrder === "az" || sortOrder === "za") {
-      const sorted = [...filteredItems].sort((a, b) =>
-        sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
-      );
+      const sorted = [...filteredItems].sort((a, b) => sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
       return [["Todas as cartas", sorted]] as [string, typeof filteredItems][];
     }
     const groups: Record<string, typeof filteredItems> = {};
-    filteredItems.forEach((item) => {
-      if (!groups[item.category]) groups[item.category] = [];
-      groups[item.category].push(item);
-    });
+    filteredItems.forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredItems, sortOrder]);
 
   return (
     <div className="space-y-6 overflow-visible">
-      <div
-        className="glass-card p-4 space-y-4 animate-fade-in-up overflow-visible"
-        style={{ animationDelay: "0.2s", opacity: 0 }}
-      >
+      <div className="glass-card p-4 space-y-4 animate-fade-in-up overflow-visible" style={{ animationDelay: "0.2s", opacity: 0 }}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors"
-          />
+          <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
         </div>
-
-        {/* Alphabetical sort */}
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Ordem:</span>
           <Select value={sortOrder} onValueChange={setSortOrder}>
-            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[250px]">
-              <SelectValue placeholder="Padrão" />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[250px]"><SelectValue placeholder="Padrão" /></SelectTrigger>
             <SelectContent className="max-h-60">
               <SelectItem value="default">Padrão (por coleção)</SelectItem>
               <SelectItem value="az">A → Z</SelectItem>
@@ -498,78 +227,30 @@ const ItemGrid = ({
             </SelectContent>
           </Select>
         </div>
-
         {isSingles && (
           <div className="flex items-center gap-2 flex-wrap">
             <Palette className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="text-xs text-muted-foreground font-medium shrink-0">Cores no custo:</span>
             {MTG_COLORS.map((color) => (
-              <button
-                key={color.value}
-                onClick={() => toggleColor(color.value)}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
-                  selectedColors.includes(color.value)
-                    ? color.className + " ring-1 ring-primary scale-105"
-                    : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"
-                }`}
-                title={`Filtrar por ${color.value} no custo de mana`}
-              >
-                {color.label} ({color.value})
-              </button>
+              <button key={color.value} onClick={() => toggleColor(color.value)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${selectedColors.includes(color.value) ? color.className + " ring-1 ring-primary scale-105" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+                title={`Filtrar por ${color.value} no custo de mana`}>{color.label} ({color.value})</button>
             ))}
-            {selectedColors.length > 1 && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">
-                Cores combinadas
-              </Badge>
-            )}
-            {selectedColors.length > 0 && (
-              <button
-                className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold"
-                onClick={() => setSelectedColors([])}
-              >
-                Limpar
-              </button>
-            )}
+            {selectedColors.length > 1 && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">Cores combinadas</Badge>}
+            {selectedColors.length > 0 && <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setSelectedColors([])}>Limpar</button>}
           </div>
         )}
-
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
-          <Input
-            type="number"
-            placeholder="Mín"
-            value={priceMin}
-            onChange={(e) => setPriceMin(e.target.value)}
-            className="w-24 h-8 text-xs bg-muted/30 border-border/50"
-            min="0"
-          />
+          <Input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
           <span className="text-xs text-muted-foreground">—</span>
-          <Input
-            type="number"
-            placeholder="Máx"
-            value={priceMax}
-            onChange={(e) => setPriceMax(e.target.value)}
-            className="w-24 h-8 text-xs bg-muted/30 border-border/50"
-            min="0"
-          />
-          {(priceMin || priceMax) && (
-            <button
-              className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold"
-              onClick={() => {
-                setPriceMin("");
-                setPriceMax("");
-              }}
-            >
-              Limpar
-            </button>
-          )}
+          <Input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-24 h-8 text-xs bg-muted/30 border-border/50" min="0" />
+          {(priceMin || priceMax) && <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setPriceMin(""); setPriceMax(""); }}>Limpar</button>}
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados
-      </p>
+      <p className="text-sm text-muted-foreground">{filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados</p>
 
       {groupedItems.length === 0 ? (
         <div className="text-center py-16">
@@ -578,219 +259,26 @@ const ItemGrid = ({
         </div>
       ) : (
         groupedItems.map(([category, catItems], groupIdx) => (
-          <div
-            key={category}
-            className="space-y-3 animate-fade-in-up"
-            style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}
-          >
+          <div key={category} className="space-y-3 animate-fade-in-up" style={{ animationDelay: `${0.3 + groupIdx * 0.1}s`, opacity: 0 }}>
             <div className="flex items-center gap-3">
               <h2 className="font-display text-xl font-semibold text-foreground">{category}</h2>
               <div className="flex-1 premium-divider" />
               <span className="text-xs text-muted-foreground font-body">{catItems.length} itens</span>
             </div>
-
-            <div
-              className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}
-            >
-              {catItems.map((item, i) => {
-                const config = descriptionConfig[item.description];
-                const Icon = config?.icon ?? Circle;
-                const discount = item.discount ?? 0;
-                const finalPrice = item.price * (1 - discount / 100);
-                const isOutOfStock = item.quantity <= 0;
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`group glass-card glow-hover overflow-hidden animate-scale-in relative ${isOutOfStock ? "opacity-70" : ""}`}
-                    style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}
-                  >
-                    {/* Favorite button */}
-                    <button
-                      className={`absolute top-2 right-2 z-30 h-8 w-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
-                      onClick={() => {
-                        if (!isLoggedIn) {
-                          toast.error("Faça login para favoritar.");
-                          return;
-                        }
-                        onToggleFavorite(item.id);
-                      }}
-                    >
-                      <Heart className={`h-4 w-4 ${isFavorite(item.id) ? "fill-current" : ""}`} />
-                    </button>
-
-                    {/* Status Badge */}
-                    {item.status === "pre_sale" && (
-                      <div className="absolute top-2 left-2 z-30">
-                        <Badge className="bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-badge-glow">
-                          <Star className="h-3 w-3 animate-spin" style={{ animationDuration: "3s" }} />
-                          PRÉ VENDA
-                        </Badge>
-                      </div>
-                    )}
-                    {item.status === "launch" && (
-                      <div className="absolute top-2 left-2 z-30">
-                        <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg gap-1 animate-badge-glow-primary">
-                          <Flame className="h-3 w-3 animate-pulse" />
-                          LANÇAMENTO
-                        </Badge>
-                      </div>
-                    )}
-
-                    {/* Image */}
-                    <div className="relative z-10 px-3 pt-3">
-                      <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative">
-                        {item.image_url ? (
-                          <ImageZoom
-                            src={item.image_url}
-                            alt={item.name}
-                            className={`w-full ${isSingles ? "h-auto aspect-[2.5/3.5]" : "h-44 sm:h-48"} object-cover transition-transform duration-500 ${isOutOfStock ? "grayscale" : ""}`}
-                            containerClassName="w-full"
-                          />
-                        ) : (
-                          <div
-                            className={`w-full ${isSingles ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"} flex items-center justify-center text-sm text-muted-foreground bg-muted/10`}
-                          >
-                            Imagem não disponível
-                          </div>
-                        )}
-                        {isOutOfStock && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[2px] z-20">
-                            <span className="text-sm font-semibold text-muted-foreground">Indisponível</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Card Info - CLEAN layout */}
-                    <div className="relative z-10 p-3 pt-2 space-y-2">
-                      {/* Name */}
-                      <h3 className="font-body font-semibold text-foreground leading-snug text-[15px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
-                        {item.name}
-                      </h3>
-
-                      {/* Foil type badge */}
-                      <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
-                        <Icon className="h-2.5 w-2.5" />
-                        {config?.label ?? item.description}
-                      </Badge>
-
-                      {/* Price section - PROMINENT */}
-                      <div className="pt-1">
-                        {discount > 0 ? (
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg font-bold text-primary font-display">
-                                R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                              </span>
-                              <span className="text-xs font-semibold text-destructive bg-destructive/10 rounded px-1.5 py-0.5">
-                                -{discount}%
-                              </span>
-                            </div>
-                            <span className="text-sm text-muted-foreground line-through">
-                              R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </span>
-                          </div>
-                        ) : (
-                          <>
-                            <span className="text-lg font-bold text-primary font-display">
-                              R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </span>
-                            {(item.price_pix ?? 0) > 0 && (
-                              <p className="text-sm font-semibold text-green-600">
-                                PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                              </p>
-                            )}
-                            {!isSingles && item.price >= 50 && (
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                💳 até 3x de R${" "}
-                                {(item.price / 3).toLocaleString("pt-BR", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}{" "}
-                                s/ juros
-                              </p>
-                            )}
-                          </>
-                        )}
-                        {discount > 0 && (
-                          <p className="text-[9px] text-muted-foreground italic mt-0.5">
-                            * Parcelamento s/ juros apenas para valores não promocionais
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Stock info - PROMINENT */}
-                      {!isOutOfStock && (
-                        <p className="text-sm font-medium text-foreground/70">
-                          {item.quantity === 1 ? "🔥 Última unidade!" : `${item.quantity} em estoque`}
-                        </p>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        {isOutOfStock ? (
-                          <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            className="h-8 text-xs gap-1.5 font-semibold"
-                            onClick={() => onAddToCart(item)}
-                          >
-                            <Plus className="h-3.5 w-3.5" /> Adicionar
-                          </Button>
-                        )}
-                        {!isSingles && (
-                          <Link to={`/catalogo/drop/${item.id}`}>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs text-primary hover:text-primary/80 font-medium"
-                            >
-                              Conteúdo do Drop →
-                            </Button>
-                          </Link>
-                        )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-muted-foreground hover:text-primary"
-                            >
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="min-w-[160px]">
-                            <DropdownMenuItem
-                              onClick={() => shareItem(item, "whatsapp")}
-                              className="gap-2 cursor-pointer"
-                            >
-                              <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => shareItem(item, "twitter")}
-                              className="gap-2 cursor-pointer"
-                            >
-                              <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => shareItem(item, "instagram")}
-                              className="gap-2 cursor-pointer"
-                            >
-                              <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
-                              <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+              {catItems.map((item, i) => (
+                <div key={item.id} className="animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
+                  <ProductCard
+                    item={item}
+                    isSingle={isSingles}
+                    onAddToCart={onAddToCart}
+                    isFavorite={isFavorite(item.id)}
+                    onToggleFavorite={() => onToggleFavorite(item.id)}
+                    isLoggedIn={isLoggedIn}
+                    userId={userId}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         ))
@@ -799,18 +287,11 @@ const ItemGrid = ({
   );
 };
 
-/* Catalog Banner Carousel - uses DB banners */
+/* Catalog Banner Carousel */
 const CatalogBanner = () => {
   const { data: banners = [] } = useActiveBanners("catalogo");
   const [currentBanner, setCurrentBanner] = useState(0);
-
-  useEffect(() => {
-    if (banners.length <= 1) return;
-    const timer = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [banners.length]);
+  useEffect(() => { if (banners.length <= 1) return; const timer = setInterval(() => { setCurrentBanner((prev) => (prev + 1) % banners.length); }, 7000); return () => clearInterval(timer); }, [banners.length]);
 
   if (banners.length === 0) {
     return (
@@ -818,10 +299,7 @@ const CatalogBanner = () => {
         <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
-          <h1
-            className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in"
-            style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: "0.05em" }}
-          >
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: "0.05em" }}>
             <span className="text-gradient">Catálogo</span>
           </h1>
           <div className="premium-divider max-w-[80px] mt-2" />
@@ -832,10 +310,7 @@ const CatalogBanner = () => {
 
   return (
     <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden group">
-      <div
-        className="absolute inset-0 flex transition-transform duration-700 ease-in-out"
-        style={{ transform: `translateX(-${currentBanner * 100}%)` }}
-      >
+      <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
         {banners.map((b, idx) => (
           <div key={idx} className="relative w-full h-full flex-shrink-0" style={{ minWidth: "100%" }}>
             <img src={b.image_url} alt={b.alt} className="absolute inset-0 w-full h-full object-cover" />
@@ -844,36 +319,16 @@ const CatalogBanner = () => {
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/40 to-background pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-10">
-        <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-1">
-          {banners[currentBanner]?.label}
-        </span>
-        <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">
-          {banners[currentBanner]?.title}
-        </h2>
+        <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-1">{banners[currentBanner]?.label}</span>
+        <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{banners[currentBanner]?.title}</h2>
         <p className="text-xs text-muted-foreground mt-0.5">{banners[currentBanner]?.subtitle}</p>
       </div>
       {banners.length > 1 && (
         <>
-          <button
-            onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+          <button onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)} className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"><ChevronLeft className="h-4 w-4" /></button>
+          <button onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"><ChevronRight className="h-4 w-4" /></button>
           <div className="absolute bottom-2 right-4 flex gap-1.5 z-20">
-            {banners.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentBanner(idx)}
-                className={`h-1.5 rounded-full transition-all ${idx === currentBanner ? "w-5 bg-primary" : "w-1.5 bg-foreground/30"}`}
-              />
-            ))}
+            {banners.map((_, idx) => (<button key={idx} onClick={() => setCurrentBanner(idx)} className={`h-1.5 rounded-full transition-all ${idx === currentBanner ? "w-5 bg-primary" : "w-1.5 bg-foreground/30"}`} />))}
           </div>
         </>
       )}
@@ -881,31 +336,20 @@ const CatalogBanner = () => {
   );
 };
 
-/* Promo Highlights - items with discounts */
+/* Promo Highlights - redesigned */
 const PromoHighlights = ({
-  items,
-  onAddToCart,
-  isFavorite,
-  onToggleFavorite,
-  isLoggedIn,
+  items, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn,
 }: {
-  items: InventoryItem[];
-  onAddToCart: (item: InventoryItem) => void;
-  isFavorite: (id: string) => boolean;
-  onToggleFavorite: (id: string) => void;
-  isLoggedIn: boolean;
+  items: InventoryItem[]; onAddToCart: (item: InventoryItem) => void;
+  isFavorite: (id: string) => boolean; onToggleFavorite: (id: string) => void; isLoggedIn: boolean;
 }) => {
   const promoItems = useMemo(() => items.filter((i) => (i.discount ?? 0) > 0 && i.quantity > 0), [items]);
-
   if (promoItems.length === 0) return null;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <h2
-          className="font-display text-xl font-semibold text-foreground"
-          style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif" }}
-        >
+        <h2 className="font-display text-xl font-semibold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif" }}>
           <span className="text-gradient">🔥 Em Promoção</span>
         </h2>
         <div className="flex-1 premium-divider" />
@@ -918,60 +362,41 @@ const PromoHighlights = ({
           const isSingle = item.product_type === "single";
 
           return (
-            <div
-              key={item.id}
-              className="flex-shrink-0 w-44 sm:w-52 glass-card glow-hover overflow-hidden snap-start relative group"
-            >
+            <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+              {/* Discount badge */}
               <div className="absolute top-2 left-2 z-30">
-                <span className="text-xs font-bold text-destructive bg-destructive/10 rounded px-2 py-0.5">
+                <div className="bg-destructive text-destructive-foreground text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg">
                   -{discount}%
-                </span>
+                </div>
               </div>
               <button
                 className={`absolute top-2 right-2 z-30 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    toast.error("Faça login para favoritar.");
-                    return;
-                  }
-                  onToggleFavorite(item.id);
-                }}
+                onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
               >
                 <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
               </button>
               <div className="relative z-10 px-2 pt-2">
                 <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20">
                   {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.name}
-                      className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} object-cover`}
-                    />
+                    <img src={item.image_url} alt={item.name} className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-40"} object-cover group-hover:scale-[1.02] transition-transform duration-500`} />
                   ) : (
-                    <div
-                      className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-36"} flex items-center justify-center bg-muted/10`}
-                    >
-                      <Package className="h-8 w-8 text-muted-foreground/30" />
-                    </div>
+                    <div className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-40"} flex items-center justify-center bg-muted/10`}><Package className="h-8 w-8 text-muted-foreground/30" /></div>
                   )}
                 </div>
               </div>
-              <div className="relative z-10 p-2.5 pt-2">
-                <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight">{item.name}</h3>
-                <div className="mt-1.5 space-y-0.5">
-                  <span className="text-base font-bold text-primary font-display block">
+              <div className="relative z-10 p-3 pt-2 space-y-1.5">
+                <div className="min-h-[38px]">
+                  <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3]">{item.name}</h3>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[22px] sm:text-[24px] font-bold text-primary font-display block leading-none">
                     R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
-                  <span className="text-xs text-muted-foreground line-through">
+                  <span className="text-[12px] text-muted-foreground line-through block">
                     R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="w-full mt-2 h-8 text-xs gap-1 font-semibold"
-                  onClick={() => onAddToCart(item)}
-                >
+                <Button size="sm" variant="default" className="w-full mt-1.5 h-9 text-[13px] gap-1 font-semibold transition-all duration-150 active:scale-[0.98]" onClick={() => onAddToCart(item)}>
                   <Plus className="h-3.5 w-3.5" /> Adicionar
                 </Button>
               </div>
@@ -999,12 +424,7 @@ const Catalogo = () => {
   useEffect(() => {
     const sentinel = bottomSentinelRef.current;
     if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setFabsVisible(!entry.isIntersecting);
-      },
-      { threshold: 0 },
-    );
+    const observer = new IntersectionObserver(([entry]) => { setFabsVisible(!entry.isIntersecting); }, { threshold: 0 });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, []);
@@ -1013,129 +433,81 @@ const Catalogo = () => {
     if (!user || savedCartLoading || cartLoadedFromDb.current || inventoryData.length === 0) return;
     if (savedItems.length > 0) {
       const restored: CartItem[] = [];
-      savedItems.forEach((si) => {
-        const item = inventoryData.find((inv) => inv.id === si.inventory_item_id);
-        if (item) restored.push({ item, qty: Math.min(si.quantity, item.quantity) });
-      });
+      savedItems.forEach((si) => { const item = inventoryData.find((inv) => inv.id === si.inventory_item_id); if (item) restored.push({ item, qty: Math.min(si.quantity, item.quantity) }); });
       if (restored.length > 0) {
-        setCartItems((prev) => {
-          const merged = [...prev];
-          restored.forEach((r) => {
-            if (!merged.find((m) => m.item.id === r.item.id)) merged.push(r);
-          });
-          return merged;
-        });
+        setCartItems((prev) => { const merged = [...prev]; restored.forEach((r) => { if (!merged.find((m) => m.item.id === r.item.id)) merged.push(r); }); return merged; });
       }
     }
     cartLoadedFromDb.current = true;
   }, [user, savedItems, savedCartLoading, inventoryData]);
 
-  const syncCartToDb = useCallback(
-    (items: CartItem[]) => {
-      if (!user) return;
-      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-      syncTimeoutRef.current = setTimeout(() => {
-        syncCart.mutate(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty })));
-      }, 1500);
-    },
-    [user, syncCart],
-  );
+  const syncCartToDb = useCallback((items: CartItem[]) => {
+    if (!user) return;
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    syncTimeoutRef.current = setTimeout(() => { syncCart.mutate(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty }))); }, 1500);
+  }, [user, syncCart]);
 
-  const addToCart = useCallback(
-    (item: InventoryItem) => {
-      if (item.quantity <= 0) {
-        toast.error("Item esgotado.");
-        return;
+  const addToCart = useCallback((item: InventoryItem) => {
+    if (item.quantity <= 0) { toast.error("Item esgotado."); return; }
+    trackEvent("add_to_cart", item);
+    setCartItems((prev) => {
+      const existing = prev.find((ci) => ci.item.id === item.id);
+      let next: CartItem[];
+      if (existing) {
+        if (existing.qty >= item.quantity) { toast.error("Quantidade máxima atingida."); return prev; }
+        toast.success(`${item.name} — quantidade atualizada!`);
+        next = prev.map((ci) => (ci.item.id === item.id ? { ...ci, qty: ci.qty + 1 } : ci));
+      } else {
+        toast.success(`${item.name} adicionado ao carrinho!`);
+        next = [...prev, { item, qty: 1 }];
       }
-      trackEvent("add_to_cart", item);
-      setCartItems((prev) => {
-        const existing = prev.find((ci) => ci.item.id === item.id);
-        let next: CartItem[];
-        if (existing) {
-          if (existing.qty >= item.quantity) {
-            toast.error("Quantidade máxima atingida.");
-            return prev;
-          }
-          toast.success(`${item.name} — quantidade atualizada!`);
-          next = prev.map((ci) => (ci.item.id === item.id ? { ...ci, qty: ci.qty + 1 } : ci));
-        } else {
-          toast.success(`${item.name} adicionado ao carrinho!`);
-          next = [...prev, { item, qty: 1 }];
-        }
-        syncCartToDb(next);
-        return next;
-      });
-    },
-    [syncCartToDb],
-  );
-
-  const removeFromCart = useCallback(
-    (itemId: string) => {
-      setCartItems((prev) => {
-        const next = prev.filter((ci) => ci.item.id !== itemId);
-        syncCartToDb(next);
-        return next;
-      });
-    },
-    [syncCartToDb],
-  );
-
-  const updateCartQty = useCallback(
-    (itemId: string, qty: number) => {
-      if (qty <= 0) {
-        removeFromCart(itemId);
-        return;
-      }
-      setCartItems((prev) => {
-        const next = prev.map((ci) => (ci.item.id === itemId ? { ...ci, qty } : ci));
-        syncCartToDb(next);
-        return next;
-      });
-    },
-    [removeFromCart, syncCartToDb],
-  );
-
-  const clearCart = useCallback(() => {
-    setCartItems([]);
-    syncCartToDb([]);
+      syncCartToDb(next);
+      return next;
+    });
   }, [syncCartToDb]);
 
-  const handleOrderPlaced = useCallback(
-    async (items: CartItem[], total: number) => {
-      if (!user) return;
-      const orderItems: OrderItem[] = items.map((ci) => {
-        const discount = ci.item.discount ?? 0;
-        const unitPrice = ci.item.price * (1 - discount / 100);
-        return {
-          id: ci.item.id,
-          name: ci.item.name,
-          description: ci.item.description,
-          language: ci.item.language,
-          condition: ci.item.condition,
-          quantity: ci.qty,
-          unit_price: unitPrice,
-          total_price: unitPrice * ci.qty,
-        };
-      });
-      createOrder.mutate({ items: orderItems, total });
+  const removeFromCart = useCallback((itemId: string) => {
+    setCartItems((prev) => { const next = prev.filter((ci) => ci.item.id !== itemId); syncCartToDb(next); return next; });
+  }, [syncCartToDb]);
 
-      for (const ci of items) {
-        const newQty = Math.max(0, ci.item.quantity - ci.qty);
-        await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
-      }
+  const updateCartQty = useCallback((itemId: string, qty: number) => {
+    if (qty <= 0) { removeFromCart(itemId); return; }
+    setCartItems((prev) => { const next = prev.map((ci) => (ci.item.id === itemId ? { ...ci, qty } : ci)); syncCartToDb(next); return next; });
+  }, [removeFromCart, syncCartToDb]);
 
-      toast.success("Pedido registrado e estoque atualizado!");
-    },
-    [user, createOrder],
-  );
+  const clearCart = useCallback(() => { setCartItems([]); syncCartToDb([]); }, [syncCartToDb]);
+
+  const handleOrderPlaced = useCallback(async (items: CartItem[], total: number) => {
+    if (!user) return;
+    const orderItems: OrderItem[] = items.map((ci) => {
+      const discount = ci.item.discount ?? 0;
+      const unitPrice = ci.item.price * (1 - discount / 100);
+      return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
+    });
+    createOrder.mutate({ items: orderItems, total });
+    for (const ci of items) {
+      const newQty = Math.max(0, ci.item.quantity - ci.qty);
+      await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+    }
+    toast.success("Pedido registrado e estoque atualizado!");
+  }, [user, createOrder]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background font-body">
+        <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-9" />
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (<ProductCardSkeleton key={i} />))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1156,7 +528,6 @@ const Catalogo = () => {
           <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
           </Link>
-
           <div className="flex items-center gap-2">
             <Link to="/tendencias">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
@@ -1166,173 +537,70 @@ const Catalogo = () => {
             </Link>
             {user ? (
               <>
-                <Link to="/conta">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Heart className="h-4 w-4" />
-                    <span className="hidden sm:inline">Favoritos</span>
-                  </Button>
-                </Link>
-                <Link to="/conta">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Layers className="h-4 w-4" />
-                    <span className="hidden sm:inline">Decks</span>
-                  </Button>
-                </Link>
-                <Link to="/conta">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <BookOpen className="h-4 w-4" />
-                    <span className="hidden sm:inline">Coleções</span>
-                  </Button>
-                </Link>
-
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground"><Heart className="h-4 w-4" /><span className="hidden sm:inline">Favoritos</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground"><Layers className="h-4 w-4" /><span className="hidden sm:inline">Decks</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Coleções</span></Button></Link>
                 <div className="h-5 w-px bg-border mx-1" />
-
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-muted/50 transition-colors">
-                      <Avatar className="h-7 w-7">
-                        <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
-                          {(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium text-foreground hidden sm:inline max-w-[120px] truncate">
-                        {profile?.display_name ?? user.email?.split("@")[0]}
-                      </span>
+                      <Avatar className="h-7 w-7"><AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">{(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}</AvatarFallback></Avatar>
+                      <span className="text-sm font-medium text-foreground hidden sm:inline max-w-[120px] truncate">{profile?.display_name ?? user.email?.split("@")[0]}</span>
                       <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta">
-                        <User className="h-4 w-4" /> Minha Conta
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta">
-                        <Heart className="h-4 w-4" /> Favoritos
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta">
-                        <Layers className="h-4 w-4" /> Meus Decks
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta">
-                        <BookOpen className="h-4 w-4" /> Minhas Coleções
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2">
-                      <Link to="/conta?tab=orders">
-                        <ShoppingBag className="h-4 w-4" /> Meus Pedidos
-                      </Link>
-                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2"><Link to="/conta"><User className="h-4 w-4" /> Minha Conta</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2"><Link to="/conta"><Heart className="h-4 w-4" /> Favoritos</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2"><Link to="/conta"><Layers className="h-4 w-4" /> Meus Decks</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2"><Link to="/conta"><BookOpen className="h-4 w-4" /> Minhas Coleções</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2"><Link to="/conta?tab=orders"><ShoppingBag className="h-4 w-4" /> Meus Pedidos</Link></DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="cursor-pointer gap-2 text-destructive focus:text-destructive"
-                      onClick={() => signOut()}
-                    >
-                      <LogOut className="h-4 w-4" /> Sair
-                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive" onClick={() => signOut()}><LogOut className="h-4 w-4" /> Sair</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
             ) : (
               <Link to="/conta/login">
-                <Button size="sm" variant="outline" className="gap-1.5 border-primary/30 hover:border-primary/60">
-                  <User className="h-4 w-4 text-primary" /> Entrar
-                </Button>
+                <Button size="sm" variant="outline" className="gap-1.5 border-primary/30 hover:border-primary/60"><User className="h-4 w-4 text-primary" /> Entrar</Button>
               </Link>
             )}
           </div>
         </div>
       </div>
 
-      {/* Hero Banner with rotating banners from DB */}
       <CatalogBanner />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12 space-y-6">
-        {/* Promo Highlights */}
-        <PromoHighlights
-          items={inventoryData}
-          onAddToCart={addToCart}
-          isFavorite={isFavorite}
-          onToggleFavorite={(id) => toggleFavorite.mutate(id)}
-          isLoggedIn={!!user}
-        />
+        <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
 
         <Tabs defaultValue="drops" className="w-full">
           <TabsList className="w-full max-w-md mx-auto mb-6 bg-muted/50 backdrop-blur-sm">
-            <TabsTrigger value="drops" className="flex-1 font-display">
-              Drops ({drops.length})
-            </TabsTrigger>
-            <TabsTrigger value="singles" className="flex-1 font-display">
-              Singles ({singles.length})
-            </TabsTrigger>
+            <TabsTrigger value="drops" className="flex-1 font-display">Drops ({drops.length})</TabsTrigger>
+            <TabsTrigger value="singles" className="flex-1 font-display">Singles ({singles.length})</TabsTrigger>
           </TabsList>
-
           <TabsContent value="drops">
-            <ItemGrid
-              items={drops}
-              onAddToCart={addToCart}
-              isFavorite={isFavorite}
-              onToggleFavorite={(id) => toggleFavorite.mutate(id)}
-              isLoggedIn={!!user}
-              userId={user?.id}
-            />
+            <ItemGrid items={drops} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} userId={user?.id} />
           </TabsContent>
-
           <TabsContent value="singles">
-            <ItemGrid
-              items={singles}
-              isSingles
-              onAddToCart={addToCart}
-              isFavorite={isFavorite}
-              onToggleFavorite={(id) => toggleFavorite.mutate(id)}
-              isLoggedIn={!!user}
-              userId={user?.id}
-            />
+            <ItemGrid items={singles} isSingles onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} userId={user?.id} />
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Bottom sentinel for hiding FABs */}
       <div ref={bottomSentinelRef} className="h-1 w-full" />
 
       {/* Social FABs */}
-      <div
-        className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
-      >
-        <a
-          href="https://www.instagram.com/scardtopia/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300"
-        >
-          <Instagram className="h-5 w-5 text-accent" />
-          Instagram
+      <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+        <a href="https://www.instagram.com/scardtopia/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300">
+          <Instagram className="h-5 w-5 text-accent" /> Instagram
         </a>
-        <a
-          href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-white shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300"
-        >
-          <MessageCircle className="h-5 w-5" />
-          Pedir via WhatsApp
+        <a href="https://wa.me/5511947154555?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20drops%20dispon%C3%ADveis." target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-full bg-success px-5 py-3 text-sm font-medium text-white shadow-lg shadow-success/20 hover:shadow-success/40 hover:shadow-xl hover:brightness-110 transition-all duration-300">
+          <MessageCircle className="h-5 w-5" /> Pedir via WhatsApp
         </a>
       </div>
 
-      {/* Shopping Cart */}
-      <ShoppingCart
-        items={cartItems}
-        onAdd={addToCart}
-        onRemove={removeFromCart}
-        onClear={clearCart}
-        onUpdateQty={updateCartQty}
-        onOrderPlaced={user ? handleOrderPlaced : undefined}
-        fabsVisible={fabsVisible}
-      />
+      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} fabsVisible={fabsVisible} />
     </div>
   );
 };
