@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { lovable } from "@/integrations/lovable/index";
+import useSEO from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
@@ -12,6 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
   const { data: banners = [] } = useActiveBanners("login");
+  useSEO({ title: "Login", description: "Entre na Spencer's Cardtopia — sua loja de Secret Lair, drops exclusivos e singles de Magic: The Gathering.", canonical: `${window.location.origin}/login` });
 
   useEffect(() => {
     if (banners.length <= 1) return;
