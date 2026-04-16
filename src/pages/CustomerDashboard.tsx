@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag, Download } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -267,6 +267,29 @@ const CustomerDashboard = () => {
               </div>
             ) : (
               <div className="space-y-3">
+                <div className="flex justify-end">
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => {
+                    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<orders>\n';
+                    orders.forEach((order) => {
+                      xml += `  <order id="${order.id}" status="${order.status}" date="${order.created_at}" total="${order.total}">\n`;
+                      (order.items as any[]).forEach((item: any) => {
+                        xml += `    <item name="${item.name}" quantity="${item.quantity}" unit_price="${item.unit_price}" total_price="${item.total_price}" />\n`;
+                      });
+                      xml += `  </order>\n`;
+                    });
+                    xml += '</orders>';
+                    const blob = new Blob([xml], { type: 'application/xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pedidos_${new Date().toISOString().split('T')[0]}.xml`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success("Arquivo XML baixado!");
+                  }}>
+                    <Download className="h-3.5 w-3.5" /> Exportar XML
+                  </Button>
+                </div>
                 {orders.map((order) => (
                   <div key={order.id} className="glass-card p-4">
                     <div className="flex items-center justify-between mb-2">
