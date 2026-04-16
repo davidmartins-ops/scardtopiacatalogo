@@ -498,7 +498,7 @@ const Catalogo = () => {
       console.error("Order error:", err);
       toast.error("Erro ao registrar pedido.");
     }
-  }, [user, createOrder]);
+  }, [user, createOrder, clearCart]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
