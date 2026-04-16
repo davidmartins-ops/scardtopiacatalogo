@@ -68,10 +68,11 @@ const AnalyticsDashboard = () => {
   }, [events]);
 
   const tooltipStyle = {
-    background: "hsl(240, 10%, 14%)",
-    border: "1px solid hsl(45, 40%, 30%)",
+    background: "hsl(40, 30%, 96%)",
+    border: "1px solid hsl(45, 40%, 80%)",
     borderRadius: "12px",
     fontSize: 12,
+    color: "hsl(20, 15%, 30%)",
   };
 
   return (
@@ -106,8 +107,8 @@ const AnalyticsDashboard = () => {
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dailyData}>
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(45, 20%, 90%)" }} axisLine={{ stroke: "hsl(240, 8%, 25%)" }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "hsl(240, 5%, 55%)" }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(20, 15%, 40%)" }} axisLine={{ stroke: "hsl(45, 20%, 80%)" }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(20, 15%, 50%)" }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Line type="monotone" dataKey="views" name="Visualizacoes" stroke="hsl(45, 80%, 55%)" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="carts" name="Carrinho" stroke="hsl(200, 70%, 50%)" strokeWidth={2} dot={false} />
@@ -128,8 +129,8 @@ const AnalyticsDashboard = () => {
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={categoryData} layout="vertical">
-                  <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(240, 5%, 55%)" }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "hsl(45, 20%, 90%)" }} width={80} axisLine={false} tickLine={false} />
+                 <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(20, 15%, 50%)" }} axisLine={false} tickLine={false} />
+                   <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "hsl(20, 15%, 40%)" }} width={80} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="value" name="Interacoes" radius={[0, 4, 4, 0]}>
                     {categoryData.map((_, i) => (

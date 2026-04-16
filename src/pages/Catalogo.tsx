@@ -362,7 +362,7 @@ const PromoHighlights = ({
           const isSingle = item.product_type === "single";
 
           return (
-            <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+            <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col">
               {/* Discount badge */}
               <div className="absolute top-2 left-2 z-30">
                 <div className="bg-destructive text-destructive-foreground text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg">
@@ -384,11 +384,11 @@ const PromoHighlights = ({
                   )}
                 </div>
               </div>
-              <div className="relative z-10 p-3 pt-2 space-y-1.5">
+              <div className="relative z-10 p-3 pt-2 flex flex-col flex-1">
                 <div className="min-h-[38px]">
                   <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3]">{item.name}</h3>
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 mt-1.5">
                   <span className="text-[22px] sm:text-[24px] font-bold text-primary font-display block leading-none">
                     R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
@@ -396,9 +396,11 @@ const PromoHighlights = ({
                     R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <Button size="sm" variant="default" className="w-full mt-1.5 h-9 text-[13px] gap-1 font-semibold transition-all duration-150 active:scale-[0.98]" onClick={() => onAddToCart(item)}>
-                  <Plus className="h-3.5 w-3.5" /> Adicionar
-                </Button>
+                <div className="mt-auto pt-2">
+                  <Button size="sm" variant="default" className="w-full h-9 text-[13px] gap-1 font-semibold transition-all duration-150 active:scale-[0.98]" onClick={() => onAddToCart(item)}>
+                    <Plus className="h-3.5 w-3.5" /> Adicionar
+                  </Button>
+                </div>
               </div>
             </div>
           );
@@ -484,13 +486,19 @@ const Catalogo = () => {
       const unitPrice = ci.item.price * (1 - discount / 100);
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
-    createOrder.mutate({ items: orderItems, total });
-    for (const ci of items) {
-      const newQty = Math.max(0, ci.item.quantity - ci.qty);
-      await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+    try {
+      await createOrder.mutateAsync({ items: orderItems, total });
+      for (const ci of items) {
+        const newQty = Math.max(0, ci.item.quantity - ci.qty);
+        await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+      }
+      clearCart();
+      toast.success("Pedido registrado e estoque atualizado!");
+    } catch (err) {
+      console.error("Order error:", err);
+      toast.error("Erro ao registrar pedido.");
     }
-    toast.success("Pedido registrado e estoque atualizado!");
-  }, [user, createOrder]);
+  }, [user, createOrder, clearCart]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
