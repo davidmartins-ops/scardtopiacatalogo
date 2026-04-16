@@ -2,12 +2,14 @@ import { useParams, Link } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Package, Sparkles, Circle, Rainbow } from "lucide-react";
+import { ArrowLeft, Package, Sparkles, Circle, Rainbow, Share2, MessageCircle, Twitter, Instagram, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.png";
 import ImageZoom from "@/components/ImageZoom";
+import { toast } from "sonner";
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
@@ -17,6 +19,28 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
   "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
+};
+
+const sharePage = async (name: string, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
+  const url = window.location.href;
+  const text = `${name} — Confira no catálogo da Spencer's Cardtopia!`;
+  const shareText = `${text}\n${url}`;
+
+  if (method === "copy") {
+    if (navigator.share) {
+      try { await navigator.share({ title: name, text, url }); return; } catch {}
+    }
+    navigator.clipboard.writeText(shareText);
+    toast.success("Link copiado!");
+  } else if (method === "whatsapp") {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+  } else if (method === "twitter") {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  } else if (method === "instagram") {
+    navigator.clipboard.writeText(shareText);
+    toast.success("Texto copiado! Cole no seu Instagram Stories");
+    window.open("https://www.instagram.com/", "_blank");
+  }
 };
 
 const DropDetail = () => {
@@ -70,20 +94,43 @@ const DropDetail = () => {
           <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
           </Link>
-          <Link to="/catalogo">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <ArrowLeft className="h-4 w-4" /> Voltar
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                  <Share2 className="h-4 w-4" /> Compartilhar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[160px]">
+                <DropdownMenuItem onClick={() => sharePage(drop.name, "whatsapp")} className="gap-2 cursor-pointer">
+                  <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePage(drop.name, "twitter")} className="gap-2 cursor-pointer">
+                  <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePage(drop.name, "instagram")} className="gap-2 cursor-pointer">
+                  <Instagram className="h-4 w-4 text-pink-500" /> Instagram
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePage(drop.name, "copy")} className="gap-2 cursor-pointer">
+                  <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link to="/catalogo">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <ArrowLeft className="h-4 w-4" /> Voltar
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Main Product */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
+          <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 flex items-center justify-center">
             {drop.image_url ? (
-              <ImageZoom src={drop.image_url} alt={drop.name} className="w-full h-auto aspect-square object-cover" containerClassName="w-full" />
+              <ImageZoom src={drop.image_url} alt={drop.name} className="w-full h-auto object-contain" containerClassName="w-full" />
             ) : (
               <div className="w-full aspect-square flex items-center justify-center text-muted-foreground bg-muted/10">
                 <Package className="h-16 w-16" />
@@ -111,16 +158,19 @@ const DropDetail = () => {
 
             <div className="space-y-1">
               {discount > 0 ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-baseline gap-3 flex-wrap">
                   <span className="text-lg text-muted-foreground line-through">R$ {drop.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                   <span className="text-3xl font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30">-{discount}%</Badge>
+                  <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-sm font-bold">-{discount}%</Badge>
                 </div>
               ) : (
                 <span className="text-3xl font-bold text-gradient font-display">R$ {drop.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
               )}
+              {(drop.price_pix ?? 0) > 0 && (
+                <p className="text-sm font-semibold text-success">💰 PIX: R$ {(drop.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              )}
               <p className="text-sm text-muted-foreground">
-                {drop.quantity <= 0 ? "Esgotado" : drop.quantity === 1 ? "Última unidade!" : `${drop.quantity} em estoque`}
+                {drop.quantity <= 0 ? "Esgotado" : drop.quantity === 1 ? "🔥 Última unidade!" : `📦 ${drop.quantity} em estoque`}
               </p>
             </div>
 

@@ -484,12 +484,18 @@ const Catalogo = () => {
       const unitPrice = ci.item.price * (1 - discount / 100);
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
-    createOrder.mutate({ items: orderItems, total });
-    for (const ci of items) {
-      const newQty = Math.max(0, ci.item.quantity - ci.qty);
-      await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+    try {
+      await createOrder.mutateAsync({ items: orderItems, total });
+      for (const ci of items) {
+        const newQty = Math.max(0, ci.item.quantity - ci.qty);
+        await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+      }
+      clearCart();
+      toast.success("Pedido registrado e estoque atualizado!");
+    } catch (err) {
+      console.error("Order error:", err);
+      toast.error("Erro ao registrar pedido.");
     }
-    toast.success("Pedido registrado e estoque atualizado!");
   }, [user, createOrder]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
