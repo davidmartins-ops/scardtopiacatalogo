@@ -214,11 +214,15 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     if (!receiptFile) { toast.error("Anexe o comprovante de pagamento."); return; }
     setUploadingReceipt(true);
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) { toast.error("Faça login para enviar o comprovante."); setUploadingReceipt(false); return; }
       const ext = receiptFile.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, receiptFile);
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
+      const { data: signed } = await supabase.storage.from("receipts").createSignedUrl(fileName, 60 * 60 * 24 * 7);
+      const urlData = { publicUrl: signed?.signedUrl ?? "" };
       let msg = buildMessage();
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
