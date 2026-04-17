@@ -16,6 +16,16 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Require service-role bearer (used by pg_cron) to prevent abuse
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const expected = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+  if (authHeader !== expected) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+    );
+  }
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const today = new Date().toISOString().split("T")[0];
   let totalInserted = 0;
