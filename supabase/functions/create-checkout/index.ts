@@ -68,7 +68,11 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(`InfinitePay API error [${response.status}]: ${JSON.stringify(data)}`);
+      console.error("InfinitePay API error:", response.status, JSON.stringify(data));
+      return new Response(
+        JSON.stringify({ error: "Payment provider error. Please try again." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 }
+      );
     }
 
     // Save transaction reference in orders
@@ -85,9 +89,9 @@ Deno.serve(async (req) => {
     );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("InfinitePay error:", msg);
+    console.error("Checkout error:", msg);
     return new Response(
-      JSON.stringify({ error: msg }),
+      JSON.stringify({ error: "Unable to create checkout. Please try again." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
