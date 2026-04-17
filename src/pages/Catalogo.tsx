@@ -522,8 +522,12 @@ const Catalogo = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-destructive font-body">Erro ao carregar catálogo.</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-3">
+          <p className="text-destructive font-body font-semibold">Erro ao carregar catálogo.</p>
+          <p className="text-xs text-muted-foreground font-mono break-all">{(error as any)?.message ?? String(error)}</p>
+          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Tentar novamente</Button>
+        </div>
       </div>
     );
   }
