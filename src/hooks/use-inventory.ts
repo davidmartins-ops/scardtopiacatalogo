@@ -10,7 +10,10 @@ export const useInventory = () => {
         .from("inventory")
         .select("id, name, description, price, price_pix, quantity, category, discount, image_url, product_type, language, condition, status, drop_description");
 
-      if (error) throw error;
+      if (error) {
+        console.error("[useInventory] Supabase error:", error);
+        throw error;
+      }
 
       return (data ?? []).map((item) => ({
         id: item.id,
