@@ -190,6 +190,8 @@ const ItemGrid = ({
       const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase()) || item.category.toLowerCase().includes(search.toLowerCase());
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
+      const matchesFoil = foilFilter === "all" || item.description === foilFilter;
+      const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
         const profile = manaProfiles[item.id];
         if (!profile) return false;
@@ -198,9 +200,23 @@ const ItemGrid = ({
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesPrice && matchesColor;
+      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet;
     });
-  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter]);
+
+  // Sets present in current items (only for singles)
+  const availableSets = useMemo(() => {
+    if (!isSingles) return [] as { code: string; name: string }[];
+    const codes = new Set<string>();
+    (items ?? []).forEach((item) => {
+      const code = extractSetCode(item.id);
+      if (code) codes.add(code);
+    });
+    const nameByCode = new Map(allSets.map((s) => [s.code, s.name]));
+    return Array.from(codes)
+      .map((code) => ({ code, name: nameByCode.get(code) ?? code.toUpperCase() }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [items, isSingles, allSets]);
 
   const groupedItems = useMemo(() => {
     if (sortOrder === "az" || sortOrder === "za") {
