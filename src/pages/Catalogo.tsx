@@ -56,6 +56,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { useOrders, type OrderItem } from "@/hooks/use-orders";
 import { supabase } from "@/integrations/supabase/client";
+import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 
 const MTG_COLORS = [
   { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
@@ -109,6 +110,9 @@ const ItemGrid = ({
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [manaProfiles, setManaProfiles] = useState<Record<string, ManaProfile>>({});
   const [sortOrder, setSortOrder] = useState<string>("default");
+  const [foilFilter, setFoilFilter] = useState<string>("all");
+  const [setFilter, setSetFilter] = useState<string>("all");
+  const { sets: allSets } = useMtgSets();
 
   useEffect(() => {
     if (!isSingles || !items?.length) { setManaProfiles({}); return; }
@@ -186,6 +190,8 @@ const ItemGrid = ({
       const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase()) || item.category.toLowerCase().includes(search.toLowerCase());
       const finalPrice = item.price * (1 - (item.discount ?? 0) / 100);
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
+      const matchesFoil = foilFilter === "all" || item.description === foilFilter;
+      const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
         const profile = manaProfiles[item.id];
         if (!profile) return false;
@@ -194,9 +200,23 @@ const ItemGrid = ({
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesPrice && matchesColor;
+      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet;
     });
-  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter]);
+
+  // Sets present in current items (only for singles)
+  const availableSets = useMemo(() => {
+    if (!isSingles) return [] as { code: string; name: string }[];
+    const codes = new Set<string>();
+    (items ?? []).forEach((item) => {
+      const code = extractSetCode(item.id);
+      if (code) codes.add(code);
+    });
+    const nameByCode = new Map(allSets.map((s) => [s.code, s.name]));
+    return Array.from(codes)
+      .map((code) => ({ code, name: nameByCode.get(code) ?? code.toUpperCase() }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [items, isSingles, allSets]);
 
   const groupedItems = useMemo(() => {
     if (sortOrder === "az" || sortOrder === "za") {
@@ -226,6 +246,41 @@ const ItemGrid = ({
               <SelectItem value="za">Z → A</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Foil:</span>
+          <Select value={foilFilter} onValueChange={setFoilFilter}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[200px]"><SelectValue placeholder="Todos" /></SelectTrigger>
+            <SelectContent className="max-h-60 z-50 bg-popover">
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="Non-Foil">Non-Foil</SelectItem>
+              <SelectItem value="Foil">Foil</SelectItem>
+              <SelectItem value="Surge Foil">Surge Foil</SelectItem>
+              <SelectItem value="Rainbow Foil">Rainbow Foil</SelectItem>
+              <SelectItem value="Holo Foil">Holo Foil</SelectItem>
+              <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
+              <SelectItem value="Confetti Foil">Confetti Foil</SelectItem>
+            </SelectContent>
+          </Select>
+          {isSingles && availableSets.length > 0 && (
+            <>
+              <BookOpen className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+              <span className="text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
+              <Select value={setFilter} onValueChange={setSetFilter}>
+                <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[260px]"><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectContent className="max-h-72 z-50 bg-popover">
+                  <SelectItem value="all">Todas as coleções</SelectItem>
+                  {availableSets.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code.toUpperCase()})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+          {(foilFilter !== "all" || setFilter !== "all") && (
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setFoilFilter("all"); setSetFilter("all"); }}>Limpar</button>
+          )}
         </div>
         {isSingles && (
           <div className="flex items-center gap-2 flex-wrap">

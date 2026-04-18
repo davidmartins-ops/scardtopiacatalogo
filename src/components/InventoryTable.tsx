@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { type InventoryItem } from "@/data/inventory";
+import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 
 const descriptionStyles: Record<string, string> = {
   "Foil": "bg-foil/15 text-foil border-foil/30",
@@ -70,7 +71,9 @@ const InventoryTable = ({ data }: Props) => {
   const [sortAsc, setSortAsc] = useState(true);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterSet, setFilterSet] = useState<string>("all");
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const { sets: allSets } = useMtgSets();
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -104,6 +107,18 @@ const InventoryTable = ({ data }: Props) => {
 
   const categories = useMemo(() => [...new Set(data.map((i) => i.category))].sort(), [data]);
 
+  const availableSets = useMemo(() => {
+    const codes = new Set<string>();
+    data.forEach((item) => {
+      const code = extractSetCode(item.id);
+      if (code) codes.add(code);
+    });
+    const nameByCode = new Map(allSets.map((s) => [s.code, s.name]));
+    return Array.from(codes)
+      .map((code) => ({ code, name: nameByCode.get(code) ?? code.toUpperCase() }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [data, allSets]);
+
   const filtered = useMemo(() => {
     const minP = priceMin ? parseFloat(priceMin) : null;
     const maxP = priceMax ? parseFloat(priceMax) : null;
@@ -111,6 +126,7 @@ const InventoryTable = ({ data }: Props) => {
       (item) =>
         (filterType === "all" || item.description === filterType) &&
         (filterCategory === "all" || item.category === filterCategory) &&
+        (filterSet === "all" || extractSetCode(item.id) === filterSet) &&
         (minP === null || item.price >= minP) &&
         (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -123,7 +139,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType, filterCategory, priceMin, priceMax]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, priceMin, priceMax]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
@@ -376,6 +392,26 @@ const InventoryTable = ({ data }: Props) => {
               ))}
             </div>
           </div>
+          {availableSets.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
+              <Select value={filterSet} onValueChange={setFilterSet}>
+                <SelectTrigger className="h-7 text-xs bg-muted border-border max-w-[280px]">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72 z-50 bg-popover">
+                  <SelectItem value="all">Todas as coleções</SelectItem>
+                  {availableSets.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code.toUpperCase()})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {filterSet !== "all" && (
+                <button className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setFilterSet("all")}>Limpar</button>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Preço:</span>
