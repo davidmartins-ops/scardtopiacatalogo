@@ -8,24 +8,25 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   const checkAuthorization = async (userSession: Session | null) => {
-    if (!userSession?.user?.email) {
+    if (!userSession?.user?.id) {
       setSession(null);
       setLoading(false);
       return;
     }
 
-    const { data } = await supabase
-      .from("authorized_emails")
-      .select("email")
-      .eq("email", userSession.user.email)
+    const { data: roleRow, error } = await supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userSession.user.id)
+      .eq("role", "admin")
       .maybeSingle();
 
-    if (data) {
+    if (!error && roleRow) {
       setSession(userSession);
     } else {
       await supabase.auth.signOut();
       setSession(null);
-      toast.error("Acesso negado. Seu email não está autorizado.");
+      toast.error("Acesso negado. Sua conta não tem permissão de administrador.");
     }
     setLoading(false);
   };
@@ -34,7 +35,8 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (session) {
-          checkAuthorization(session);
+          // Defer to avoid deadlocks inside the auth callback
+          setTimeout(() => checkAuthorization(session), 0);
         } else {
           setSession(null);
           setLoading(false);
