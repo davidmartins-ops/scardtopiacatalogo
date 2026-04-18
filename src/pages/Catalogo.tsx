@@ -266,17 +266,8 @@ const ItemGrid = ({
           </Select>
           {isSingles && availableSets.length > 0 && (
             <>
-              <BookOpen className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
-              <span className="text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
-              <Select value={setFilter} onValueChange={setSetFilter}>
-                <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[260px]"><SelectValue placeholder="Todas" /></SelectTrigger>
-                <SelectContent className="max-h-72 z-50 bg-popover">
-                  <SelectItem value="all">Todas as coleções</SelectItem>
-                  {availableSets.map((s) => (
-                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code.toUpperCase()})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <span className="text-xs text-muted-foreground font-medium shrink-0 ml-2">Coleção:</span>
+              <SetCombobox sets={availableSets} value={setFilter} onChange={setSetFilter} />
             </>
           )}
           {(foilFilter !== "all" || setFilter !== "all") && (
