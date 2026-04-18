@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -13,6 +13,7 @@ import AddItemDialog from "@/components/AddItemDialog";
 import ScryfallSearchDialog from "@/components/ScryfallSearchDialog";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import BannerManager from "@/components/BannerManager";
+import AdminRolesManager from "@/components/AdminRolesManager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -113,6 +114,9 @@ const Index = () => {
                 <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <BarChart3 className="h-3.5 w-3.5" /> Analytics
                 </TabsTrigger>
+                <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <Shield className="h-3.5 w-3.5" /> Admins
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="drops">
@@ -126,6 +130,9 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="analytics">
                 <AnalyticsDashboard />
+              </TabsContent>
+              <TabsContent value="admins">
+                <AdminRolesManager />
               </TabsContent>
             </Tabs>
           </div>
