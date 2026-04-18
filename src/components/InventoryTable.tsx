@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { type InventoryItem } from "@/data/inventory";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
+import SetCombobox from "@/components/SetCombobox";
 
 const descriptionStyles: Record<string, string> = {
   "Foil": "bg-foil/15 text-foil border-foil/30",
