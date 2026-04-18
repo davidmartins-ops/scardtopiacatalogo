@@ -247,6 +247,41 @@ const ItemGrid = ({
             </SelectContent>
           </Select>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Foil:</span>
+          <Select value={foilFilter} onValueChange={setFoilFilter}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[200px]"><SelectValue placeholder="Todos" /></SelectTrigger>
+            <SelectContent className="max-h-60 z-50 bg-popover">
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="Non-Foil">Non-Foil</SelectItem>
+              <SelectItem value="Foil">Foil</SelectItem>
+              <SelectItem value="Surge Foil">Surge Foil</SelectItem>
+              <SelectItem value="Rainbow Foil">Rainbow Foil</SelectItem>
+              <SelectItem value="Holo Foil">Holo Foil</SelectItem>
+              <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
+              <SelectItem value="Confetti Foil">Confetti Foil</SelectItem>
+            </SelectContent>
+          </Select>
+          {isSingles && availableSets.length > 0 && (
+            <>
+              <BookOpen className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+              <span className="text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
+              <Select value={setFilter} onValueChange={setSetFilter}>
+                <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[260px]"><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectContent className="max-h-72 z-50 bg-popover">
+                  <SelectItem value="all">Todas as coleções</SelectItem>
+                  {availableSets.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code.toUpperCase()})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+          {(foilFilter !== "all" || setFilter !== "all") && (
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setFoilFilter("all"); setSetFilter("all"); }}>Limpar</button>
+          )}
+        </div>
         {isSingles && (
           <div className="flex items-center gap-2 flex-wrap">
             <Palette className="h-4 w-4 text-muted-foreground shrink-0" />
