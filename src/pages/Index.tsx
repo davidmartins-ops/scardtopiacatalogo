@@ -120,19 +120,19 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="drops">
-                <InventoryTable data={drops} />
+                <div><InventoryTable data={drops} /></div>
               </TabsContent>
               <TabsContent value="singles">
-                <InventoryTable data={singles} />
+                <div><InventoryTable data={singles} /></div>
               </TabsContent>
               <TabsContent value="banners">
-                <BannerManager />
+                <div><BannerManager /></div>
               </TabsContent>
               <TabsContent value="analytics">
-                <AnalyticsDashboard />
+                <div><AnalyticsDashboard /></div>
               </TabsContent>
               <TabsContent value="admins">
-                <AdminRolesManager />
+                <div><AdminRolesManager /></div>
               </TabsContent>
             </Tabs>
           </div>
