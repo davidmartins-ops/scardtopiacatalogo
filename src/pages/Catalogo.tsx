@@ -56,6 +56,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { useOrders, type OrderItem } from "@/hooks/use-orders";
 import { supabase } from "@/integrations/supabase/client";
+import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 
 const MTG_COLORS = [
   { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
@@ -109,6 +110,9 @@ const ItemGrid = ({
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [manaProfiles, setManaProfiles] = useState<Record<string, ManaProfile>>({});
   const [sortOrder, setSortOrder] = useState<string>("default");
+  const [foilFilter, setFoilFilter] = useState<string>("all");
+  const [setFilter, setSetFilter] = useState<string>("all");
+  const { sets: allSets } = useMtgSets();
 
   useEffect(() => {
     if (!isSingles || !items?.length) { setManaProfiles({}); return; }
