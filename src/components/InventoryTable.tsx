@@ -392,6 +392,26 @@ const InventoryTable = ({ data }: Props) => {
               ))}
             </div>
           </div>
+          {availableSets.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium shrink-0">Coleção:</span>
+              <Select value={filterSet} onValueChange={setFilterSet}>
+                <SelectTrigger className="h-7 text-xs bg-muted border-border max-w-[280px]">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72 z-50 bg-popover">
+                  <SelectItem value="all">Todas as coleções</SelectItem>
+                  {availableSets.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code.toUpperCase()})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {filterSet !== "all" && (
+                <button className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium" onClick={() => setFilterSet("all")}>Limpar</button>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Preço:</span>
