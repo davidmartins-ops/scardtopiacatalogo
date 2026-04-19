@@ -161,10 +161,29 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
   const discount = item.discount ?? 0;
   const finalPrice = item.price * (1 - discount / 100);
   const isOutOfStock = item.quantity <= 0;
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Track product view once per session per item using IntersectionObserver
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || SESSION_VIEWED.has(item.id)) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !SESSION_VIEWED.has(item.id)) {
+          SESSION_VIEWED.add(item.id);
+          trackEvent("view", item);
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [item.id, item.name, item.category]);
 
   return (
     <div
-      className={`group glass-card glow-hover overflow-hidden relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${isOutOfStock ? "" : ""}`}
+      ref={cardRef}
+      className={`group glass-card glow-hover overflow-hidden relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col h-full`}
     >
       {/* Discount badge - top left, prominent */}
       {discount > 0 && !isOutOfStock && (
@@ -201,18 +220,18 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
       </button>
 
-      {/* Image */}
+      {/* Image - fixed height for consistent alignment */}
       <div className="relative z-10 px-3 pt-3">
-        <div className="overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative">
+        <div className={`overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative ${isSingle ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"}`}>
           {item.image_url ? (
             <ImageZoom
               src={item.image_url}
               alt={item.name}
-              className={`w-full ${isSingle ? "h-auto aspect-[2.5/3.5]" : "h-44 sm:h-48"} object-cover transition-transform duration-500 group-hover:scale-[1.02] ${isOutOfStock ? "grayscale" : ""}`}
-              containerClassName="w-full"
+              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ${isOutOfStock ? "grayscale" : ""}`}
+              containerClassName="w-full h-full"
             />
           ) : (
-            <div className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"} flex items-center justify-center text-sm text-muted-foreground bg-muted/10`}>
+            <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground bg-muted/10">
               <Package className="h-8 w-8 text-muted-foreground/30" />
             </div>
           )}
@@ -222,8 +241,8 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         </div>
       </div>
 
-      {/* Card Info */}
-      <div className="relative z-10 p-3 pt-2.5 space-y-1.5">
+      {/* Card Info - flex column with anchored bottom actions */}
+      <div className="relative z-10 p-3 pt-2.5 space-y-1.5 flex flex-col flex-1">
         {/* Title */}
         <div className="min-h-[42px]">
           <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[16px] sm:text-[17px] md:text-[18px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
@@ -232,7 +251,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         </div>
 
         {/* Foil badge */}
-        <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
+        <Badge variant="outline" className={`gap-1 text-[10px] w-fit ${config?.className ?? ""}`}>
           <Icon className="h-2.5 w-2.5" />
           {config?.label ?? item.description}
         </Badge>
@@ -240,13 +259,11 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         {/* Info block - standardized height */}
         <div className="min-h-[110px] flex flex-col justify-start pt-1">
           {isOutOfStock ? (
-            /* Out of stock - no prices shown */
             <div className="flex-1 flex flex-col justify-center">
               <p className="text-[13px] sm:text-[14px] text-muted-foreground font-medium">Indisponível</p>
             </div>
           ) : (
             <>
-              {/* Price */}
               {discount > 0 ? (
                 <div className="space-y-0.5">
                   <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-primary font-display leading-none">
@@ -274,8 +291,6 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                   )}
                 </div>
               )}
-
-              {/* Stock urgency */}
               <p className="text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
                 {item.quantity === 1 ? "🔥 Última unidade!" : `📦 ${item.quantity} em estoque`}
               </p>
@@ -283,8 +298,8 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           )}
         </div>
 
-        {/* Actions */}
-        <div className="space-y-1.5 pt-1">
+        {/* Actions - anchored to bottom */}
+        <div className="space-y-1.5 pt-1 mt-auto">
           {isOutOfStock ? (
             <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
           ) : (
@@ -299,8 +314,18 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           )}
 
           <div className="flex items-center gap-1.5">
-            {!isSingle && (
-              <Link to={`/catalogo/drop/${item.id}`} className="flex-1">
+            {isSingle ? (
+              <Link to={`/catalogo/single/${encodeURIComponent(item.id)}`} className="flex-1" onClick={() => trackEvent("more_info_click", item)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1"
+                >
+                  🧐 Mais Informações
+                </Button>
+              </Link>
+            ) : (
+              <Link to={`/catalogo/drop/${item.id}`} className="flex-1" onClick={() => trackEvent("drop_content_click", item)}>
                 <Button
                   size="sm"
                   variant="outline"
