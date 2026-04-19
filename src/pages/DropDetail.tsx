@@ -19,6 +19,7 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
   "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
+  "Etched Foil": { label: "Etched Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
 };
 
 const sharePage = async (name: string, method: "whatsapp" | "twitter" | "instagram" | "copy") => {

@@ -262,6 +262,7 @@ const ItemGrid = ({
               <SelectItem value="Holo Foil">Holo Foil</SelectItem>
               <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
               <SelectItem value="Confetti Foil">Confetti Foil</SelectItem>
+              <SelectItem value="Etched Foil">Etched Foil</SelectItem>
             </SelectContent>
           </Select>
           {isSingles && availableSets.length > 0 && (
