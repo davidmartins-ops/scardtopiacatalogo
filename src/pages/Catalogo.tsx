@@ -600,30 +600,30 @@ const Catalogo = () => {
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Sticky Header Bar - dark blue brand identity */}
-      <div className="sticky top-0 z-40 border-b border-slate-800 bg-slate-900 backdrop-blur-xl shadow-md">
+      <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
           </Link>
           <div className="flex items-center gap-2">
             <Link to="/tendencias">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-white hover:bg-white/10 hover:text-amber-400 transition-colors duration-200">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200">
                 <Flame className="h-4 w-4" />
                 <span className="hidden sm:inline">Tendências</span>
               </Button>
             </Link>
             {user ? (
               <>
-                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-white hover:bg-white/10 hover:text-amber-400 transition-colors duration-200"><Heart className="h-4 w-4" /><span className="hidden sm:inline">Favoritos</span></Button></Link>
-                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-white hover:bg-white/10 hover:text-amber-400 transition-colors duration-200"><Layers className="h-4 w-4" /><span className="hidden sm:inline">Decks</span></Button></Link>
-                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-white hover:bg-white/10 hover:text-amber-400 transition-colors duration-200"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Coleções</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><Heart className="h-4 w-4" /><span className="hidden sm:inline">Favoritos</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><Layers className="h-4 w-4" /><span className="hidden sm:inline">Decks</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Coleções</span></Button></Link>
                 <div className="h-5 w-px bg-white/20 mx-1" />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-white/10 transition-colors">
-                      <Avatar className="h-7 w-7"><AvatarFallback className="text-xs bg-amber-400/20 text-amber-300 font-bold">{(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}</AvatarFallback></Avatar>
-                      <span className="text-sm font-medium text-white hidden sm:inline max-w-[120px] truncate">{profile?.display_name ?? user.email?.split("@")[0]}</span>
-                      <ChevronDown className="h-3.5 w-3.5 text-white/70" />
+                      <Avatar className="h-7 w-7"><AvatarFallback className="text-xs bg-brand-gold/20 text-brand-gold font-bold">{(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}</AvatarFallback></Avatar>
+                      <span className="text-sm font-medium text-brand-header-foreground hidden sm:inline max-w-[120px] truncate">{profile?.display_name ?? user.email?.split("@")[0]}</span>
+                      <ChevronDown className="h-3.5 w-3.5 text-brand-header-foreground/70" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -639,7 +639,7 @@ const Catalogo = () => {
               </>
             ) : (
               <Link to="/conta/login">
-                <Button size="sm" variant="outline" className="gap-1.5 bg-transparent border-amber-400/60 text-amber-300 hover:bg-amber-400 hover:text-slate-900 hover:border-amber-400 transition-colors duration-200"><User className="h-4 w-4" /> Entrar</Button>
+                <Button size="sm" variant="outline" className="gap-1.5 bg-transparent border-brand-gold/60 text-brand-gold hover:bg-brand-gold hover:text-brand-gold-foreground hover:border-brand-gold transition-colors duration-200"><User className="h-4 w-4" /> Entrar</Button>
               </Link>
             )}
           </div>
