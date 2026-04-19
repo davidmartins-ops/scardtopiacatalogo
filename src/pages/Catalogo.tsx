@@ -674,7 +674,7 @@ const Catalogo = () => {
         </a>
       </div>
 
-      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={user ? handleOrderPlaced : undefined} fabsVisible={fabsVisible} />
+      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={handleOrderPlaced} fabsVisible={fabsVisible} />
     </div>
   );
 };
