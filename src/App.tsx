@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
 import DropDetail from "./pages/DropDetail.tsx";
+import SingleDetail from "./pages/SingleDetail.tsx";
 import CustomerLogin from "./pages/CustomerLogin.tsx";
 import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
+          <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
           <Route path="/conta/login" element={<CustomerLogin />} />
           <Route path="/conta" element={<CustomerDashboard />} />
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
