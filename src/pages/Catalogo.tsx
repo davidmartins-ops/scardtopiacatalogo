@@ -54,7 +54,7 @@ import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
-import { useOrders, type OrderItem } from "@/hooks/use-orders";
+import { type OrderItem } from "@/hooks/use-orders";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
