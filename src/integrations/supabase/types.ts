@@ -379,7 +379,7 @@ export type Database = {
           items: Json
           status: string
           total: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -387,7 +387,7 @@ export type Database = {
           items?: Json
           status?: string
           total?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -395,7 +395,7 @@ export type Database = {
           items?: Json
           status?: string
           total?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -512,6 +512,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_inventory_stock: {
+        Args: { _item_id: string; _qty: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
