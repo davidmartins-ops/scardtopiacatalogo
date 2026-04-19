@@ -465,7 +465,7 @@ const Catalogo = () => {
   const { user, profile, signOut } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
-  const { createOrder } = useOrders();
+  const queryClient = useQueryClient();
   const cartLoadedFromDb = useRef(false);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
