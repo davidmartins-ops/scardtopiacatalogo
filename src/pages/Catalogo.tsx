@@ -55,6 +55,7 @@ import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { useOrders, type OrderItem } from "@/hooks/use-orders";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 import SetCombobox from "@/components/SetCombobox";
