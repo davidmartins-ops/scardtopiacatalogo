@@ -396,7 +396,7 @@ const PromoHighlights = ({
   if (promoItems.length === 0) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 mt-6 sm:mt-8">
       <div className="flex items-center gap-3">
         <h2 className="font-display text-xl font-semibold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif" }}>
           <span className="text-gradient">🔥 Em Promoção</span>
@@ -404,14 +404,13 @@ const PromoHighlights = ({
         <div className="flex-1 premium-divider" />
         <span className="text-xs text-muted-foreground">{promoItems.length} itens</span>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide items-stretch">
         {promoItems.map((item) => {
           const discount = item.discount ?? 0;
           const finalPrice = item.price * (1 - discount / 100);
-          const isSingle = item.product_type === "single";
 
           return (
-            <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col">
+            <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col h-auto">
               {/* Discount badge */}
               <div className="absolute top-2 left-2 z-30">
                 <div className="bg-destructive text-destructive-foreground text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg">
@@ -424,20 +423,23 @@ const PromoHighlights = ({
               >
                 <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
               </button>
+              {/* Image - FIXED height for ALL cards (singles or drops, with or without image) */}
               <div className="relative z-10 px-2 pt-2">
-                <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20">
+                <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20 h-44 sm:h-48">
                   {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-40"} object-cover group-hover:scale-[1.02] transition-transform duration-500`} />
+                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500" />
                   ) : (
-                    <div className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-40"} flex items-center justify-center bg-muted/10`}><Package className="h-8 w-8 text-muted-foreground/30" /></div>
+                    <div className="w-full h-full flex items-center justify-center bg-muted/10"><Package className="h-8 w-8 text-muted-foreground/30" /></div>
                   )}
                 </div>
               </div>
               <div className="relative z-10 p-3 pt-2 flex flex-col flex-1">
-                <div className="min-h-[38px]">
+                {/* Title - fixed min height */}
+                <div className="min-h-[40px]">
                   <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3]">{item.name}</h3>
                 </div>
-                <div className="space-y-0.5 mt-1.5">
+                {/* Prices - fixed min height to align across cards */}
+                <div className="space-y-0.5 mt-1.5 min-h-[52px]">
                   <span className="text-[22px] sm:text-[24px] font-bold text-primary font-display block leading-none">
                     R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
@@ -445,6 +447,7 @@ const PromoHighlights = ({
                     R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 </div>
+                {/* Button anchored to bottom */}
                 <div className="mt-auto pt-2">
                   <Button size="sm" variant="default" className="w-full h-9 text-[13px] gap-1 font-semibold transition-all duration-150 active:scale-[0.98]" onClick={() => onAddToCart(item)}>
                     <Plus className="h-3.5 w-3.5" /> Adicionar
@@ -596,31 +599,31 @@ const Catalogo = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      {/* Sticky Header Bar */}
-      <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+      {/* Sticky Header Bar - dark blue brand identity */}
+      <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
           </Link>
           <div className="flex items-center gap-2">
             <Link to="/tendencias">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200">
                 <Flame className="h-4 w-4" />
                 <span className="hidden sm:inline">Tendências</span>
               </Button>
             </Link>
             {user ? (
               <>
-                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground"><Heart className="h-4 w-4" /><span className="hidden sm:inline">Favoritos</span></Button></Link>
-                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground"><Layers className="h-4 w-4" /><span className="hidden sm:inline">Decks</span></Button></Link>
-                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Coleções</span></Button></Link>
-                <div className="h-5 w-px bg-border mx-1" />
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><Heart className="h-4 w-4" /><span className="hidden sm:inline">Favoritos</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><Layers className="h-4 w-4" /><span className="hidden sm:inline">Decks</span></Button></Link>
+                <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Coleções</span></Button></Link>
+                <div className="h-5 w-px bg-white/20 mx-1" />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-muted/50 transition-colors">
-                      <Avatar className="h-7 w-7"><AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">{(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}</AvatarFallback></Avatar>
-                      <span className="text-sm font-medium text-foreground hidden sm:inline max-w-[120px] truncate">{profile?.display_name ?? user.email?.split("@")[0]}</span>
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-white/10 transition-colors">
+                      <Avatar className="h-7 w-7"><AvatarFallback className="text-xs bg-brand-gold/20 text-brand-gold font-bold">{(profile?.display_name ?? user.email ?? "U").charAt(0).toUpperCase()}</AvatarFallback></Avatar>
+                      <span className="text-sm font-medium text-brand-header-foreground hidden sm:inline max-w-[120px] truncate">{profile?.display_name ?? user.email?.split("@")[0]}</span>
+                      <ChevronDown className="h-3.5 w-3.5 text-brand-header-foreground/70" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -636,7 +639,7 @@ const Catalogo = () => {
               </>
             ) : (
               <Link to="/conta/login">
-                <Button size="sm" variant="outline" className="gap-1.5 border-primary/30 hover:border-primary/60"><User className="h-4 w-4 text-primary" /> Entrar</Button>
+                <Button size="sm" variant="outline" className="gap-1.5 bg-transparent border-brand-gold/60 text-brand-gold hover:bg-brand-gold hover:text-brand-gold-foreground hover:border-brand-gold transition-colors duration-200"><User className="h-4 w-4" /> Entrar</Button>
               </Link>
             )}
           </div>
@@ -645,7 +648,7 @@ const Catalogo = () => {
 
       <CatalogBanner />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 relative z-20 pb-12 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 relative z-20 pb-12 space-y-6">
         <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
 
         <Tabs defaultValue="drops" className="w-full">

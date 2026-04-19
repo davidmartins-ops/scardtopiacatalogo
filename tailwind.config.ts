@@ -55,6 +55,15 @@ export default {
         "non-foil": "hsl(var(--non-foil))",
         rainbow: "hsl(var(--rainbow))",
         success: "hsl(var(--success))",
+        "brand-header": {
+          DEFAULT: "hsl(var(--brand-header))",
+          foreground: "hsl(var(--brand-header-foreground))",
+          border: "hsl(var(--brand-header-border))",
+        },
+        "brand-gold": {
+          DEFAULT: "hsl(var(--brand-gold))",
+          foreground: "hsl(var(--brand-gold-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

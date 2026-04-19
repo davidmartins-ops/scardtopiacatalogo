@@ -48,6 +48,13 @@
     --rainbow: 300 50% 55%;
     --success: 150 60% 38%;
 
+    /* Brand header tokens (navy + gold) */
+    --brand-header: 222 47% 11%;
+    --brand-header-foreground: 0 0% 100%;
+    --brand-header-border: 222 30% 22%;
+    --brand-gold: 38 92% 55%;
+    --brand-gold-foreground: 222 47% 11%;
+
     --font-display: 'Cinzel', serif;
     --font-body: 'Open Sans', sans-serif;
 
