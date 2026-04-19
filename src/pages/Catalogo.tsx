@@ -534,7 +534,6 @@ const Catalogo = () => {
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
-      // Insert order (guest = user_id null, logged-in = user.id)
       const { error: orderErr } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
         items: orderItems as any,
@@ -543,34 +542,24 @@ const Catalogo = () => {
       } as any);
       if (orderErr) throw orderErr;
 
-      // Decrement stock via secure RPC for each item (works for guests too)
       for (const ci of items) {
         const { error: rpcErr } = await supabase.rpc("decrement_inventory_stock" as any, {
           _item_id: ci.item.id,
           _qty: ci.qty,
         } as any);
         if (rpcErr) console.warn("[stock] decrement failed:", ci.item.id, rpcErr);
-        // analytics: register purchase
         trackEvent("purchase", ci.item);
       }
 
-      // Refresh inventory & orders
-      await Promise.all([
-        (async () => { try { await createOrder.reset(); } catch {} })(),
-      ]);
-      // Invalidate inventory query so stock is reflected in the catalog
-      const { default: queryClient } = await import("@tanstack/query-core").then(() => ({ default: null as any })).catch(() => ({ default: null as any }));
-      void queryClient;
-      // Use window event as a lightweight signal
-      window.dispatchEvent(new CustomEvent("inventory:refresh"));
-
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      if (user) queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
       clearCart();
       toast.success("Pedido registrado e estoque atualizado!");
     } catch (err) {
       console.error("Order error:", err);
       toast.error("Erro ao registrar pedido.");
     }
-  }, [user, createOrder, clearCart]);
+  }, [user, clearCart, queryClient]);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
