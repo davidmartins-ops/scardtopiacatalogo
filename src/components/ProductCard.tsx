@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Heart, Plus, Share2, Bell, Star, Flame,
   Sparkles, Circle, Rainbow, MessageCircle,
-  Twitter, Instagram, Copy, Search as SearchIcon, Package,
+  Twitter, Instagram, Copy, Search as SearchIcon, Package, Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,25 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
   "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
   "Etched Foil": { label: "Etched Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
+};
+
+// Session-scoped tracking: avoid duplicate views per item per session
+const SESSION_VIEWED = new Set<string>();
+const getSessionId = () => {
+  let id = sessionStorage.getItem("analytics_session");
+  if (!id) { id = crypto.randomUUID(); sessionStorage.setItem("analytics_session", id); }
+  return id;
+};
+const trackEvent = async (eventType: string, item: InventoryItem) => {
+  try {
+    await supabase.from("analytics_events").insert({
+      event_type: eventType,
+      inventory_item_id: item.id,
+      item_name: item.name,
+      category: item.category,
+      session_id: getSessionId(),
+    } as any);
+  } catch {}
 };
 
 const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
