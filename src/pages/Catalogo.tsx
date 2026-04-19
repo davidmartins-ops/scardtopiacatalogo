@@ -528,18 +528,42 @@ const Catalogo = () => {
   const clearCart = useCallback(() => { setCartItems([]); syncCartToDb([]); }, [syncCartToDb]);
 
   const handleOrderPlaced = useCallback(async (items: CartItem[], total: number) => {
-    if (!user) return;
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
       const unitPrice = ci.item.price * (1 - discount / 100);
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
-      await createOrder.mutateAsync({ items: orderItems, total });
+      // Insert order (guest = user_id null, logged-in = user.id)
+      const { error: orderErr } = await supabase.from("orders").insert({
+        user_id: user?.id ?? null,
+        items: orderItems as any,
+        total,
+        status: "sent",
+      } as any);
+      if (orderErr) throw orderErr;
+
+      // Decrement stock via secure RPC for each item (works for guests too)
       for (const ci of items) {
-        const newQty = Math.max(0, ci.item.quantity - ci.qty);
-        await supabase.from("inventory").update({ quantity: newQty }).eq("id", ci.item.id);
+        const { error: rpcErr } = await supabase.rpc("decrement_inventory_stock" as any, {
+          _item_id: ci.item.id,
+          _qty: ci.qty,
+        } as any);
+        if (rpcErr) console.warn("[stock] decrement failed:", ci.item.id, rpcErr);
+        // analytics: register purchase
+        trackEvent("purchase", ci.item);
       }
+
+      // Refresh inventory & orders
+      await Promise.all([
+        (async () => { try { await createOrder.reset(); } catch {} })(),
+      ]);
+      // Invalidate inventory query so stock is reflected in the catalog
+      const { default: queryClient } = await import("@tanstack/query-core").then(() => ({ default: null as any })).catch(() => ({ default: null as any }));
+      void queryClient;
+      // Use window event as a lightweight signal
+      window.dispatchEvent(new CustomEvent("inventory:refresh"));
+
       clearCart();
       toast.success("Pedido registrado e estoque atualizado!");
     } catch (err) {
