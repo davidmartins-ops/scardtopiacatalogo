@@ -6,33 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 import ImageZoom from "@/components/ImageZoom";
-import { extractSetCode } from "@/hooks/use-mtg-sets";
 import { supabase } from "@/integrations/supabase/client";
-
-interface ScryfallCard {
-  name: string;
-  printed_name?: string;
-  mana_cost?: string;
-  type_line?: string;
-  printed_type_line?: string;
-  oracle_text?: string;
-  printed_text?: string;
-  power?: string;
-  toughness?: string;
-  loyalty?: string;
-  rarity?: string;
-  set_name?: string;
-  collector_number?: string;
-  image_uris?: { normal?: string; large?: string; png?: string; border_crop?: string };
-  prices?: { usd?: string | null; usd_foil?: string | null };
-}
+import { fetchScryfallCard, pickBestImageUrl, type ScryfallCardData } from "@/lib/scryfall-cache";
 
 const SingleDetail = () => {
   const { singleId } = useParams<{ singleId: string }>();
   const navigate = useNavigate();
   const { data: inventoryData = [], isLoading } = useInventory();
   const item = inventoryData.find((i) => i.id === singleId && i.product_type === "single");
-  const [card, setCard] = useState<ScryfallCard | null>(null);
+  const [card, setCard] = useState<ScryfallCardData | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
 
   useEffect(() => {
@@ -43,24 +25,22 @@ const SingleDetail = () => {
     const num = parts[1]?.toLowerCase();
     if (!set || !num) return;
     setLoadingCard(true);
-    // Try PT first; fallback to default. Always also fetch default to get high-res png if PT lacks it.
-    const fetchPt = fetch(`https://api.scryfall.com/cards/${set}/${num}/pt`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const fetchDefault = fetch(`https://api.scryfall.com/cards/${set}/${num}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    Promise.all([fetchPt, fetchDefault])
-      .then(([pt, def]) => {
-        const base = pt || def;
-        if (!base) { setCard(null); return; }
-        // Merge: prefer PT text, but use highest-resolution image available (default usually has png)
-        const ptImg = pt?.image_uris;
-        const defImg = def?.image_uris;
-        const bestImg = {
-          png: ptImg?.png || defImg?.png,
-          large: ptImg?.large || defImg?.large,
-          normal: ptImg?.normal || defImg?.normal,
-          border_crop: ptImg?.border_crop || defImg?.border_crop,
-        };
-        setCard({ ...base, image_uris: bestImg });
+    fetchScryfallCard(set, num, item.id)
+      .then((data) => {
+        setCard(data);
+        if (data && data._imageQuality && data._imageQuality !== "high") {
+          try {
+            supabase.from("analytics_events").insert({
+              event_type: "scryfall_low_quality_image",
+              inventory_item_id: item.id,
+              item_name: item.name,
+              category: item.category,
+              metadata: { quality: data._imageQuality, set, num } as any,
+            } as any);
+          } catch {}
+        }
       })
+      .catch(() => setCard(null))
       .finally(() => setLoadingCard(false));
 
     // Track view
@@ -95,6 +75,7 @@ const SingleDetail = () => {
   const displayName = card?.printed_name || card?.name || item.name;
   const displayType = card?.printed_type_line || card?.type_line || "";
   const displayText = card?.printed_text || card?.oracle_text || "";
+  const bestImage = pickBestImageUrl(card?.image_uris, item.image_url);
 
   return (
     <div className="min-h-screen bg-background font-body">
@@ -113,16 +94,20 @@ const SingleDetail = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
-          {(card?.image_uris?.png || card?.image_uris?.large || card?.image_uris?.normal || item.image_url) ? (
+        {/* Fixed-aspect container prevents layout shift between low/high-res versions */}
+        <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative aspect-[2.5/3.5] w-full max-w-[420px] mx-auto">
+          {bestImage ? (
             <ImageZoom
-              src={card?.image_uris?.png || card?.image_uris?.large || card?.image_uris?.normal || item.image_url!}
+              src={bestImage}
               alt={displayName}
-              className="w-full h-auto object-contain"
-              containerClassName="w-full"
+              className="absolute inset-0 w-full h-full object-contain"
+              containerClassName="absolute inset-0"
             />
           ) : (
-            <div className="aspect-[2.5/3.5] flex items-center justify-center text-muted-foreground"><Package className="h-12 w-12" /></div>
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground"><Package className="h-12 w-12" /></div>
+          )}
+          {loadingCard && !bestImage && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/40"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
           )}
         </div>
 

@@ -352,9 +352,10 @@ const CatalogBanner = () => {
       : `/catalogo/drop/${encodeURIComponent(item.id)}`;
   };
 
+  // Banner sized for 1920x720 source assets. aspect-[16/6] keeps proportions consistent across breakpoints.
   if (banners.length === 0) {
     return (
-      <div className="relative h-32 sm:h-40 overflow-hidden">
+      <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] max-h-[420px] overflow-hidden">
         <img src={heroBanner} alt="" className="absolute inset-0 w-full h-full object-cover scale-105" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/50 to-background" />
         <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
@@ -371,7 +372,7 @@ const CatalogBanner = () => {
   const activeHref = linkedHrefFor(activeBanner?.inventory_item_id);
 
   return (
-    <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden group">
+    <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] max-h-[420px] overflow-hidden group">
       <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
         {banners.map((b, idx) => {
           const href = linkedHrefFor(b.inventory_item_id);
