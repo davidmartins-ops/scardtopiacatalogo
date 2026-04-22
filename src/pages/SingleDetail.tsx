@@ -43,11 +43,24 @@ const SingleDetail = () => {
     const num = parts[1]?.toLowerCase();
     if (!set || !num) return;
     setLoadingCard(true);
-    // Try to fetch in PT first; fallback to default
-    fetch(`https://api.scryfall.com/cards/${set}/${num}/pt`)
-      .then((r) => (r.ok ? r.json() : fetch(`https://api.scryfall.com/cards/${set}/${num}`).then((r2) => r2.json())))
-      .then((data) => setCard(data))
-      .catch(() => setCard(null))
+    // Try PT first; fallback to default. Always also fetch default to get high-res png if PT lacks it.
+    const fetchPt = fetch(`https://api.scryfall.com/cards/${set}/${num}/pt`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const fetchDefault = fetch(`https://api.scryfall.com/cards/${set}/${num}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    Promise.all([fetchPt, fetchDefault])
+      .then(([pt, def]) => {
+        const base = pt || def;
+        if (!base) { setCard(null); return; }
+        // Merge: prefer PT text, but use highest-resolution image available (default usually has png)
+        const ptImg = pt?.image_uris;
+        const defImg = def?.image_uris;
+        const bestImg = {
+          png: ptImg?.png || defImg?.png,
+          large: ptImg?.large || defImg?.large,
+          normal: ptImg?.normal || defImg?.normal,
+          border_crop: ptImg?.border_crop || defImg?.border_crop,
+        };
+        setCard({ ...base, image_uris: bestImg });
+      })
       .finally(() => setLoadingCard(false));
 
     // Track view
