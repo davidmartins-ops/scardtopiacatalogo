@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +46,7 @@ const sharePage = async (name: string, method: "whatsapp" | "twitter" | "instagr
 
 const DropDetail = () => {
   const { dropId } = useParams<{ dropId: string }>();
+  const navigate = useNavigate();
   const { data: inventoryData = [], isLoading } = useInventory();
 
   const drop = inventoryData.find((item) => item.id === dropId && (item.product_type ?? "drop") === "drop");
@@ -90,7 +91,7 @@ const DropDetail = () => {
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Header */}
-      <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <Link to="/catalogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
@@ -98,8 +99,8 @@ const DropDetail = () => {
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                  <Share2 className="h-4 w-4" /> Compartilhar
+                <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200">
+                  <Share2 className="h-4 w-4" /> <span className="hidden sm:inline">Compartilhar</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
@@ -117,11 +118,14 @@ const DropDetail = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link to="/catalogo">
-              <Button variant="ghost" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Voltar
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"
+              onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/catalogo"))}
+            >
+              <ArrowLeft className="h-4 w-4" /> Voltar
+            </Button>
           </div>
         </div>
       </div>
