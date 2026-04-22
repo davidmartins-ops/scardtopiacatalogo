@@ -62,3 +62,41 @@ export const useOrders = () => {
 
   return { orders, isLoading, createOrder };
 };
+
+// Admin: list/manage all orders
+export const useAdminOrders = () => {
+  const qc = useQueryClient();
+
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((o: any) => ({
+        ...o,
+        items: typeof o.items === "string" ? JSON.parse(o.items) : o.items,
+      })) as Order[];
+    },
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-orders"] }),
+  });
+
+  const removeOrder = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("orders").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-orders"] }),
+  });
+
+  return { orders, isLoading, updateStatus, removeOrder };
+};

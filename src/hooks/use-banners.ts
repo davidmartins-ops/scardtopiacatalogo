@@ -11,6 +11,7 @@ export interface Banner {
   sort_order: number;
   is_active: boolean;
   display_page: "all" | "login" | "catalogo";
+  inventory_item_id?: string | null;
 }
 
 export const useBanners = () => {
