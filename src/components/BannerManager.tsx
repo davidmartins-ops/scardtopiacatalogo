@@ -214,6 +214,21 @@ const BannerManager = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Vincular a um produto (clicável)</Label>
+              <Select value={form.inventory_item_id} onValueChange={(v) => setForm((p) => ({ ...p, inventory_item_id: v }))}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue placeholder="Nenhum (banner estático)" /></SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <SelectItem value="none">Nenhum (banner estático)</SelectItem>
+                  {inventoryOptions.map((it) => (
+                    <SelectItem key={it.id} value={it.id}>
+                      [{(it.product_type ?? "drop") === "single" ? "Single" : "Drop"}] {it.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">Se vinculado, ao clicar no banner o usuário vai direto para a página do produto.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Etiqueta</Label>
