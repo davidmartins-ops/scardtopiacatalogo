@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
-import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical, Eye, EyeOff, Upload, X } from "lucide-react";
+import { useState, useRef, useMemo } from "react";
+import { Plus, Pencil, Trash2, Image as ImageIcon, GripVertical, Eye, EyeOff, Upload, X, Link as LinkIcon } from "lucide-react";
 import { useBanners, useBannerMutations, type Banner } from "@/hooks/use-banners";
+import { useInventory } from "@/hooks/use-inventory";
 import { uploadProductImage } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ const DISPLAY_PAGES = [
 
 const BannerManager = () => {
   const { data: banners = [], isLoading } = useBanners();
+  const { data: inventory = [] } = useInventory();
   const { addBanner, updateBanner, deleteBanner } = useBannerMutations();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
@@ -28,11 +30,16 @@ const BannerManager = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo" });
+  const inventoryOptions = useMemo(
+    () => [...inventory].sort((a, b) => a.name.localeCompare(b.name)),
+    [inventory]
+  );
+
+  const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo", inventory_item_id: "none" });
 
   const openNew = () => {
     setEditingBanner(null);
-    setForm({ alt: "", label: "🔥 Lançamento", title: "", subtitle: "", sort_order: String(banners.length), display_page: "all" });
+    setForm({ alt: "", label: "🔥 Lançamento", title: "", subtitle: "", sort_order: String(banners.length), display_page: "all", inventory_item_id: "none" });
     setImagePreview(null);
     setImageFile(null);
     setDialogOpen(true);
@@ -40,7 +47,7 @@ const BannerManager = () => {
 
   const openEdit = (b: Banner) => {
     setEditingBanner(b);
-    setForm({ alt: b.alt, label: b.label, title: b.title, subtitle: b.subtitle, sort_order: String(b.sort_order), display_page: b.display_page ?? "all" });
+    setForm({ alt: b.alt, label: b.label, title: b.title, subtitle: b.subtitle, sort_order: String(b.sort_order), display_page: b.display_page ?? "all", inventory_item_id: b.inventory_item_id ?? "none" });
     setImagePreview(b.image_url);
     setImageFile(null);
     setDialogOpen(true);
@@ -75,6 +82,7 @@ const BannerManager = () => {
         sort_order: parseInt(form.sort_order) || 0,
         is_active: true,
         display_page: form.display_page,
+        inventory_item_id: form.inventory_item_id === "none" ? null : form.inventory_item_id,
       };
 
       if (editingBanner) {
@@ -205,6 +213,21 @@ const BannerManager = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Vincular a um produto (clicável)</Label>
+              <Select value={form.inventory_item_id} onValueChange={(v) => setForm((p) => ({ ...p, inventory_item_id: v }))}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue placeholder="Nenhum (banner estático)" /></SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <SelectItem value="none">Nenhum (banner estático)</SelectItem>
+                  {inventoryOptions.map((it) => (
+                    <SelectItem key={it.id} value={it.id}>
+                      [{(it.product_type ?? "drop") === "single" ? "Single" : "Drop"}] {it.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">Se vinculado, ao clicar no banner o usuário vai direto para a página do produto.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

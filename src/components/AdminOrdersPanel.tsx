@@ -1,0 +1,169 @@
+import { useState, useMemo } from "react";
+import { useAdminOrders } from "@/hooks/use-orders";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, Send } from "lucide-react";
+import { toast } from "sonner";
+
+const STATUS_OPTIONS = [
+  { value: "sent", label: "Enviado p/ WhatsApp", icon: Send, className: "bg-primary/10 text-primary border-primary/30" },
+  { value: "shipped", label: "Despachado", icon: Truck, className: "bg-accent/10 text-accent border-accent/30" },
+  { value: "delivered", label: "Entregue", icon: CheckCircle2, className: "bg-success/10 text-success border-success/30" },
+  { value: "cancelled", label: "Cancelado", icon: XCircle, className: "bg-destructive/10 text-destructive border-destructive/30" },
+];
+
+const statusConfig = (status: string) =>
+  STATUS_OPTIONS.find((s) => s.value === status) ?? { value: status, label: status, icon: Package, className: "bg-muted text-muted-foreground border-border" };
+
+const AdminOrdersPanel = () => {
+  const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (!search.trim()) return true;
+      const s = search.toLowerCase();
+      if (o.id.toLowerCase().includes(s)) return true;
+      if ((o.user_id ?? "").toLowerCase().includes(s)) return true;
+      if ((o.items as any[]).some((it) => (it.name ?? "").toLowerCase().includes(s))) return true;
+      return false;
+    });
+  }, [orders, search, statusFilter]);
+
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      await updateStatus.mutateAsync({ id, status });
+      toast.success("Status atualizado!");
+    } catch {
+      toast.error("Erro ao atualizar status.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await removeOrder.mutateAsync(deleteId);
+      toast.success("Pedido removido!");
+    } catch {
+      toast.error("Erro ao remover pedido.");
+    }
+    setDeleteId(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="glass-card p-8 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const totalRevenue = filtered.filter((o) => o.status !== "cancelled").reduce((s, o) => s + Number(o.total ?? 0), 0);
+
+  return (
+    <div className="glass-card p-4 space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
+          <Package className="h-4 w-4 text-primary" /> Gerenciar Pedidos
+        </h3>
+        <div className="text-xs text-muted-foreground">
+          {filtered.length} pedido(s) — <span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input placeholder="Buscar por ID, usuário ou item..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs bg-muted/30 border-border/50" />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[180px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12">
+          <Package className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Nenhum pedido encontrado.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((order) => {
+            const cfg = statusConfig(order.status);
+            const Icon = cfg.icon;
+            return (
+              <div key={order.id} className="border border-border rounded-lg p-3 bg-muted/10 space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={`text-[10px] gap-1 ${cfg.className}`}>
+                      <Icon className="h-3 w-3" /> {cfg.label}
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground font-mono">#{order.id.slice(0, 8)}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {new Date(order.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {order.user_id ? "Cliente" : "Visitante"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-primary font-display">
+                      R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-0.5 pl-1">
+                  {(order.items as any[]).map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="truncate flex-1">{item.quantity}× {item.name}</span>
+                      <span className="shrink-0 ml-2">R$ {Number(item.total_price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 border-t border-border/40 flex-wrap">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Atualizar:</span>
+                  <Select value={order.status} onValueChange={(v) => handleStatusChange(order.id, v)}>
+                    <SelectTrigger className="h-7 w-[180px] text-xs bg-background border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display">Remover pedido?</AlertDialogTitle>
+            <AlertDialogDescription>Esta ação é permanente e não pode ser desfeita.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default AdminOrdersPanel;

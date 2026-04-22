@@ -1,0 +1,1 @@
+ALTER TABLE public.banners ADD COLUMN IF NOT EXISTS inventory_item_id text REFERENCES public.inventory(id) ON DELETE SET NULL;

@@ -268,15 +268,15 @@ const TrendingCards = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <Link to="/catalogo"><Button variant="ghost" size="icon" className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button></Link>
+            <Link to="/catalogo"><Button variant="ghost" size="icon" className="h-8 w-8 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><ArrowLeft className="h-4 w-4" /></Button></Link>
             <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-8 hover:scale-105 transition-transform" /></Link>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/catalogo"><Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground text-xs">Catálogo</Button></Link>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground text-xs" onClick={() => fetchFormatCards(activeFormat)} disabled={loading}>
+            <Link to="/catalogo"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold text-xs transition-colors duration-200">Catálogo</Button></Link>
+            <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold text-xs transition-colors duration-200" onClick={() => fetchFormatCards(activeFormat)} disabled={loading}>
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /><span className="hidden sm:inline">Atualizar</span>
             </Button>
           </div>

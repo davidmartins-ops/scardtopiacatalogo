@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
 import { ArrowLeft, Loader2, Package, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,13 @@ interface ScryfallCard {
   rarity?: string;
   set_name?: string;
   collector_number?: string;
-  image_uris?: { normal?: string; large?: string };
+  image_uris?: { normal?: string; large?: string; png?: string; border_crop?: string };
   prices?: { usd?: string | null; usd_foil?: string | null };
 }
 
 const SingleDetail = () => {
   const { singleId } = useParams<{ singleId: string }>();
+  const navigate = useNavigate();
   const { data: inventoryData = [], isLoading } = useInventory();
   const item = inventoryData.find((i) => i.id === singleId && i.product_type === "single");
   const [card, setCard] = useState<ScryfallCard | null>(null);
@@ -84,19 +85,29 @@ const SingleDetail = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" /></Link>
-          <Link to="/catalogo">
-            <Button variant="ghost" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/catalogo"))}
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </Button>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
-          {(card?.image_uris?.normal || item.image_url) ? (
-            <ImageZoom src={card?.image_uris?.normal || item.image_url!} alt={displayName} className="w-full h-auto object-contain" containerClassName="w-full" />
+          {(card?.image_uris?.png || card?.image_uris?.large || card?.image_uris?.normal || item.image_url) ? (
+            <ImageZoom
+              src={card?.image_uris?.png || card?.image_uris?.large || card?.image_uris?.normal || item.image_url!}
+              alt={displayName}
+              className="w-full h-auto object-contain"
+              containerClassName="w-full"
+            />
           ) : (
             <div className="aspect-[2.5/3.5] flex items-center justify-center text-muted-foreground"><Package className="h-12 w-12" /></div>
           )}

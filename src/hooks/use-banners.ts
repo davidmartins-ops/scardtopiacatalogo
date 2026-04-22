@@ -11,6 +11,7 @@ export interface Banner {
   sort_order: number;
   is_active: boolean;
   display_page: "all" | "login" | "catalogo";
+  inventory_item_id?: string | null;
 }
 
 export const useBanners = () => {
@@ -22,7 +23,7 @@ export const useBanners = () => {
         .select("*")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all" })) as Banner[];
+      return (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all", inventory_item_id: d.inventory_item_id ?? null })) as Banner[];
     },
   });
 };
@@ -37,7 +38,7 @@ export const useActiveBanners = (page?: "login" | "catalogo") => {
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      const all = (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all" })) as Banner[];
+      const all = (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all", inventory_item_id: d.inventory_item_id ?? null })) as Banner[];
       if (!page) return all;
       return all.filter((b) => b.display_page === "all" || b.display_page === page);
     },
