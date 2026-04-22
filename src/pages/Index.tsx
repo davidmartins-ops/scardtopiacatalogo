@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -14,6 +14,7 @@ import ScryfallSearchDialog from "@/components/ScryfallSearchDialog";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import BannerManager from "@/components/BannerManager";
 import AdminRolesManager from "@/components/AdminRolesManager";
+import AdminOrdersPanel from "@/components/AdminOrdersPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -114,6 +115,9 @@ const Index = () => {
                 <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <BarChart3 className="h-3.5 w-3.5" /> Analytics
                 </TabsTrigger>
+                <TabsTrigger value="orders" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <ShoppingBag className="h-3.5 w-3.5" /> Pedidos
+                </TabsTrigger>
                 <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <Shield className="h-3.5 w-3.5" /> Admins
                 </TabsTrigger>
@@ -130,6 +134,9 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="analytics">
                 <div><AnalyticsDashboard /></div>
+              </TabsContent>
+              <TabsContent value="orders">
+                <div><AdminOrdersPanel /></div>
               </TabsContent>
               <TabsContent value="admins">
                 <div><AdminRolesManager /></div>
