@@ -57,6 +57,7 @@ export type Database = {
           display_page: string
           id: string
           image_url: string
+          inventory_item_id: string | null
           is_active: boolean
           label: string
           sort_order: number
@@ -70,6 +71,7 @@ export type Database = {
           display_page?: string
           id?: string
           image_url: string
+          inventory_item_id?: string | null
           is_active?: boolean
           label?: string
           sort_order?: number
@@ -83,6 +85,7 @@ export type Database = {
           display_page?: string
           id?: string
           image_url?: string
+          inventory_item_id?: string | null
           is_active?: boolean
           label?: string
           sort_order?: number
@@ -90,7 +93,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "banners_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       collection_cards: {
         Row: {
