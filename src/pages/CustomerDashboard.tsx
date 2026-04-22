@@ -73,15 +73,15 @@ const CustomerDashboard = () => {
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+      <div className="border-b border-brand-header-border bg-brand-header backdrop-blur-xl sticky top-0 z-30 shadow-md">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/catalogo" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/catalogo" className="flex items-center gap-2 text-sm text-brand-header-foreground hover:text-brand-gold transition-colors duration-200">
             <ArrowLeft className="h-4 w-4" /> Catálogo
           </Link>
           <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-10 hover:scale-105 transition-transform" /></Link>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-foreground">{profile?.display_name ?? user.email}</span>
-            <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" onClick={() => { signOut(); navigate("/catalogo"); }}>
+            <span className="text-sm text-brand-header-foreground">{profile?.display_name ?? user.email}</span>
+            <Button size="sm" variant="ghost" className="gap-1 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200" onClick={() => { signOut(); navigate("/catalogo"); }}>
               <LogOut className="h-3.5 w-3.5" /> Sair
             </Button>
           </div>
