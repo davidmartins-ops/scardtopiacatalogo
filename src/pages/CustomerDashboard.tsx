@@ -267,13 +267,27 @@ const CustomerDashboard = () => {
               </div>
             ) : (
               <div className="space-y-3">
+                <div className="rounded-md border border-border bg-muted/20 p-3 text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="font-semibold text-foreground mb-1">🔒 Privacidade dos seus pedidos</p>
+                  <p>
+                    Você visualiza apenas os seus próprios pedidos (regra de segurança por linha vinculada ao seu usuário).
+                    Pedidos de visitantes (sem login) são gravados sem identificação e ficam acessíveis somente para administradores.
+                    Exclusão e alteração de status são restritas a administradores.
+                  </p>
+                </div>
                 <div className="flex justify-end">
                   <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => {
+                    const esc = (v: any) => String(v ?? "")
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&apos;");
                     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<orders>\n';
                     orders.forEach((order) => {
-                      xml += `  <order id="${order.id}" status="${order.status}" date="${order.created_at}" total="${order.total}">\n`;
+                      xml += `  <order id="${esc(order.id)}" status="${esc(order.status)}" date="${esc(order.created_at)}" total="${esc(order.total)}">\n`;
                       (order.items as any[]).forEach((item: any) => {
-                        xml += `    <item name="${item.name}" quantity="${item.quantity}" unit_price="${item.unit_price}" total_price="${item.total_price}" />\n`;
+                        xml += `    <item name="${esc(item.name)}" quantity="${esc(item.quantity)}" unit_price="${esc(item.unit_price)}" total_price="${esc(item.total_price)}" />\n`;
                       });
                       xml += `  </order>\n`;
                     });
