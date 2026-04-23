@@ -94,6 +94,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const { profile, user } = useCustomerAuth();
   const navigate = useNavigate();
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
+  const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | null>(null);
 
   // Auto-fetch freight when CEP has 8+ digits
   useEffect(() => {
