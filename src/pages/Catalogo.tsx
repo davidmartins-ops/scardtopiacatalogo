@@ -561,17 +561,13 @@ const Catalogo = () => {
 
   const clearCart = useCallback(() => { setCartItems([]); syncCartToDb([]); }, [syncCartToDb]);
 
-  const handleOrderPlaced = useCallback(async (items: CartItem[], total: number) => {
+  const handleOrderPlaced = useCallback(async (items: CartItem[], total: number): Promise<boolean> => {
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
       const unitPrice = ci.item.price * (1 - discount / 100);
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
-      // Snapshot pre-order quantities for verification
-      const preStock: Record<string, number> = {};
-      items.forEach((ci) => { preStock[ci.item.id] = ci.item.quantity; });
-
       const { data: orderRow, error: orderErr } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
         items: orderItems as any,
@@ -588,8 +584,7 @@ const Catalogo = () => {
 
       if (auditErr || !auditRows || auditRows.length === 0) {
         console.error("[CHECKOUT] Stock decrement trigger failed to log audit rows", { auditErr, orderId: (orderRow as any)?.id });
-        toast.error("Não foi possível confirmar a baixa de estoque. Entre em contato pelo WhatsApp antes de prosseguir.");
-        return;
+        return false;
       }
 
       // Track analytics
@@ -601,9 +596,10 @@ const Catalogo = () => {
       if (user) queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
       clearCart();
       toast.success("Pedido registrado e estoque atualizado!");
+      return true;
     } catch (err) {
       console.error("Order error:", err);
-      toast.error("Erro ao registrar pedido. Tente novamente ou contate o suporte.");
+      return false;
     }
   }, [user, clearCart, queryClient]);
 

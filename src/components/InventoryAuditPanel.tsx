@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, Filter, Search, Calendar } from "lucide-react";
+import { Loader2, Download, Filter, Search, Calendar, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface AuditRow {
@@ -18,41 +19,69 @@ interface AuditRow {
   metadata: any;
 }
 
+const PAGE_SIZE = 50;
+
 const InventoryAuditPanel = () => {
+  const { session, loading: authLoading } = useAuth();
+  const isAdmin = !!session?.user;
+
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [itemFilter, setItemFilter] = useState("");
   const [userFilter, setUserFilter] = useState("");
+  const [page, setPage] = useState(0);
 
-  const { data: rows = [], isLoading, refetch } = useQuery({
-    queryKey: ["inventory-audit"],
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [from, to, itemFilter, userFilter]);
+
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["inventory-audit", { from, to, itemFilter, userFilter, page }],
+    enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("inventory_audit")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false });
+
+      if (from) query = query.gte("created_at", new Date(from).toISOString());
+      if (to) query = query.lte("created_at", new Date(to + "T23:59:59").toISOString());
+      if (itemFilter.trim()) query = query.ilike("inventory_item_id", `%${itemFilter.trim()}%`);
+      if (userFilter.trim()) query = query.eq("user_id", userFilter.trim());
+
+      const fromIdx = page * PAGE_SIZE;
+      const toIdx = fromIdx + PAGE_SIZE - 1;
+      query = query.range(fromIdx, toIdx);
+
+      const { data, error, count } = await query;
       if (error) throw error;
-      return (data ?? []) as AuditRow[];
+      return { rows: (data ?? []) as AuditRow[], count: count ?? 0 };
     },
   });
 
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (from && new Date(r.created_at) < new Date(from)) return false;
-      if (to && new Date(r.created_at) > new Date(to + "T23:59:59")) return false;
-      if (itemFilter && !r.inventory_item_id.toLowerCase().includes(itemFilter.toLowerCase())) return false;
-      if (userFilter && !(r.user_id ?? "").toLowerCase().includes(userFilter.toLowerCase())) return false;
-      return true;
-    });
-  }, [rows, from, to, itemFilter, userFilter]);
+  const rows = data?.rows ?? [];
+  const totalCount = data?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const exportCSV = () => {
-    if (filtered.length === 0) { toast.error("Nada para exportar."); return; }
+  const exportCSV = async () => {
+    if (!isAdmin) return;
+    // Re-query without pagination, applying same filters
+    let query = supabase
+      .from("inventory_audit")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10000);
+    if (from) query = query.gte("created_at", new Date(from).toISOString());
+    if (to) query = query.lte("created_at", new Date(to + "T23:59:59").toISOString());
+    if (itemFilter.trim()) query = query.ilike("inventory_item_id", `%${itemFilter.trim()}%`);
+    if (userFilter.trim()) query = query.eq("user_id", userFilter.trim());
+
+    const { data: allRows, error } = await query;
+    if (error || !allRows || allRows.length === 0) { toast.error("Nada para exportar."); return; }
+
     const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const header = ["id", "created_at", "inventory_item_id", "quantity_delta", "source", "user_id", "order_id", "metadata"];
     const lines = [header.join(",")];
-    filtered.forEach((r) => {
+    (allRows as AuditRow[]).forEach((r) => {
       lines.push([r.id, r.created_at, r.inventory_item_id, r.quantity_delta, r.source, r.user_id ?? "", r.order_id ?? "", JSON.stringify(r.metadata ?? {})].map(esc).join(","));
     });
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
@@ -62,8 +91,29 @@ const InventoryAuditPanel = () => {
     a.download = `inventory_audit_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`${filtered.length} linhas exportadas.`);
+    toast.success(`${allRows.length} linhas exportadas.`);
   };
+
+  if (authLoading) {
+    return (
+      <div className="glass-card p-8 flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="glass-card p-6 text-center space-y-3 border-destructive/40">
+        <ShieldAlert className="h-10 w-10 text-destructive mx-auto" />
+        <h3 className="font-display text-base font-semibold text-foreground">Acesso restrito</h3>
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          A auditoria de estoque está disponível apenas para administradores.
+          Se você acredita que deveria ter acesso, contate um administrador.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card p-4 space-y-4">
@@ -72,8 +122,8 @@ const InventoryAuditPanel = () => {
           <Filter className="h-4 w-4 text-primary" /> Auditoria de Estoque
         </h3>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Atualizar"}
+          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Atualizar"}
           </Button>
           <Button size="sm" onClick={exportCSV} className="gap-1.5">
             <Download className="h-3.5 w-3.5" /> CSV
@@ -100,7 +150,9 @@ const InventoryAuditPanel = () => {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">{filtered.length} de {rows.length} registros</p>
+      <p className="text-xs text-muted-foreground">
+        Página {page + 1} de {totalPages} · {totalCount.toLocaleString("pt-BR")} registros (filtrados pelo servidor)
+      </p>
 
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-xs">
@@ -117,9 +169,9 @@ const InventoryAuditPanel = () => {
           <tbody>
             {isLoading ? (
               <tr><td colSpan={6} className="text-center py-8"><Loader2 className="h-4 w-4 animate-spin inline text-primary" /></td></tr>
-            ) : filtered.length === 0 ? (
+            ) : rows.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</td></tr>
-            ) : filtered.map((r) => (
+            ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-border hover:bg-muted/20">
                 <td className="px-2 py-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString("pt-BR")}</td>
                 <td className="px-2 py-2 font-mono text-[11px]">{r.inventory_item_id}</td>
@@ -131,6 +183,17 @@ const InventoryAuditPanel = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between gap-2">
+        <Button size="sm" variant="outline" disabled={page === 0 || isFetching} onClick={() => setPage((p) => Math.max(0, p - 1))} className="gap-1">
+          <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+        </Button>
+        <span className="text-xs text-muted-foreground">{page + 1} / {totalPages}</span>
+        <Button size="sm" variant="outline" disabled={page + 1 >= totalPages || isFetching} onClick={() => setPage((p) => p + 1)} className="gap-1">
+          Próxima <ChevronRight className="h-3.5 w-3.5" />
+        </Button>
       </div>
     </div>
   );
