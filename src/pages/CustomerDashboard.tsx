@@ -268,12 +268,10 @@ const CustomerDashboard = () => {
             ) : (
               <div className="space-y-3">
                 <div className="rounded-md border border-border bg-muted/20 p-3 text-[11px] text-muted-foreground leading-relaxed">
-                  <p className="font-semibold text-foreground mb-1">🔒 Privacidade dos seus pedidos</p>
-                  <p>
-                    Você visualiza apenas os seus próprios pedidos (regra de segurança por linha vinculada ao seu usuário).
-                    Pedidos de visitantes (sem login) são gravados sem identificação e ficam acessíveis somente para administradores.
-                    Exclusão e alteração de status são restritas a administradores.
-                  </p>
+                  <p className="font-semibold text-foreground mb-1">🔒 Privacidade dos pedidos</p>
+                  <p><strong className="text-foreground">Você vê:</strong> ID, status, data, total e itens (nome, qtd, preço) — apenas dos seus pedidos.</p>
+                  <p><strong className="text-foreground">Admins veem:</strong> todos os pedidos (seus e de visitantes) e podem alterar status ou excluir.</p>
+                  <p><strong className="text-foreground">Seu user_id</strong> nunca é exposto a outros clientes (RLS por linha).</p>
                 </div>
                 <div className="flex justify-end">
                   <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => {
