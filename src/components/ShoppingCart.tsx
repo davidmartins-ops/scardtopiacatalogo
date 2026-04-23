@@ -314,6 +314,27 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </SheetContent>
       </Sheet>
 
+      {/* Login Required Dialog */}
+      <Dialog open={loginPromptOpen} onOpenChange={setLoginPromptOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              <LogIn className="h-5 w-5 text-primary" /> Faça login para finalizar
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>Para fechar a compra, registrar o pedido no seu histórico e enviar o comprovante PIX, você precisa estar logado.</p>
+            <p className="text-xs">Seu carrinho será mantido após o login.</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setLoginPromptOpen(false)}>Cancelar</Button>
+            <Button onClick={() => { setLoginPromptOpen(false); setOpen(false); navigate("/conta/login"); }} className="gap-2">
+              <LogIn className="h-4 w-4" /> Ir para login
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delivery Method Dialog */}
       <Dialog open={deliveryDialogOpen} onOpenChange={setDeliveryDialogOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
