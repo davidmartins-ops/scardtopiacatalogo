@@ -264,6 +264,7 @@ const ItemGrid = ({
               <SelectItem value="Galaxy Foil">Galaxy Foil</SelectItem>
               <SelectItem value="Confetti Foil">Confetti Foil</SelectItem>
               <SelectItem value="Etched Foil">Etched Foil</SelectItem>
+              <SelectItem value="Silver Scroll">Silver Scroll</SelectItem>
             </SelectContent>
           </Select>
           {isSingles && availableSets.length > 0 && (
@@ -567,16 +568,31 @@ const Catalogo = () => {
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
-      const { error: orderErr } = await supabase.from("orders").insert({
+      // Snapshot pre-order quantities for verification
+      const preStock: Record<string, number> = {};
+      items.forEach((ci) => { preStock[ci.item.id] = ci.item.quantity; });
+
+      const { data: orderRow, error: orderErr } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
         items: orderItems as any,
         total,
         status: "sent",
-      } as any);
+      } as any).select("id").single();
       if (orderErr) throw orderErr;
 
-      // Stock decrement is now handled by a server-side trigger on order insert.
-      // We only track analytics here.
+      // Verify trigger ran by checking inventory_audit rows for this order
+      const { data: auditRows, error: auditErr } = await supabase
+        .from("inventory_audit")
+        .select("inventory_item_id, quantity_delta")
+        .eq("order_id", (orderRow as any)?.id ?? "");
+
+      if (auditErr || !auditRows || auditRows.length === 0) {
+        console.error("[CHECKOUT] Stock decrement trigger failed to log audit rows", { auditErr, orderId: (orderRow as any)?.id });
+        toast.error("Não foi possível confirmar a baixa de estoque. Entre em contato pelo WhatsApp antes de prosseguir.");
+        return;
+      }
+
+      // Track analytics
       for (const ci of items) {
         trackEvent("purchase", ci.item);
       }
@@ -587,7 +603,7 @@ const Catalogo = () => {
       toast.success("Pedido registrado e estoque atualizado!");
     } catch (err) {
       console.error("Order error:", err);
-      toast.error("Erro ao registrar pedido.");
+      toast.error("Erro ao registrar pedido. Tente novamente ou contate o suporte.");
     }
   }, [user, clearCart, queryClient]);
 
