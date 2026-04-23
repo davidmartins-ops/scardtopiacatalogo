@@ -32,6 +32,7 @@ const descriptionStyles: Record<string, string> = {
   "Confetti Foil": "bg-accent/15 text-accent border-accent/30",
   "Surge Foil": "bg-foil/15 text-foil border-foil/30",
   "Etched Foil": "bg-foil/15 text-foil border-foil/30",
+  "Silver Scroll": "bg-muted/40 text-foreground border-border",
 };
 
 const LANGUAGES = [
@@ -57,6 +58,7 @@ const FOIL_TYPES = [
   { value: "Galaxy Foil", label: "Galaxy Foil" },
   { value: "Confetti Foil", label: "Confetti Foil" },
   { value: "Etched Foil", label: "Etched Foil" },
+  { value: "Silver Scroll", label: "Silver Scroll" },
 ];
 
 const STATUSES = [
@@ -349,7 +351,7 @@ const InventoryTable = ({ data }: Props) => {
     </th>
   );
 
-  const typeFilters = ["all", "Foil", "Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil"];
+  const typeFilters = ["all", "Foil", "Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil", "Silver Scroll"];
 
   return (
     <>
