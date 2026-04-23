@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { ShoppingCart as CartIcon, X, Trash2, Plus, Minus, Send, QrCode, Upload, Loader2, Check, Truck, Store, MapPin, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ShoppingCart as CartIcon, X, Trash2, Plus, Minus, Send, QrCode, Upload, Loader2, Check, Truck, Store, MapPin, Package, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -90,7 +91,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
-  const { profile } = useCustomerAuth();
+  const { profile, user } = useCustomerAuth();
+  const navigate = useNavigate();
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   // Auto-fetch freight when CEP has 8+ digits
   useEffect(() => {
@@ -174,6 +177,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   };
 
   const openDeliveryDialog = (action: "whatsapp" | "pix") => {
+    if (!user) {
+      setPendingAction(action);
+      setLoginPromptOpen(true);
+      return;
+    }
     setPendingAction(action);
     setDeliveryMethod(null);
     setShippingInfo({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
@@ -305,6 +313,27 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Login Required Dialog */}
+      <Dialog open={loginPromptOpen} onOpenChange={setLoginPromptOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              <LogIn className="h-5 w-5 text-primary" /> Faça login para finalizar
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>Para fechar a compra, registrar o pedido no seu histórico e enviar o comprovante PIX, você precisa estar logado.</p>
+            <p className="text-xs">Seu carrinho será mantido após o login.</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setLoginPromptOpen(false)}>Cancelar</Button>
+            <Button onClick={() => { setLoginPromptOpen(false); setOpen(false); navigate("/conta/login"); }} className="gap-2">
+              <LogIn className="h-4 w-4" /> Ir para login
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delivery Method Dialog */}
       <Dialog open={deliveryDialogOpen} onOpenChange={setDeliveryDialogOpen}>

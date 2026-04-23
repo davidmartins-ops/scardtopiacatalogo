@@ -383,6 +383,39 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_audit: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          metadata: Json | null
+          order_id: string | null
+          quantity_delta: number
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          metadata?: Json | null
+          order_id?: string | null
+          quantity_delta: number
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          quantity_delta?: number
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string

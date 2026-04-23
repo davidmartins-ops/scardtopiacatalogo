@@ -575,12 +575,9 @@ const Catalogo = () => {
       } as any);
       if (orderErr) throw orderErr;
 
+      // Stock decrement is now handled by a server-side trigger on order insert.
+      // We only track analytics here.
       for (const ci of items) {
-        const { error: rpcErr } = await supabase.rpc("decrement_inventory_stock" as any, {
-          _item_id: ci.item.id,
-          _qty: ci.qty,
-        } as any);
-        if (rpcErr) console.warn("[stock] decrement failed:", ci.item.id, rpcErr);
         trackEvent("purchase", ci.item);
       }
 
