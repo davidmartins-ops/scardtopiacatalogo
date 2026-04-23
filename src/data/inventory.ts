@@ -1,7 +1,7 @@
 export interface InventoryItem {
   id: string;
   name: string;
-  description: "Foil" | "Non-Foil" | "Surge Foil" | "Rainbow Foil" | "Holo Foil" | "Galaxy Foil" | "Confetti Foil" | "Etched Foil";
+  description: "Foil" | "Non-Foil" | "Surge Foil" | "Rainbow Foil" | "Holo Foil" | "Galaxy Foil" | "Confetti Foil" | "Etched Foil" | "Silver Scroll";
   price: number;
   price_pix?: number;
   quantity: number;
