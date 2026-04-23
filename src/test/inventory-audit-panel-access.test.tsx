@@ -51,7 +51,9 @@ describe("InventoryAuditPanel access control", () => {
     const text = container.textContent ?? "";
     expect(text).toMatch(/Acesso restrito/i);
     expect(text).toMatch(/apenas para administradores/i);
-    expect(text).not.toMatch(/Auditoria de Estoque/i);
+    // Admin-only UI markers must NOT be rendered
+    expect(text).not.toMatch(/Limite CSV/i);
+    expect(text).not.toMatch(/CSV \(filtros\)/i);
     expect(fromSpy).not.toHaveBeenCalled();
   });
 
