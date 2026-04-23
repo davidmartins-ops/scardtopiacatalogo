@@ -142,12 +142,26 @@ const InventoryAuditPanel = () => {
         <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
           <Filter className="h-4 w-4 text-primary" /> Auditoria de Estoque
         </h3>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* CORREÇÃO 28.4: configurable export limit */}
+          <div className="flex items-center gap-1">
+            <label className="text-[10px] text-muted-foreground" htmlFor="exportLimit">Limite CSV</label>
+            <Input
+              id="exportLimit"
+              type="number"
+              min={50}
+              max={EXPORT_LIMIT_MAX}
+              step={50}
+              value={exportLimit}
+              onChange={(e) => setExportLimit(Math.min(EXPORT_LIMIT_MAX, Math.max(50, parseInt(e.target.value || "1000", 10) || 1000)))}
+              className="h-8 w-24 text-xs"
+            />
+          </div>
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Atualizar"}
           </Button>
           <Button size="sm" onClick={exportCSV} className="gap-1.5">
-            <Download className="h-3.5 w-3.5" /> CSV
+            <Download className="h-3.5 w-3.5" /> CSV (filtros)
           </Button>
         </div>
       </div>
