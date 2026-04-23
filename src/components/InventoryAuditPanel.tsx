@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,19 +21,37 @@ interface AuditRow {
 }
 
 const PAGE_SIZE = 50;
+const EXPORT_LIMIT_MAX = 10000;
 
 const InventoryAuditPanel = () => {
   const { session, loading: authLoading } = useAuth();
   const isAdmin = !!session?.user;
 
-  const [from, setFrom] = useState<string>("");
-  const [to, setTo] = useState<string>("");
-  const [itemFilter, setItemFilter] = useState("");
-  const [userFilter, setUserFilter] = useState("");
-  const [page, setPage] = useState(0);
+  // CORREÇÃO 28.6: Persist filters & pagination in URL so admins can share the exact view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [from, setFrom] = useState<string>(searchParams.get("from") ?? "");
+  const [to, setTo] = useState<string>(searchParams.get("to") ?? "");
+  const [itemFilter, setItemFilter] = useState(searchParams.get("item") ?? "");
+  const [userFilter, setUserFilter] = useState(searchParams.get("user") ?? "");
+  const [page, setPage] = useState(Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0));
+  const [exportLimit, setExportLimit] = useState<number>(
+    Math.min(EXPORT_LIMIT_MAX, Math.max(50, parseInt(searchParams.get("exportLimit") ?? "1000", 10) || 1000)),
+  );
 
   // Reset page when filters change
   useEffect(() => { setPage(0); }, [from, to, itemFilter, userFilter]);
+
+  // Sync state → URL whenever any param changes
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (from) next.set("from", from);
+    if (to) next.set("to", to);
+    if (itemFilter.trim()) next.set("item", itemFilter.trim());
+    if (userFilter.trim()) next.set("user", userFilter.trim());
+    if (page > 0) next.set("page", String(page));
+    if (exportLimit !== 1000) next.set("exportLimit", String(exportLimit));
+    setSearchParams(next, { replace: true });
+  }, [from, to, itemFilter, userFilter, page, exportLimit, setSearchParams]);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["inventory-audit", { from, to, itemFilter, userFilter, page }],
@@ -64,12 +83,13 @@ const InventoryAuditPanel = () => {
 
   const exportCSV = async () => {
     if (!isAdmin) return;
-    // Re-query without pagination, applying same filters
+    // CORREÇÃO 28.4: Export honors the active filters AND the configurable limit.
+    const safeLimit = Math.min(EXPORT_LIMIT_MAX, Math.max(1, exportLimit || 1000));
     let query = supabase
       .from("inventory_audit")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(10000);
+      .limit(safeLimit);
     if (from) query = query.gte("created_at", new Date(from).toISOString());
     if (to) query = query.lte("created_at", new Date(to + "T23:59:59").toISOString());
     if (itemFilter.trim()) query = query.ilike("inventory_item_id", `%${itemFilter.trim()}%`);
@@ -91,7 +111,8 @@ const InventoryAuditPanel = () => {
     a.download = `inventory_audit_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`${allRows.length} linhas exportadas.`);
+    const truncated = allRows.length >= safeLimit;
+    toast.success(`${allRows.length} linhas exportadas${truncated ? ` (limite ${safeLimit} atingido)` : ""}.`);
   };
 
   if (authLoading) {
@@ -121,12 +142,26 @@ const InventoryAuditPanel = () => {
         <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
           <Filter className="h-4 w-4 text-primary" /> Auditoria de Estoque
         </h3>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* CORREÇÃO 28.4: configurable export limit */}
+          <div className="flex items-center gap-1">
+            <label className="text-[10px] text-muted-foreground" htmlFor="exportLimit">Limite CSV</label>
+            <Input
+              id="exportLimit"
+              type="number"
+              min={50}
+              max={EXPORT_LIMIT_MAX}
+              step={50}
+              value={exportLimit}
+              onChange={(e) => setExportLimit(Math.min(EXPORT_LIMIT_MAX, Math.max(50, parseInt(e.target.value || "1000", 10) || 1000)))}
+              className="h-8 w-24 text-xs"
+            />
+          </div>
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Atualizar"}
           </Button>
           <Button size="sm" onClick={exportCSV} className="gap-1.5">
-            <Download className="h-3.5 w-3.5" /> CSV
+            <Download className="h-3.5 w-3.5" /> CSV (filtros)
           </Button>
         </div>
       </div>

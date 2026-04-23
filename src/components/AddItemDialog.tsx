@@ -41,9 +41,41 @@ const AddItemDialog = () => {
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
     language: "PT", condition: "NM", status: "none" as string, drop_description: "",
   });
+  // CORREÇÃO 28.1: build SET-NUM-LANG-F/NF-COND automatically until the admin overrides it manually.
+  const [idParts, setIdParts] = useState({ set: "", num: "" });
+  const [idAutoTouched, setIdAutoTouched] = useState(false);
+
+  const buildAutoId = (parts: { set: string; num: string }, language: string, description: string, condition: string) => {
+    const set = parts.set.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const num = parts.num.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!set || !num) return "";
+    const foilTag = description === "Non-Foil" ? "NF" : "F";
+    return `${set}-${num}-${language}-${foilTag}-${condition}`;
+  };
 
   const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (!idAutoTouched && (field === "language" || field === "description" || field === "condition")) {
+        const auto = buildAutoId(idParts, next.language, next.description, next.condition);
+        if (auto) next.id = auto;
+      }
+      return next;
+    });
+  };
+
+  const handleIdPartChange = (field: "set" | "num", value: string) => {
+    const nextParts = { ...idParts, [field]: value };
+    setIdParts(nextParts);
+    if (!idAutoTouched) {
+      const auto = buildAutoId(nextParts, form.language, form.description, form.condition);
+      if (auto) setForm((prev) => ({ ...prev, id: auto }));
+    }
+  };
+
+  const handleIdManualChange = (value: string) => {
+    setIdAutoTouched(true);
+    setForm((prev) => ({ ...prev, id: value }));
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +95,8 @@ const AddItemDialog = () => {
 
   const resetForm = () => {
     setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
+    setIdParts({ set: "", num: "" });
+    setIdAutoTouched(false);
     clearImage();
   };
 
@@ -133,20 +167,33 @@ const AddItemDialog = () => {
           <DialogTitle className="font-display text-foreground">Adicionar Item</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 font-body">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="id">ID *</Label>
-              <Input id="id" placeholder="SLDXX01" value={form.id} onChange={(e) => handleChange("id", e.target.value)} maxLength={20} className="bg-muted border-border" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Input id="category" placeholder="Ex: D&D, Fallout..." value={form.category} onChange={(e) => handleChange("category", e.target.value)} maxLength={50} className="bg-muted border-border" />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria</Label>
+            <Input id="category" placeholder="Ex: D&D, Fallout..." value={form.category} onChange={(e) => handleChange("category", e.target.value)} maxLength={50} className="bg-muted border-border" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="name">Nome *</Label>
             <Input id="name" placeholder="Secret Lair x ..." value={form.name} onChange={(e) => handleChange("name", e.target.value)} maxLength={200} className="bg-muted border-border" />
+          </div>
+
+          {/* CORREÇÃO 28.1: ID is auto-built from SET + collector number + language + foil + condition. */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="set">Set *</Label>
+              <Input id="set" placeholder="SLD" value={idParts.set} onChange={(e) => handleIdPartChange("set", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="num">Nº Coletor *</Label>
+              <Input id="num" placeholder="01" value={idParts.num} onChange={(e) => handleIdPartChange("num", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="id" className="flex items-center justify-between">
+              <span>ID gerado *</span>
+              <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SET-NUM-LANG-F/NF-COND"}</span>
+            </Label>
+            <Input id="id" placeholder="SLD-01-PT-F-NM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
           </div>
 
           {/* Drop Description */}
