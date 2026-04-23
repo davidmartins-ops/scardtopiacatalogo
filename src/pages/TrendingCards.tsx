@@ -117,26 +117,35 @@ const TrendingCards = () => {
     let filtered = cards;
     if (search) {
       const q = search.toLowerCase();
-      filtered = cards.filter((c) => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
+      filtered = filtered.filter((c) => c.name.toLowerCase().includes(q) || c.set_name.toLowerCase().includes(q));
     }
-    // Always sort by percentage change magnitude
+    // CORREÇÃO 28.2: hard split by sign of variation. Zeros and missing data are excluded from both tabs.
     if (type === "rising") {
+      filtered = filtered.filter((c) => (c.priceChangePct ?? 0) > 0);
       return [...filtered].sort((a, b) => {
         const aPct = a.priceChangePct ?? 0;
         const bPct = b.priceChangePct ?? 0;
         return sortOrder === "pct_desc" ? bPct - aPct : aPct - bPct;
       });
     } else {
+      filtered = filtered.filter((c) => (c.priceChangePct ?? 0) < 0);
       return [...filtered].sort((a, b) => {
         const aPct = a.priceChangePct ?? 0;
         const bPct = b.priceChangePct ?? 0;
-        return sortOrder === "pct_desc" ? aPct - bPct : bPct - aPct; // most negative first when desc
+        // "desc" = biggest fall first (most negative). "asc" = smallest fall first (closer to 0).
+        return sortOrder === "pct_desc" ? aPct - bPct : bPct - aPct;
       });
     }
   };
 
-  const filteredRising = useMemo(() => applyFilterAndSort(currentData.rising, "rising"), [currentData.rising, search, sortOrder]);
-  const filteredFalling = useMemo(() => applyFilterAndSort(currentData.falling, "falling"), [currentData.falling, search, sortOrder]);
+  // CORREÇÃO 28.2: union the rising+falling pools so a card with negative variation
+  // accidentally returned by the "rising" Scryfall query still ends up in the correct tab.
+  const allCards = useMemo(
+    () => [...currentData.rising, ...currentData.falling],
+    [currentData.rising, currentData.falling],
+  );
+  const filteredRising = useMemo(() => applyFilterAndSort(allCards, "rising"), [allCards, search, sortOrder]);
+  const filteredFalling = useMemo(() => applyFilterAndSort(allCards, "falling"), [allCards, search, sortOrder]);
 
   const getImage = (card: ScryfallCard) => {
     if (card.image_uris?.normal) return card.image_uris.normal;
