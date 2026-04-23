@@ -41,9 +41,41 @@ const AddItemDialog = () => {
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
     language: "PT", condition: "NM", status: "none" as string, drop_description: "",
   });
+  // CORREÇÃO 28.1: build SET-NUM-LANG-F/NF-COND automatically until the admin overrides it manually.
+  const [idParts, setIdParts] = useState({ set: "", num: "" });
+  const [idAutoTouched, setIdAutoTouched] = useState(false);
+
+  const buildAutoId = (parts: { set: string; num: string }, language: string, description: string, condition: string) => {
+    const set = parts.set.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const num = parts.num.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!set || !num) return "";
+    const foilTag = description === "Non-Foil" ? "NF" : "F";
+    return `${set}-${num}-${language}-${foilTag}-${condition}`;
+  };
 
   const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (!idAutoTouched && (field === "language" || field === "description" || field === "condition")) {
+        const auto = buildAutoId(idParts, next.language, next.description, next.condition);
+        if (auto) next.id = auto;
+      }
+      return next;
+    });
+  };
+
+  const handleIdPartChange = (field: "set" | "num", value: string) => {
+    const nextParts = { ...idParts, [field]: value };
+    setIdParts(nextParts);
+    if (!idAutoTouched) {
+      const auto = buildAutoId(nextParts, form.language, form.description, form.condition);
+      if (auto) setForm((prev) => ({ ...prev, id: auto }));
+    }
+  };
+
+  const handleIdManualChange = (value: string) => {
+    setIdAutoTouched(true);
+    setForm((prev) => ({ ...prev, id: value }));
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +95,8 @@ const AddItemDialog = () => {
 
   const resetForm = () => {
     setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
+    setIdParts({ set: "", num: "" });
+    setIdAutoTouched(false);
     clearImage();
   };
 
