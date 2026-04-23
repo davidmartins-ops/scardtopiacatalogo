@@ -1,17 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
-// CORREÇÃO 28.3: Non-admin users must see the "Acesso restrito" banner and never reach the audit table.
+// CORREÇÃO 28.3: Non-admin users must see the "Acesso restrito" banner
+// and must NEVER trigger a query against the inventory_audit table.
 
-// Mock the auth hook — we control the session per test.
 const mockUseAuth = vi.fn();
-vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => mockUseAuth(),
-}));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => mockUseAuth() }));
 
-// Mock supabase to ensure the query is never reached for unauthorized users.
 const fromSpy = vi.fn();
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { from: (...args: any[]) => fromSpy(...args) },
@@ -32,35 +29,49 @@ describe("InventoryAuditPanel access control", () => {
   beforeEach(() => {
     fromSpy.mockReset();
     fromSpy.mockReturnValue({
-      select: () => ({ order: () => ({ gte: () => ({ lte: () => ({ ilike: () => ({ eq: () => ({ range: () => Promise.resolve({ data: [], error: null, count: 0 }) }) }) }) }) }) }),
+      select: () => ({
+        order: () => ({
+          gte: () => ({
+            lte: () => ({
+              ilike: () => ({
+                eq: () => ({
+                  range: () => Promise.resolve({ data: [], error: null, count: 0 }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      }),
     });
   });
 
-  it("shows 'Acesso restrito' message when user is NOT logged in", () => {
+  it("shows 'Acesso restrito' when user is NOT logged in and never queries the audit table", () => {
     mockUseAuth.mockReturnValue({ session: null, loading: false, signOut: vi.fn() });
-    renderPanel();
-    expect(screen.getByText(/Acesso restrito/i)).toBeInTheDocument();
-    expect(screen.getByText(/apenas para administradores/i)).toBeInTheDocument();
-    // The audit table must NOT be rendered
-    expect(screen.queryByText(/Auditoria de Estoque/i)).not.toBeInTheDocument();
+    const { container } = renderPanel();
+    const text = container.textContent ?? "";
+    expect(text).toMatch(/Acesso restrito/i);
+    expect(text).toMatch(/apenas para administradores/i);
+    expect(text).not.toMatch(/Auditoria de Estoque/i);
     expect(fromSpy).not.toHaveBeenCalled();
   });
 
-  it("shows the audit panel when user IS an admin (session present — useAuth already gated by role)", () => {
+  it("renders the audit panel when an admin session is present", () => {
     mockUseAuth.mockReturnValue({
       session: { user: { id: "admin-uuid" } } as any,
       loading: false,
       signOut: vi.fn(),
     });
-    renderPanel();
-    expect(screen.getByText(/Auditoria de Estoque/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Acesso restrito/i)).not.toBeInTheDocument();
+    const { container } = renderPanel();
+    const text = container.textContent ?? "";
+    expect(text).toMatch(/Auditoria de Estoque/i);
+    expect(text).not.toMatch(/Acesso restrito/i);
   });
 
-  it("shows a loading spinner while auth is resolving", () => {
+  it("shows a loading spinner while auth resolves and does not fetch yet", () => {
     mockUseAuth.mockReturnValue({ session: null, loading: true, signOut: vi.fn() });
     const { container } = renderPanel();
     expect(container.querySelector(".animate-spin")).toBeTruthy();
-    expect(screen.queryByText(/Acesso restrito/i)).not.toBeInTheDocument();
+    expect((container.textContent ?? "")).not.toMatch(/Acesso restrito/i);
+    expect(fromSpy).not.toHaveBeenCalled();
   });
 });
