@@ -167,15 +167,9 @@ const AddItemDialog = () => {
           <DialogTitle className="font-display text-foreground">Adicionar Item</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 font-body">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="id">ID *</Label>
-              <Input id="id" placeholder="SLDXX01" value={form.id} onChange={(e) => handleChange("id", e.target.value)} maxLength={20} className="bg-muted border-border" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Input id="category" placeholder="Ex: D&D, Fallout..." value={form.category} onChange={(e) => handleChange("category", e.target.value)} maxLength={50} className="bg-muted border-border" />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria</Label>
+            <Input id="category" placeholder="Ex: D&D, Fallout..." value={form.category} onChange={(e) => handleChange("category", e.target.value)} maxLength={50} className="bg-muted border-border" />
           </div>
 
           <div className="space-y-2">
@@ -200,6 +194,19 @@ const AddItemDialog = () => {
               <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SET-NUM-LANG-F/NF-COND"}</span>
             </Label>
             <Input id="id" placeholder="SLD-01-PT-F-NM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
+          </div>
+
+          {/* Drop Description */}
+          <div className="space-y-2">
+            <Label htmlFor="drop_description">Descrição do Drop</Label>
+            <Textarea
+              id="drop_description"
+              placeholder="Descrição detalhada do produto (exibida na página do drop)..."
+              value={form.drop_description}
+              onChange={(e) => handleChange("drop_description", e.target.value)}
+              className="bg-muted border-border min-h-[80px] resize-y"
+              maxLength={2000}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
