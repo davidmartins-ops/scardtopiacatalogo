@@ -183,17 +183,23 @@ const AddItemDialog = () => {
             <Input id="name" placeholder="Secret Lair x ..." value={form.name} onChange={(e) => handleChange("name", e.target.value)} maxLength={200} className="bg-muted border-border" />
           </div>
 
-          {/* Drop Description */}
+          {/* CORREÇÃO 28.1: ID is auto-built from SET + collector number + language + foil + condition. */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="set">Set *</Label>
+              <Input id="set" placeholder="SLD" value={idParts.set} onChange={(e) => handleIdPartChange("set", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="num">Nº Coletor *</Label>
+              <Input id="num" placeholder="01" value={idParts.num} onChange={(e) => handleIdPartChange("num", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
+            </div>
+          </div>
           <div className="space-y-2">
-            <Label htmlFor="drop_description">Descrição do Drop</Label>
-            <Textarea
-              id="drop_description"
-              placeholder="Descrição detalhada do produto (exibida na página do drop)..."
-              value={form.drop_description}
-              onChange={(e) => handleChange("drop_description", e.target.value)}
-              className="bg-muted border-border min-h-[80px] resize-y"
-              maxLength={2000}
-            />
+            <Label htmlFor="id" className="flex items-center justify-between">
+              <span>ID gerado *</span>
+              <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SET-NUM-LANG-F/NF-COND"}</span>
+            </Label>
+            <Input id="id" placeholder="SLD-01-PT-F-NM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
