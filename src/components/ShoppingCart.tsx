@@ -368,6 +368,52 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </DialogContent>
       </Dialog>
 
+      {/* Order Confirmation Dialog (with retry/back-to-cart on failure) */}
+      <Dialog open={confirmOrderOpen} onOpenChange={(o) => { if (!submittingOrder) setConfirmOrderOpen(o); }}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              <Check className="h-5 w-5 text-primary" /> Confirmar pedido?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
+              <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : "WhatsApp"}</span></div>
+              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total</span><span className="font-bold text-primary">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ao confirmar, registramos seu pedido e damos baixa no estoque automaticamente.
+              Em caso de falha, seus itens permanecem no carrinho.
+            </p>
+            {orderError && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+                {orderError}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2 flex-col sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => { setConfirmOrderOpen(false); setOrderError(null); }}
+              disabled={submittingOrder}
+            >
+              Voltar ao carrinho
+            </Button>
+            <Button onClick={submitOrder} disabled={submittingOrder} className="gap-2">
+              {submittingOrder ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</>
+              ) : orderError ? (
+                <><Send className="h-4 w-4" /> Reenviar pedido</>
+              ) : (
+                <><Check className="h-4 w-4" /> Confirmar pedido</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delivery Method Dialog */}
       <Dialog open={deliveryDialogOpen} onOpenChange={setDeliveryDialogOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
