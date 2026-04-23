@@ -203,18 +203,23 @@ const ScryfallSearchDialog = () => {
 
         {!selected ? (
           <div className="space-y-4 flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="flex gap-2 shrink-0">
+            {/* CORREÇÃO 29: input + botão acoplados, sem gap, bordas contínuas. */}
+            <div className="flex w-full shrink-0">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar carta por nome (ex: Lightning Bolt)..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && searchScryfall()}
-                  className="pl-9 bg-muted border-border"
+                  className="rounded-r-none border-r-0 pl-9 focus-visible:ring-0 focus-visible:border-primary"
                 />
               </div>
-              <Button onClick={searchScryfall} disabled={searching || !query.trim()}>
+              <Button
+                onClick={searchScryfall}
+                disabled={searching || !query.trim()}
+                className="h-11 rounded-l-none rounded-r-xl px-5"
+              >
                 {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
               </Button>
             </div>
