@@ -65,7 +65,7 @@ describe("InventoryAuditPanel access control", () => {
     });
     const { container } = renderPanel();
     const text = container.textContent ?? "";
-    expect(text).toMatch(/Auditoria de Estoque/i);
+    expect(text).toMatch(/Limite CSV/i);
     expect(text).not.toMatch(/Acesso restrito/i);
   });
 
