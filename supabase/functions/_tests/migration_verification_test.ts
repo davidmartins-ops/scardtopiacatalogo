@@ -1,4 +1,4 @@
-// Verification script for CORREÇÃO 25/26 migrations.
+// Verification script for CORREÇÃO 25/26/27 migrations.
 // Run with: deno run --allow-env --allow-net supabase/functions/_tests/migration_verification_test.ts
 // Requires env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (use staging creds).
 
@@ -20,6 +20,27 @@ let fail = 0;
 const ok = (msg: string) => { console.log(`✅ ${msg}`); pass++; };
 const ko = (msg: string) => { console.error(`❌ ${msg}`); fail++; };
 
+// Helper: run raw SQL via PostgREST. Requires a SQL exec RPC.
+// We use the supabase-js .rpc on a generic helper if present; otherwise fall back to REST.
+async function runSQL(sql: string): Promise<{ rows: any[] | null; error: string | null }> {
+  // Try a conventional `exec_sql` RPC if the project exposes one.
+  const r = await admin.rpc("exec_sql" as any, { sql }).catch(() => null);
+  if (r && !r.error) return { rows: (r.data as any[]) ?? [], error: null };
+  // Fallback: use the PostgREST query endpoint via fetch using the pg_meta convention.
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
+    method: "POST",
+    headers: {
+      apikey: SERVICE_ROLE,
+      Authorization: `Bearer ${SERVICE_ROLE}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ sql }),
+  });
+  if (!res.ok) return { rows: null, error: `HTTP ${res.status}` };
+  const data = await res.json().catch(() => null);
+  return { rows: Array.isArray(data) ? data : [], error: null };
+}
+
 // 1) inventory_audit table exists & is selectable by service role
 {
   const { error } = await admin.from("inventory_audit").select("id").limit(1);
@@ -27,11 +48,27 @@ const ko = (msg: string) => { console.error(`❌ ${msg}`); fail++; };
   else ok("inventory_audit table exists");
 }
 
-// 2) Trigger trg_orders_decrement_stock exists on public.orders
+// 2) Trigger trg_orders_decrement_stock exists on public.orders — explicit metadata query
 {
-  const { data, error } = await admin.rpc("pg_get_triggerdef" as any, {}).then(() => ({ data: null, error: null })).catch(() => ({ data: null, error: null }));
-  // Fallback: query information_schema via REST not available; rely on functional check (test 4).
-  ok("Trigger existence will be confirmed via functional insert test (#4)");
+  const sql = `
+    SELECT t.tgname, c.relname, p.proname
+    FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    JOIN pg_proc p ON p.oid = t.tgfoid
+    WHERE n.nspname = 'public'
+      AND c.relname = 'orders'
+      AND t.tgname = 'trg_orders_decrement_stock'
+      AND NOT t.tgisinternal;
+  `;
+  const { rows, error } = await runSQL(sql);
+  if (error) {
+    ko(`Could not query pg_trigger metadata (${error}). Ensure an exec_sql RPC exists or run via psql instead.`);
+  } else if (!rows || rows.length === 0) {
+    ko("Trigger trg_orders_decrement_stock NOT FOUND on public.orders — migration is missing or failed");
+  } else {
+    ok(`Trigger trg_orders_decrement_stock exists on public.orders (function: ${rows[0]?.proname ?? "unknown"})`);
+  }
 }
 
 // 3) RPC decrement_inventory_stock callable as admin (service role bypasses RLS but auth.uid() is null → expect 'Autenticação obrigatória')
@@ -48,7 +85,6 @@ const ko = (msg: string) => { console.error(`❌ ${msg}`); fail++; };
 
 // 4) Functional test: insert an order, verify inventory decrement + audit row written by trigger
 {
-  // Pick an existing inventory item with stock
   const { data: items } = await admin.from("inventory").select("id, quantity").gt("quantity", 0).limit(1);
   if (!items || items.length === 0) {
     ko("No inventory item with stock > 0 to test trigger");
