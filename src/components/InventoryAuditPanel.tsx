@@ -21,19 +21,37 @@ interface AuditRow {
 }
 
 const PAGE_SIZE = 50;
+const EXPORT_LIMIT_MAX = 10000;
 
 const InventoryAuditPanel = () => {
   const { session, loading: authLoading } = useAuth();
   const isAdmin = !!session?.user;
 
-  const [from, setFrom] = useState<string>("");
-  const [to, setTo] = useState<string>("");
-  const [itemFilter, setItemFilter] = useState("");
-  const [userFilter, setUserFilter] = useState("");
-  const [page, setPage] = useState(0);
+  // CORREÇÃO 28.6: Persist filters & pagination in URL so admins can share the exact view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [from, setFrom] = useState<string>(searchParams.get("from") ?? "");
+  const [to, setTo] = useState<string>(searchParams.get("to") ?? "");
+  const [itemFilter, setItemFilter] = useState(searchParams.get("item") ?? "");
+  const [userFilter, setUserFilter] = useState(searchParams.get("user") ?? "");
+  const [page, setPage] = useState(Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0));
+  const [exportLimit, setExportLimit] = useState<number>(
+    Math.min(EXPORT_LIMIT_MAX, Math.max(50, parseInt(searchParams.get("exportLimit") ?? "1000", 10) || 1000)),
+  );
 
   // Reset page when filters change
   useEffect(() => { setPage(0); }, [from, to, itemFilter, userFilter]);
+
+  // Sync state → URL whenever any param changes
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (from) next.set("from", from);
+    if (to) next.set("to", to);
+    if (itemFilter.trim()) next.set("item", itemFilter.trim());
+    if (userFilter.trim()) next.set("user", userFilter.trim());
+    if (page > 0) next.set("page", String(page));
+    if (exportLimit !== 1000) next.set("exportLimit", String(exportLimit));
+    setSearchParams(next, { replace: true });
+  }, [from, to, itemFilter, userFilter, page, exportLimit, setSearchParams]);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["inventory-audit", { from, to, itemFilter, userFilter, page }],
