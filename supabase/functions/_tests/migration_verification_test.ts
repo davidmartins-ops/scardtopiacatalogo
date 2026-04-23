@@ -20,13 +20,15 @@ let fail = 0;
 const ok = (msg: string) => { console.log(`✅ ${msg}`); pass++; };
 const ko = (msg: string) => { console.error(`❌ ${msg}`); fail++; };
 
-// Helper: run raw SQL via PostgREST. Requires a SQL exec RPC.
-// We use the supabase-js .rpc on a generic helper if present; otherwise fall back to REST.
-async function runSQL(sql: string): Promise<{ rows: any[] | null; error: string | null }> {
-  // Try a conventional `exec_sql` RPC if the project exposes one.
+// Helper: run raw SQL via PostgREST. Requires an `exec_sql` RPC in the project.
+// CORREÇÃO 28.7: When the RPC is missing, surface clear instructions on how to verify via psql.
+async function runSQL(sql: string): Promise<{ rows: any[] | null; error: string | null; missingRpc?: boolean }> {
   const r = await admin.rpc("exec_sql" as any, { sql }).catch(() => null);
   if (r && !r.error) return { rows: (r.data as any[]) ?? [], error: null };
-  // Fallback: use the PostgREST query endpoint via fetch using the pg_meta convention.
+  if (r?.error && /function .*exec_sql.* does not exist/i.test(r.error.message)) {
+    return { rows: null, error: r.error.message, missingRpc: true };
+  }
+  // Fallback REST call
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
     method: "POST",
     headers: {
@@ -36,10 +38,23 @@ async function runSQL(sql: string): Promise<{ rows: any[] | null; error: string 
     },
     body: JSON.stringify({ sql }),
   });
+  if (res.status === 404) return { rows: null, error: "exec_sql RPC not found", missingRpc: true };
   if (!res.ok) return { rows: null, error: `HTTP ${res.status}` };
   const data = await res.json().catch(() => null);
   return { rows: Array.isArray(data) ? data : [], error: null };
 }
+
+const printPsqlInstructions = (sql: string, label: string) => {
+  console.error(`\n⚠️  Could not verify "${label}" automatically because the 'exec_sql' RPC is not deployed.`);
+  console.error(`To verify manually, run this with psql against the staging database:\n`);
+  console.error(`    psql "$SUPABASE_DB_URL" -c "${sql.replace(/\n\s*/g, " ").trim()}"\n`);
+  console.error(`Or paste the same query in the Supabase SQL editor. Expected: at least 1 row returned.`);
+  console.error(`Alternatively, deploy a small RPC:\n`);
+  console.error(`    CREATE OR REPLACE FUNCTION public.exec_sql(sql text) RETURNS setof json`);
+  console.error(`      LANGUAGE plpgsql SECURITY DEFINER AS $$`);
+  console.error(`      BEGIN RETURN QUERY EXECUTE 'SELECT row_to_json(t) FROM (' || sql || ') t'; END; $$;`);
+  console.error(`    REVOKE ALL ON FUNCTION public.exec_sql(text) FROM PUBLIC, anon, authenticated;\n`);
+};
 
 // 1) inventory_audit table exists & is selectable by service role
 {
@@ -61,9 +76,12 @@ async function runSQL(sql: string): Promise<{ rows: any[] | null; error: string 
       AND t.tgname = 'trg_orders_decrement_stock'
       AND NOT t.tgisinternal;
   `;
-  const { rows, error } = await runSQL(sql);
-  if (error) {
-    ko(`Could not query pg_trigger metadata (${error}). Ensure an exec_sql RPC exists or run via psql instead.`);
+  const { rows, error, missingRpc } = await runSQL(sql);
+  if (missingRpc) {
+    printPsqlInstructions(sql, "trg_orders_decrement_stock trigger");
+    ko("Cannot verify trigger metadata: 'exec_sql' RPC missing — see psql instructions above");
+  } else if (error) {
+    ko(`Could not query pg_trigger metadata (${error}). Run the SQL above via psql instead.`);
   } else if (!rows || rows.length === 0) {
     ko("Trigger trg_orders_decrement_stock NOT FOUND on public.orders — migration is missing or failed");
   } else {
