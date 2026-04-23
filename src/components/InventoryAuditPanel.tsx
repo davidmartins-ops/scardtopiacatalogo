@@ -83,12 +83,13 @@ const InventoryAuditPanel = () => {
 
   const exportCSV = async () => {
     if (!isAdmin) return;
-    // Re-query without pagination, applying same filters
+    // CORREÇÃO 28.4: Export honors the active filters AND the configurable limit.
+    const safeLimit = Math.min(EXPORT_LIMIT_MAX, Math.max(1, exportLimit || 1000));
     let query = supabase
       .from("inventory_audit")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(10000);
+      .limit(safeLimit);
     if (from) query = query.gte("created_at", new Date(from).toISOString());
     if (to) query = query.lte("created_at", new Date(to + "T23:59:59").toISOString());
     if (itemFilter.trim()) query = query.ilike("inventory_item_id", `%${itemFilter.trim()}%`);
@@ -110,7 +111,8 @@ const InventoryAuditPanel = () => {
     a.download = `inventory_audit_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`${allRows.length} linhas exportadas.`);
+    const truncated = allRows.length >= safeLimit;
+    toast.success(`${allRows.length} linhas exportadas${truncated ? ` (limite ${safeLimit} atingido)` : ""}.`);
   };
 
   if (authLoading) {
