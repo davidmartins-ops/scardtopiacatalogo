@@ -109,6 +109,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
   const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | null>(null);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+  const [customerExtra, setCustomerExtra] = useState<CustomerExtra>({ cpf: "", phone: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
   const { profile, user } = useCustomerAuth();
@@ -118,6 +119,16 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | null>(null);
+
+  // Pre-fill cpf/phone from saved profile
+  useEffect(() => {
+    if (profile) {
+      setCustomerExtra((p) => ({
+        cpf: p.cpf || (profile.cpf ?? ""),
+        phone: p.phone || (profile.phone ?? ""),
+      }));
+    }
+  }, [profile]);
 
   // Auto-fetch freight when CEP has 8+ digits
   useEffect(() => {
