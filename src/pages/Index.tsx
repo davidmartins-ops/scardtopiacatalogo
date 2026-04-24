@@ -99,6 +99,27 @@ const Index = () => {
           <div className="flex items-center gap-2 animate-fade-in flex-wrap justify-end" style={{ animationDelay: '0.2s' }}>
             <ScryfallSearchDialog />
             <AddItemDialog />
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="glass-card hover:border-primary/40 hover:text-primary transition-all duration-300"
+                title={`${pendingCount} pedido(s) aguardando ação`}
+                aria-label={`${pendingCount} pedidos pendentes`}
+                onClick={() => {
+                  const el = document.querySelector('[data-tab-orders]') as HTMLElement | null;
+                  el?.click();
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              >
+                <Bell className="h-4 w-4" />
+              </Button>
+              {pendingCount > 0 && (
+                <Badge className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full text-[10px] bg-primary text-primary-foreground border-2 border-background">
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </Badge>
+              )}
+            </div>
             <Button
               variant="outline"
               size="icon"
