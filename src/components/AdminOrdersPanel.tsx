@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAdminOrders, type OrderStatus } from "@/hooks/use-orders";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil } from "lucide-react";
+import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string; icon: typeof Package; className: string }[] = [
   { value: "pending_payment", label: "Aguardando pagamento", icon: Clock, className: "bg-muted text-muted-foreground border-border" },
@@ -23,27 +25,59 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string; icon: typeof Package;
 const statusConfig = (status: string) =>
   STATUS_OPTIONS.find((s) => s.value === status) ?? { value: status as OrderStatus, label: status, icon: Package, className: "bg-muted text-muted-foreground border-border" };
 
+const csvEscape = (val: unknown): string => {
+  const s = String(val ?? "");
+  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+
 const AdminOrdersPanel = () => {
   const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<OrderStatus>("payment_confirmed");
   const [editTracking, setEditTracking] = useState("");
   const [editNote, setEditNote] = useState("");
 
+  // Realtime: notify on new orders
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-orders-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
+        const total = Number((payload.new as any)?.total ?? 0);
+        toast.success(`🛒 Novo pedido recebido — R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, {
+          duration: 6000,
+        });
+        qc.invalidateQueries({ queryKey: ["admin-orders"] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
   const filtered = useMemo(() => {
+    const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
+    const toTs = dateTo ? new Date(dateTo).getTime() + 24 * 60 * 60 * 1000 - 1 : null;
     return orders.filter((o) => {
       if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      const ts = new Date(o.created_at).getTime();
+      if (fromTs !== null && ts < fromTs) return false;
+      if (toTs !== null && ts > toTs) return false;
       if (!search.trim()) return true;
       const s = search.toLowerCase();
       if (o.id.toLowerCase().includes(s)) return true;
       if ((o.user_id ?? "").toLowerCase().includes(s)) return true;
+      if ((o.tracking_code ?? "").toLowerCase().includes(s)) return true;
       if ((o.items as any[]).some((it) => (it.name ?? "").toLowerCase().includes(s))) return true;
       return false;
     });
-  }, [orders, search, statusFilter]);
+  }, [orders, search, statusFilter, dateFrom, dateTo]);
 
   const openEdit = (orderId: string, currentStatus: OrderStatus, currentTracking: string | null) => {
     setEditingOrderId(orderId);
@@ -79,6 +113,46 @@ const AdminOrdersPanel = () => {
     setDeleteId(null);
   };
 
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum pedido para exportar com os filtros atuais.");
+      return;
+    }
+    const header = [
+      "ID", "Data", "Cliente (user_id)", "Status", "Total (R$)", "Código rastreio",
+      "Itens (qtd × nome)", "Comprovante",
+    ];
+    const rows = filtered.map((o) => [
+      o.id,
+      new Date(o.created_at).toLocaleString("pt-BR"),
+      o.user_id ?? "visitante",
+      statusConfig(o.status).label,
+      Number(o.total).toFixed(2).replace(".", ","),
+      o.tracking_code ?? "",
+      (o.items as any[]).map((it) => `${it.quantity}× ${it.name}`).join(" | "),
+      o.receipt_url ?? "",
+    ]);
+    const csv = [header, ...rows].map((r) => r.map(csvEscape).join(";")).join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.download = `pedidos-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`${filtered.length} pedido(s) exportado(s).`);
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setDateFrom("");
+    setDateTo("");
+  };
+
   if (isLoading) {
     return (
       <div className="glass-card p-8 flex items-center justify-center">
@@ -88,6 +162,7 @@ const AdminOrdersPanel = () => {
   }
 
   const totalRevenue = filtered.filter((o) => o.status !== "cancelled").reduce((s, o) => s + Number(o.total ?? 0), 0);
+  const hasActiveFilters = search.trim() || statusFilter !== "all" || dateFrom || dateTo;
 
   return (
     <div className="glass-card p-4 space-y-4">
@@ -95,23 +170,63 @@ const AdminOrdersPanel = () => {
         <h3 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" /> Gerenciar Pedidos
         </h3>
-        <div className="text-xs text-muted-foreground">
-          {filtered.length} pedido(s) — <span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-muted-foreground">
+            {filtered.length} pedido(s) — <span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+          </div>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportCSV}>
+            <Download className="h-3.5 w-3.5" /> CSV
+          </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input placeholder="Buscar por ID, usuário ou item..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs bg-muted/30 border-border/50" />
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por ID, cliente, item ou código de rastreio..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-8 text-xs bg-muted/30 border-border/50"
+              aria-label="Buscar pedidos"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[200px]" aria-label="Filtrar por status"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[200px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="date-from" className="text-[11px] text-muted-foreground">De</Label>
+            <Input
+              id="date-from"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="h-8 text-xs bg-muted/30 border-border/50 w-[150px]"
+            />
+            <Label htmlFor="date-to" className="text-[11px] text-muted-foreground">até</Label>
+            <Input
+              id="date-to"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="h-8 text-xs bg-muted/30 border-border/50 w-[150px]"
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={clearFilters}>
+              Limpar filtros
+            </Button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -143,6 +258,11 @@ const AdminOrdersPanel = () => {
                         <Truck className="h-3 w-3" /> {order.tracking_code}
                       </Badge>
                     )}
+                    {order.receipt_url && (
+                      <a href={order.receipt_url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline">
+                        comprovante PIX
+                      </a>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-primary font-display">
@@ -164,7 +284,7 @@ const AdminOrdersPanel = () => {
                   <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => openEdit(order.id, order.status, order.tracking_code)}>
                     <Pencil className="h-3 w-3" /> Atualizar status
                   </Button>
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)}>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)} aria-label="Remover pedido">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
