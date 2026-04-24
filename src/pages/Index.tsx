@@ -167,11 +167,19 @@ const Index = () => {
                 <TabsTrigger value="banners" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ImageIcon className="h-3.5 w-3.5" /> Banners
                 </TabsTrigger>
+                <TabsTrigger value="sales" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <TrendingUp className="h-3.5 w-3.5" /> Vendas
+                </TabsTrigger>
                 <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <BarChart3 className="h-3.5 w-3.5" /> Analytics
                 </TabsTrigger>
-                <TabsTrigger value="orders" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="orders" data-tab-orders className="flex-1 font-display text-xs sm:text-sm gap-1 relative">
                   <ShoppingBag className="h-3.5 w-3.5" /> Pedidos
+                  {pendingCount > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full text-[9px] bg-primary text-primary-foreground">
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger value="disputes" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ShoppingBag className="h-3.5 w-3.5" /> Devoluções
