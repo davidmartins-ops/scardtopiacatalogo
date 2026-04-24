@@ -20,7 +20,7 @@
     --secondary-foreground: 240 10% 20%;
 
     --muted: 40 15% 92%;
-    --muted-foreground: 240 5% 45%;
+    --muted-foreground: 240 6% 35%; /* WCAG AA: 4.5:1 contrast on --background */
 
     --accent: 270 40% 55%;
     --accent-foreground: 0 0% 100%;
@@ -28,8 +28,8 @@
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 15% 88%;
-    --input: 40 15% 88%;
+    --border: 40 15% 80%; /* darker border for WCAG AA non-text contrast 3:1 */
+    --input: 40 15% 78%;
     --ring: 38 75% 50%;
 
     --radius: 0.75rem;
@@ -73,6 +73,22 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* WCAG 2.4.7 — visible focus indicator on every interactive element */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* Skip link — WCAG 2.4.1 Bypass Blocks */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200]
+           focus:px-4 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground
+           focus:shadow-lg focus:font-medium;
   }
 }
 
