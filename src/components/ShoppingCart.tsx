@@ -24,7 +24,11 @@ interface ShoppingCartProps {
   onRemove: (itemId: string) => void;
   onClear: () => void;
   onUpdateQty: (itemId: string, qty: number) => void;
-  onOrderPlaced?: (items: CartItem[], total: number) => void | Promise<boolean | void>;
+  onOrderPlaced?: (
+    items: CartItem[],
+    total: number,
+    meta?: { paymentMethod?: "pix" | "whatsapp"; receiptUrl?: string | null }
+  ) => void | Promise<boolean | void>;
   fabsVisible?: boolean;
 }
 
