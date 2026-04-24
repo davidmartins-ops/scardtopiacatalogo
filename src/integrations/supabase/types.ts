@@ -180,6 +180,48 @@ export type Database = {
         }
         Relationships: []
       }
+      cookie_consents: {
+        Row: {
+          analytics: boolean
+          created_at: string
+          essential: boolean
+          id: string
+          marketing: boolean
+          policy_version: string
+          session_id: string | null
+          source: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analytics?: boolean
+          created_at?: string
+          essential?: boolean
+          id?: string
+          marketing?: boolean
+          policy_version?: string
+          session_id?: string | null
+          source?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analytics?: boolean
+          created_at?: string
+          essential?: boolean
+          id?: string
+          marketing?: boolean
+          policy_version?: string
+          session_id?: string | null
+          source?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       customer_profiles: {
         Row: {
           avatar_url: string | null

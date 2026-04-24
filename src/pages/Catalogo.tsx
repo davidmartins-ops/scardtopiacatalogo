@@ -89,6 +89,9 @@ const getManaColors = (manaCost?: string | null, colorIdentity?: string[] | null
 };
 
 const trackEvent = async (eventType: string, item?: InventoryItem) => {
+  // LGPD: only record analytics when user has given consent
+  const { hasAnalyticsConsent } = await import("@/lib/consent");
+  if (!hasAnalyticsConsent()) return;
   try {
     const sessionId = sessionStorage.getItem("analytics_session") || (() => { const id = crypto.randomUUID(); sessionStorage.setItem("analytics_session", id); return id; })();
     await supabase.from("analytics_events").insert({ event_type: eventType, inventory_item_id: item?.id ?? null, item_name: item?.name ?? null, category: item?.category ?? null, session_id: sessionId });

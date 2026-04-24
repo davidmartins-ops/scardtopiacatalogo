@@ -16,7 +16,10 @@ import DeckBuilder from "./pages/DeckBuilder.tsx";
 import CollectionManager from "./pages/CollectionManager.tsx";
 import PublicCollection from "./pages/PublicCollection.tsx";
 import TrendingCards from "./pages/TrendingCards.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import Terms from "./pages/Terms.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -74,8 +77,11 @@ const App = () => (
           <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
           <Route path="/colecao/:collectionId" element={<PublicCollection />} />
           <Route path="/tendencias" element={<TrendingCards />} />
+          <Route path="/privacidade" element={<Privacy />} />
+          <Route path="/termos" element={<Terms />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <CookieBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
