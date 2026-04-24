@@ -564,18 +564,24 @@ const Catalogo = () => {
 
   const clearCart = useCallback(() => { setCartItems([]); syncCartToDb([]); }, [syncCartToDb]);
 
-  const handleOrderPlaced = useCallback(async (items: CartItem[], total: number): Promise<boolean> => {
+  const handleOrderPlaced = useCallback(async (
+    items: CartItem[],
+    total: number,
+    meta?: { paymentMethod?: "pix" | "whatsapp"; receiptUrl?: string | null }
+  ): Promise<boolean> => {
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
       const unitPrice = ci.item.price * (1 - discount / 100);
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
+      const isPix = meta?.paymentMethod === "pix";
       const { data: orderRow, error: orderErr } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
         items: orderItems as any,
         total,
-        status: "sent",
+        status: isPix ? "pending_payment" : "payment_confirmed",
+        receipt_url: meta?.receiptUrl ?? null,
       } as any).select("id").single();
       if (orderErr) throw orderErr;
 
