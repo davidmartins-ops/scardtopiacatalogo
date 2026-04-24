@@ -1,28 +1,37 @@
 import { useState, useMemo } from "react";
-import { useAdminOrders } from "@/hooks/use-orders";
+import { useAdminOrders, type OrderStatus } from "@/hooks/use-orders";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, Send } from "lucide-react";
+import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
-const STATUS_OPTIONS = [
-  { value: "sent", label: "Enviado p/ WhatsApp", icon: Send, className: "bg-primary/10 text-primary border-primary/30" },
+const STATUS_OPTIONS: { value: OrderStatus; label: string; icon: typeof Package; className: string }[] = [
+  { value: "pending_payment", label: "Aguardando pagamento", icon: Clock, className: "bg-muted text-muted-foreground border-border" },
+  { value: "payment_confirmed", label: "Pagamento confirmado", icon: CreditCard, className: "bg-primary/10 text-primary border-primary/30" },
+  { value: "preparing", label: "Em preparação", icon: Wrench, className: "bg-accent/10 text-accent border-accent/30" },
   { value: "shipped", label: "Despachado", icon: Truck, className: "bg-accent/10 text-accent border-accent/30" },
   { value: "delivered", label: "Entregue", icon: CheckCircle2, className: "bg-success/10 text-success border-success/30" },
   { value: "cancelled", label: "Cancelado", icon: XCircle, className: "bg-destructive/10 text-destructive border-destructive/30" },
 ];
 
 const statusConfig = (status: string) =>
-  STATUS_OPTIONS.find((s) => s.value === status) ?? { value: status, label: status, icon: Package, className: "bg-muted text-muted-foreground border-border" };
+  STATUS_OPTIONS.find((s) => s.value === status) ?? { value: status as OrderStatus, label: status, icon: Package, className: "bg-muted text-muted-foreground border-border" };
 
 const AdminOrdersPanel = () => {
   const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [editStatus, setEditStatus] = useState<OrderStatus>("payment_confirmed");
+  const [editTracking, setEditTracking] = useState("");
+  const [editNote, setEditNote] = useState("");
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -36,12 +45,26 @@ const AdminOrdersPanel = () => {
     });
   }, [orders, search, statusFilter]);
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const openEdit = (orderId: string, currentStatus: OrderStatus, currentTracking: string | null) => {
+    setEditingOrderId(orderId);
+    setEditStatus(currentStatus);
+    setEditTracking(currentTracking ?? "");
+    setEditNote("");
+  };
+
+  const submitEdit = async () => {
+    if (!editingOrderId) return;
     try {
-      await updateStatus.mutateAsync({ id, status });
-      toast.success("Status atualizado!");
+      await updateStatus.mutateAsync({
+        id: editingOrderId,
+        status: editStatus,
+        tracking_code: editTracking.trim() || null,
+        note: editNote.trim() || undefined,
+      });
+      toast.success("Pedido atualizado! Email enviado ao cliente.");
+      setEditingOrderId(null);
     } catch {
-      toast.error("Erro ao atualizar status.");
+      toast.error("Erro ao atualizar pedido.");
     }
   };
 
@@ -83,7 +106,7 @@ const AdminOrdersPanel = () => {
           <Input placeholder="Buscar por ID, usuário ou item..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs bg-muted/30 border-border/50" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[180px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[200px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
             {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
@@ -115,6 +138,11 @@ const AdminOrdersPanel = () => {
                     <Badge variant="outline" className="text-[10px]">
                       {order.user_id ? "Cliente" : "Visitante"}
                     </Badge>
+                    {order.tracking_code && (
+                      <Badge variant="outline" className="text-[10px] gap-1 bg-accent/5">
+                        <Truck className="h-3 w-3" /> {order.tracking_code}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-primary font-display">
@@ -133,13 +161,9 @@ const AdminOrdersPanel = () => {
                 </div>
 
                 <div className="flex items-center gap-2 pt-1 border-t border-border/40 flex-wrap">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Atualizar:</span>
-                  <Select value={order.status} onValueChange={(v) => handleStatusChange(order.id, v)}>
-                    <SelectTrigger className="h-7 w-[180px] text-xs bg-background border-border"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => openEdit(order.id, order.status, order.tracking_code)}>
+                    <Pencil className="h-3 w-3" /> Atualizar status
+                  </Button>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -149,6 +173,45 @@ const AdminOrdersPanel = () => {
           })}
         </div>
       )}
+
+      <Dialog open={!!editingOrderId} onOpenChange={(open) => !open && setEditingOrderId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display">Atualizar pedido</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="status-select">Novo status</Label>
+              <Select value={editStatus} onValueChange={(v) => setEditStatus(v as OrderStatus)}>
+                <SelectTrigger id="status-select"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {(editStatus === "shipped" || editTracking) && (
+              <div>
+                <Label htmlFor="tracking">Código de rastreio (Correios)</Label>
+                <Input id="tracking" value={editTracking} onChange={(e) => setEditTracking(e.target.value.toUpperCase())} placeholder="Ex: BR123456789BR" />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="note">Observação para o cliente (opcional)</Label>
+              <Textarea id="note" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Ex: Despachado pelo SEDEX hoje pela manhã" rows={3} />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Um email automático será enviado ao cliente com a nova situação.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingOrderId(null)}>Cancelar</Button>
+            <Button onClick={submitEdit} disabled={updateStatus.isPending}>
+              {updateStatus.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+              Salvar e notificar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="bg-card border-border">
