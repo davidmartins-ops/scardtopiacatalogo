@@ -314,7 +314,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       let msg = buildMessage();
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, { paymentMethod: "pix", receiptUrl: urlData.publicUrl });
+        const result = await onOrderPlaced(items, total, {
+          paymentMethod: "pix",
+          receiptUrl: urlData.publicUrl,
+          customerInfo: buildCustomerInfo(),
+        });
         if (result === false) {
           toast.error("Não foi possível registrar o pedido. Tente novamente.");
           return;
