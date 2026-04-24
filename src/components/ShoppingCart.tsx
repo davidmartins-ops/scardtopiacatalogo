@@ -271,8 +271,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       const urlData = { publicUrl: signed?.signedUrl ?? "" };
       let msg = buildMessage();
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
+      if (onOrderPlaced) {
+        const result = await onOrderPlaced(items, total, { paymentMethod: "pix", receiptUrl: urlData.publicUrl });
+        if (result === false) {
+          toast.error("Não foi possível registrar o pedido. Tente novamente.");
+          return;
+        }
+      }
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-      if (onOrderPlaced) onOrderPlaced(items, total);
       setReceiptSent(true);
       toast.success("Comprovante enviado e pedido registrado!");
       setPixDialogOpen(false);
