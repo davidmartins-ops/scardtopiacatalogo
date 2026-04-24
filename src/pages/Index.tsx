@@ -20,11 +20,40 @@ import AdminRolesManager from "@/components/AdminRolesManager";
 import AdminOrdersPanel from "@/components/AdminOrdersPanel";
 import AdminDisputesPanel from "@/components/AdminDisputesPanel";
 import InventoryAuditPanel from "@/components/InventoryAuditPanel";
+import SalesDashboard from "@/components/SalesDashboard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
   const { signOut } = useAuth();
   const { data: inventoryData = [], isLoading, error } = useInventory();
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  // Live count of orders awaiting action (pending_payment + payment_confirmed)
+  useEffect(() => {
+    let mounted = true;
+    const fetchPending = async () => {
+      const { count } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pending_payment", "payment_confirmed"]);
+      if (mounted) setPendingCount(count ?? 0);
+    };
+    fetchPending();
+    const channel = supabase
+      .channel("admin-pending-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+        fetchPending();
+        if (payload.eventType === "INSERT") {
+          const total = Number((payload.new as any)?.total ?? 0);
+          toast.success(`🛒 Novo pedido — R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, { duration: 6000 });
+        }
+      })
+      .subscribe();
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
