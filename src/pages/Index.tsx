@@ -1,6 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
