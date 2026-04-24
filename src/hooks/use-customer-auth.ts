@@ -23,7 +23,7 @@ export const useCustomerAuth = () => {
       .select("*")
       .eq("id", userId)
       .maybeSingle();
-    setProfile(data);
+    setProfile(data as unknown as CustomerProfile | null);
   }, []);
 
   useEffect(() => {
