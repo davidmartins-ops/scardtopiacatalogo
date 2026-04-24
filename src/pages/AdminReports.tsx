@@ -52,9 +52,10 @@ const STATUS_LABEL = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s.la
 const PAYMENT_LABEL = Object.fromEntries(PAYMENT_OPTIONS.map((p) => [p.value, p.label])) as Record<string, string>;
 
 const AdminReports = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { orders, isLoading } = useAdminOrders();
+  const user = session?.user ?? null;
 
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
