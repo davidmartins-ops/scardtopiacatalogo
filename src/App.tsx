@@ -65,6 +65,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        {/* WCAG 2.4.1 Bypass Blocks */}
+        <a href="#main-content" className="skip-link">
+          Pular para o conteúdo principal
+        </a>
         <Routes>
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />

@@ -69,9 +69,9 @@ const CustomerLogin = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6">
+      <main id="main-content" className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link to="/catalogo">
+          <Link to="/catalogo" aria-label="Voltar ao catálogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-20 mx-auto mb-4 drop-shadow-xl" />
           </Link>
           <h1 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}><span className="text-gradient">Minha Conta</span></h1>
@@ -113,11 +113,25 @@ const CustomerLogin = () => {
                 </div>
                 <div>
                   <Label htmlFor="reg-pw">Senha</Label>
-                  <Input id="reg-pw" type="password" required value={regPassword} onChange={(e) => setRegPassword(e.target.value)} />
+                  <Input id="reg-pw" type="password" required minLength={6} aria-describedby="reg-pw-help" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} />
+                  <p id="reg-pw-help" className="text-xs text-muted-foreground mt-1">Mínimo 6 caracteres. Senhas vazadas são bloqueadas.</p>
                 </div>
                 <div>
                   <Label htmlFor="reg-confirm">Confirmar Senha</Label>
-                  <Input id="reg-confirm" type="password" required value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} />
+                  <Input
+                    id="reg-confirm"
+                    type="password"
+                    required
+                    aria-invalid={regConfirm.length > 0 && regConfirm !== regPassword}
+                    aria-describedby={regConfirm.length > 0 && regConfirm !== regPassword ? "reg-confirm-error" : undefined}
+                    value={regConfirm}
+                    onChange={(e) => setRegConfirm(e.target.value)}
+                  />
+                  {regConfirm.length > 0 && regConfirm !== regPassword && (
+                    <p id="reg-confirm-error" role="alert" className="text-xs text-destructive mt-1">
+                      As senhas não coincidem.
+                    </p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Conta"}
@@ -147,7 +161,7 @@ const CustomerLogin = () => {
             <ArrowLeft className="h-3 w-3" /> Voltar ao catálogo
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
