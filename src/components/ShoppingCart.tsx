@@ -55,6 +55,11 @@ interface ShippingInfo {
   shippingMethod: "pac" | "sedex" | "transportadora" | "";
 }
 
+interface CustomerExtra {
+  cpf: string;
+  phone: string;
+}
+
 interface FreightEstimate {
   pac?: { price: string; deadline: string };
   sedex?: { price: string; deadline: string };
