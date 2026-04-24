@@ -262,7 +262,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         return;
       }
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
+        const result = await onOrderPlaced(items, total, {
+          paymentMethod: "whatsapp",
+          customerInfo: buildCustomerInfo(),
+        });
         if (result === false) {
           setOrderError("Não foi possível confirmar a baixa de estoque do servidor. Tente reenviar ou volte ao carrinho.");
           return;
