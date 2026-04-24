@@ -201,6 +201,9 @@ const Index = () => {
               <TabsContent value="banners">
                 <div><BannerManager /></div>
               </TabsContent>
+              <TabsContent value="sales">
+                <div><SalesDashboard /></div>
+              </TabsContent>
               <TabsContent value="analytics">
                 <div><AnalyticsDashboard /></div>
               </TabsContent>
