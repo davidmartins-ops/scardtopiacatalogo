@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           category: string | null
@@ -224,22 +257,31 @@ export type Database = {
       }
       customer_profiles: {
         Row: {
+          address: Json | null
           avatar_url: string | null
+          cpf: string | null
           created_at: string
           display_name: string | null
           id: string
+          phone: string | null
         }
         Insert: {
+          address?: Json | null
           avatar_url?: string | null
+          cpf?: string | null
           created_at?: string
           display_name?: string | null
           id: string
+          phone?: string | null
         }
         Update: {
+          address?: Json | null
           avatar_url?: string | null
+          cpf?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
+          phone?: string | null
         }
         Relationships: []
       }
@@ -592,6 +634,33 @@ export type Database = {
           },
         ]
       }
+      order_sla_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          max_hours: number
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          max_hours: number
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          max_hours?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_status_history: {
         Row: {
           changed_by: string | null
@@ -633,9 +702,13 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          customer_info: Json
           id: string
           items: Json
+          payment_method: Database["public"]["Enums"]["payment_method"]
           receipt_url: string | null
+          sla_breach_status: Database["public"]["Enums"]["order_status"] | null
+          sla_breached_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           status_updated_at: string
           total: number
@@ -644,9 +717,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_info?: Json
           id?: string
           items?: Json
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           receipt_url?: string | null
+          sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
+          sla_breached_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           status_updated_at?: string
           total?: number
@@ -655,9 +732,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_info?: Json
           id?: string
           items?: Json
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           receipt_url?: string | null
+          sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
+          sla_breached_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           status_updated_at?: string
           total?: number
@@ -851,6 +932,7 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
+      payment_method: "pix" | "credit" | "debit" | "whatsapp" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -988,6 +1070,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      payment_method: ["pix", "credit", "debit", "whatsapp", "other"],
     },
   },
 } as const
