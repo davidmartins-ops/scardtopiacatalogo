@@ -6,6 +6,9 @@ interface CustomerProfile {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  cpf?: string | null;
+  phone?: string | null;
+  address?: Record<string, unknown> | null;
 }
 
 export const useCustomerAuth = () => {
