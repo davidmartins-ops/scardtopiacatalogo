@@ -216,21 +216,22 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     setSubmittingOrder(true);
     setOrderError(null);
     try {
+      // For PIX, defer order creation until receipt is uploaded in handleConfirmPix
+      if (pendingChannel === "pix") {
+        setConfirmOrderOpen(false);
+        handlePixSelect();
+        return;
+      }
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total);
+        const result = await onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
         if (result === false) {
           setOrderError("Não foi possível confirmar a baixa de estoque do servidor. Tente reenviar ou volte ao carrinho.");
           return;
         }
       }
-      // Success → close + open the chosen channel
       setConfirmOrderOpen(false);
-      if (pendingChannel === "whatsapp") {
-        const msg = buildMessage();
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-      } else if (pendingChannel === "pix") {
-        handlePixSelect();
-      }
+      const msg = buildMessage();
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
       setOrderError(err?.message ?? "Erro inesperado ao registrar pedido. Tente novamente.");
     } finally {
