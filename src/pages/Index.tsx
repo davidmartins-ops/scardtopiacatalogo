@@ -1,6 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
@@ -17,11 +20,40 @@ import AdminRolesManager from "@/components/AdminRolesManager";
 import AdminOrdersPanel from "@/components/AdminOrdersPanel";
 import AdminDisputesPanel from "@/components/AdminDisputesPanel";
 import InventoryAuditPanel from "@/components/InventoryAuditPanel";
+import SalesDashboard from "@/components/SalesDashboard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
   const { signOut } = useAuth();
   const { data: inventoryData = [], isLoading, error } = useInventory();
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  // Live count of orders awaiting action (pending_payment + payment_confirmed)
+  useEffect(() => {
+    let mounted = true;
+    const fetchPending = async () => {
+      const { count } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pending_payment", "payment_confirmed"]);
+      if (mounted) setPendingCount(count ?? 0);
+    };
+    fetchPending();
+    const channel = supabase
+      .channel("admin-pending-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+        fetchPending();
+        if (payload.eventType === "INSERT") {
+          const total = Number((payload.new as any)?.total ?? 0);
+          toast.success(`🛒 Novo pedido — R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, { duration: 6000 });
+        }
+      })
+      .subscribe();
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
@@ -67,6 +99,27 @@ const Index = () => {
           <div className="flex items-center gap-2 animate-fade-in flex-wrap justify-end" style={{ animationDelay: '0.2s' }}>
             <ScryfallSearchDialog />
             <AddItemDialog />
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="glass-card hover:border-primary/40 hover:text-primary transition-all duration-300"
+                title={`${pendingCount} pedido(s) aguardando ação`}
+                aria-label={`${pendingCount} pedidos pendentes`}
+                onClick={() => {
+                  const el = document.querySelector('[data-tab-orders]') as HTMLElement | null;
+                  el?.click();
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              >
+                <Bell className="h-4 w-4" />
+              </Button>
+              {pendingCount > 0 && (
+                <Badge className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full text-[10px] bg-primary text-primary-foreground border-2 border-background">
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </Badge>
+              )}
+            </div>
             <Button
               variant="outline"
               size="icon"
@@ -114,11 +167,19 @@ const Index = () => {
                 <TabsTrigger value="banners" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ImageIcon className="h-3.5 w-3.5" /> Banners
                 </TabsTrigger>
+                <TabsTrigger value="sales" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <TrendingUp className="h-3.5 w-3.5" /> Vendas
+                </TabsTrigger>
                 <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <BarChart3 className="h-3.5 w-3.5" /> Analytics
                 </TabsTrigger>
-                <TabsTrigger value="orders" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="orders" data-tab-orders className="flex-1 font-display text-xs sm:text-sm gap-1 relative">
                   <ShoppingBag className="h-3.5 w-3.5" /> Pedidos
+                  {pendingCount > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full text-[9px] bg-primary text-primary-foreground">
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger value="disputes" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ShoppingBag className="h-3.5 w-3.5" /> Devoluções
@@ -139,6 +200,9 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="banners">
                 <div><BannerManager /></div>
+              </TabsContent>
+              <TabsContent value="sales">
+                <div><SalesDashboard /></div>
               </TabsContent>
               <TabsContent value="analytics">
                 <div><AnalyticsDashboard /></div>
