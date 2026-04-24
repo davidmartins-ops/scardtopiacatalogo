@@ -224,7 +224,20 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     setDeliveryDialogOpen(true);
   };
 
+  const buildCustomerInfo = () => ({
+    name: profile?.display_name ?? "",
+    email: user?.email ?? "",
+    cpf: customerExtra.cpf.trim(),
+    phone: customerExtra.phone.trim(),
+    address: deliveryMethod === "shipping" ? { ...shippingInfo } : undefined,
+    deliveryMethod: deliveryMethod ?? undefined,
+  });
+
   const confirmDeliveryAndProceed = () => {
+    if (!customerExtra.cpf.trim() || !customerExtra.phone.trim()) {
+      toast.error("Informe seu CPF e telefone para concluir o pedido.");
+      return;
+    }
     if (deliveryMethod === "shipping") {
       if (!shippingInfo.street || !shippingInfo.neighborhood || !shippingInfo.city || !shippingInfo.state || !shippingInfo.cep || !shippingInfo.shippingMethod) {
         toast.error("Preencha todos os campos de endereço.");
@@ -232,7 +245,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       }
     }
     setDeliveryDialogOpen(false);
-    // Open the confirmation step before actually submitting
     setPendingChannel(pendingAction);
     setOrderError(null);
     setConfirmOrderOpen(true);
