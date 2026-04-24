@@ -37,6 +37,9 @@ const getSessionId = () => {
   return id;
 };
 const trackEvent = async (eventType: string, item: InventoryItem) => {
+  // LGPD: only record analytics when user has given consent
+  const { hasAnalyticsConsent } = await import("@/lib/consent");
+  if (!hasAnalyticsConsent()) return;
   try {
     await supabase.from("analytics_events").insert({
       event_type: eventType,
