@@ -242,7 +242,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const handleBuyWhatsApp = () => {
     const msg = buildMessage();
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-    if (onOrderPlaced) onOrderPlaced(items, total);
+    if (onOrderPlaced) onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
   };
 
   const handlePixSelect = () => { setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false); };
