@@ -24,7 +24,11 @@ interface ShoppingCartProps {
   onRemove: (itemId: string) => void;
   onClear: () => void;
   onUpdateQty: (itemId: string, qty: number) => void;
-  onOrderPlaced?: (items: CartItem[], total: number) => void | Promise<boolean | void>;
+  onOrderPlaced?: (
+    items: CartItem[],
+    total: number,
+    meta?: { paymentMethod?: "pix" | "whatsapp"; receiptUrl?: string | null }
+  ) => void | Promise<boolean | void>;
   fabsVisible?: boolean;
 }
 
@@ -212,21 +216,22 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     setSubmittingOrder(true);
     setOrderError(null);
     try {
+      // For PIX, defer order creation until receipt is uploaded in handleConfirmPix
+      if (pendingChannel === "pix") {
+        setConfirmOrderOpen(false);
+        handlePixSelect();
+        return;
+      }
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total);
+        const result = await onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
         if (result === false) {
           setOrderError("Não foi possível confirmar a baixa de estoque do servidor. Tente reenviar ou volte ao carrinho.");
           return;
         }
       }
-      // Success → close + open the chosen channel
       setConfirmOrderOpen(false);
-      if (pendingChannel === "whatsapp") {
-        const msg = buildMessage();
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-      } else if (pendingChannel === "pix") {
-        handlePixSelect();
-      }
+      const msg = buildMessage();
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
       setOrderError(err?.message ?? "Erro inesperado ao registrar pedido. Tente novamente.");
     } finally {
@@ -237,7 +242,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const handleBuyWhatsApp = () => {
     const msg = buildMessage();
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-    if (onOrderPlaced) onOrderPlaced(items, total);
+    if (onOrderPlaced) onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
   };
 
   const handlePixSelect = () => { setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false); };
@@ -266,8 +271,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       const urlData = { publicUrl: signed?.signedUrl ?? "" };
       let msg = buildMessage();
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
+      if (onOrderPlaced) {
+        const result = await onOrderPlaced(items, total, { paymentMethod: "pix", receiptUrl: urlData.publicUrl });
+        if (result === false) {
+          toast.error("Não foi possível registrar o pedido. Tente novamente.");
+          return;
+        }
+      }
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-      if (onOrderPlaced) onOrderPlaced(items, total);
       setReceiptSent(true);
       toast.success("Comprovante enviado e pedido registrado!");
       setPixDialogOpen(false);
