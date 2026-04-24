@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag, Download } from "lucide-react";
+import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag, Download, ChevronRight, Truck } from "lucide-react";
+import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -303,29 +304,41 @@ const CustomerDashboard = () => {
                   </Button>
                 </div>
                 {orders.map((order) => (
-                  <div key={order.id} className="glass-card p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px]">
-                          {order.status === "sent" ? "Enviado" : order.status}
-                        </Badge>
+                  <Link to={`/conta/pedidos/${order.id}`} key={order.id} className="glass-card p-4 block hover:border-primary/40 transition-colors">
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <OrderStatusBadge status={order.status} className="text-[10px]" />
+                        <span className="text-[11px] text-muted-foreground font-mono">#{order.id.slice(0, 8).toUpperCase()}</span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(order.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
+                        {order.tracking_code && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-accent">
+                            <Truck className="h-3 w-3" /> {order.tracking_code}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-sm font-bold text-primary font-display">
-                        R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-primary font-display">
+                          R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
                     </div>
                     <div className="space-y-1">
-                      {(order.items as any[]).map((item: any, idx: number) => (
+                      {(order.items as any[]).slice(0, 3).map((item: any, idx: number) => (
                         <div key={idx} className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="truncate flex-1">{item.quantity}× {item.name}</span>
                           <span className="shrink-0 ml-2">R$ {Number(item.total_price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                         </div>
                       ))}
+                      {(order.items as any[]).length > 3 && (
+                        <div className="text-[11px] text-muted-foreground italic">
+                          + {(order.items as any[]).length - 3} item(ns)…
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

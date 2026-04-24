@@ -15,6 +15,7 @@ import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import BannerManager from "@/components/BannerManager";
 import AdminRolesManager from "@/components/AdminRolesManager";
 import AdminOrdersPanel from "@/components/AdminOrdersPanel";
+import AdminDisputesPanel from "@/components/AdminDisputesPanel";
 import InventoryAuditPanel from "@/components/InventoryAuditPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -119,6 +120,9 @@ const Index = () => {
                 <TabsTrigger value="orders" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ShoppingBag className="h-3.5 w-3.5" /> Pedidos
                 </TabsTrigger>
+                <TabsTrigger value="disputes" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <ShoppingBag className="h-3.5 w-3.5" /> Devoluções
+                </TabsTrigger>
                 <TabsTrigger value="audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ClipboardList className="h-3.5 w-3.5" /> Auditoria
                 </TabsTrigger>
@@ -141,6 +145,9 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="orders">
                 <div><AdminOrdersPanel /></div>
+              </TabsContent>
+              <TabsContent value="disputes">
+                <div><AdminDisputesPanel /></div>
               </TabsContent>
               <TabsContent value="audit">
                 <div><InventoryAuditPanel /></div>

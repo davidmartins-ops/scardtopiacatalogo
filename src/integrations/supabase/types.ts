@@ -347,6 +347,93 @@ export type Database = {
         }
         Relationships: []
       }
+      email_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          template_name?: string
+        }
+        Relationships: []
+      }
+      email_send_state: {
+        Row: {
+          auth_email_ttl_minutes: number
+          batch_size: number
+          id: number
+          retry_after_until: string | null
+          send_delay_ms: number
+          transactional_email_ttl_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_unsubscribe_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -458,29 +545,123 @@ export type Database = {
         }
         Relationships: []
       }
+      order_disputes: {
+        Row: {
+          admin_response: string | null
+          attachment_url: string | null
+          created_at: string
+          description: string
+          id: string
+          order_id: string
+          reason: string
+          status: Database["public"]["Enums"]["dispute_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          attachment_url?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          order_id: string
+          reason: string
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          attachment_url?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["order_status"] | null
+          id: string
+          note: string | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          note?: string | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          to_status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
           id: string
           items: Json
-          status: string
+          receipt_url: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          status_updated_at: string
           total: number
+          tracking_code: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           items?: Json
-          status?: string
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          status_updated_at?: string
           total?: number
+          tracking_code?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           items?: Json
-          status?: string
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          status_updated_at?: string
           total?: number
+          tracking_code?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -572,6 +753,30 @@ export type Database = {
         }
         Relationships: []
       }
+      suppressed_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          metadata: Json | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -602,6 +807,14 @@ export type Database = {
         Args: { _item_id: string; _qty: number }
         Returns: undefined
       }
+      delete_email: {
+        Args: { message_id: number; queue_name: string }
+        Returns: boolean
+      }
+      enqueue_email: {
+        Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -610,9 +823,34 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      move_to_dlq: {
+        Args: {
+          dlq_name: string
+          message_id: number
+          payload: Json
+          source_queue: string
+        }
+        Returns: number
+      }
+      read_email_batch: {
+        Args: { batch_size: number; queue_name: string; vt: number }
+        Returns: {
+          message: Json
+          msg_id: number
+          read_ct: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      dispute_status: "open" | "in_review" | "resolved" | "rejected"
+      order_status:
+        | "pending_payment"
+        | "payment_confirmed"
+        | "preparing"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -741,6 +979,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      dispute_status: ["open", "in_review", "resolved", "rejected"],
+      order_status: [
+        "pending_payment",
+        "payment_confirmed",
+        "preparing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
     },
   },
 } as const
