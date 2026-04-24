@@ -27,7 +27,18 @@ interface ShoppingCartProps {
   onOrderPlaced?: (
     items: CartItem[],
     total: number,
-    meta?: { paymentMethod?: "pix" | "whatsapp"; receiptUrl?: string | null }
+    meta?: {
+      paymentMethod?: "pix" | "whatsapp";
+      receiptUrl?: string | null;
+      customerInfo?: {
+        name?: string;
+        email?: string;
+        cpf?: string;
+        phone?: string;
+        address?: ShippingInfo & { complement?: string };
+        deliveryMethod?: "pickup" | "shipping";
+      };
+    }
   ) => void | Promise<boolean | void>;
   fabsVisible?: boolean;
 }
