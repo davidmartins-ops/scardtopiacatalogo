@@ -18,6 +18,8 @@ import PublicCollection from "./pages/PublicCollection.tsx";
 import TrendingCards from "./pages/TrendingCards.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Terms from "./pages/Terms.tsx";
+import OrderDetail from "./pages/OrderDetail.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import CookieBanner from "./components/CookieBanner";
 
@@ -79,6 +81,8 @@ const App = () => (
           <Route path="/conta" element={<CustomerDashboard />} />
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
           <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
+          <Route path="/conta/pedidos/:orderId" element={<OrderDetail />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/colecao/:collectionId" element={<PublicCollection />} />
           <Route path="/tendencias" element={<TrendingCards />} />
           <Route path="/privacidade" element={<Privacy />} />
