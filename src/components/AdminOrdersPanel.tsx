@@ -75,6 +75,11 @@ const AdminOrdersPanel = () => {
       if ((o.user_id ?? "").toLowerCase().includes(s)) return true;
       if ((o.tracking_code ?? "").toLowerCase().includes(s)) return true;
       if ((o.items as any[]).some((it) => (it.name ?? "").toLowerCase().includes(s))) return true;
+      const ci = ((o as any).customer_info ?? {}) as { name?: string; cpf?: string; phone?: string; email?: string };
+      if ((ci.name ?? "").toLowerCase().includes(s)) return true;
+      if ((ci.email ?? "").toLowerCase().includes(s)) return true;
+      if ((ci.cpf ?? "").replace(/\D/g, "").includes(s.replace(/\D/g, ""))) return true;
+      if ((ci.phone ?? "").replace(/\D/g, "").includes(s.replace(/\D/g, ""))) return true;
       return false;
     });
   }, [orders, search, statusFilter, dateFrom, dateTo]);
@@ -185,7 +190,7 @@ const AdminOrdersPanel = () => {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Buscar por ID, cliente, item ou código de rastreio..."
+              placeholder="Buscar por ID, nome, CPF, telefone, email, item ou rastreio..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-8 text-xs bg-muted/30 border-border/50"

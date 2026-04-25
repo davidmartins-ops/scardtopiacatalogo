@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, ShoppingBag, DollarSign, Package, Loader2, Trophy } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
+import PaymentMethodChart from "./PaymentMethodChart";
 
 type Range = "7d" | "30d" | "90d" | "all";
 
@@ -126,6 +127,8 @@ const SalesDashboard = () => {
           </ResponsiveContainer>
         </ChartContainer>
       </Card>
+
+      <PaymentMethodChart orders={filtered} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="glass-card p-4">
