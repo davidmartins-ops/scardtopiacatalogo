@@ -567,7 +567,11 @@ const Catalogo = () => {
   const handleOrderPlaced = useCallback(async (
     items: CartItem[],
     total: number,
-    meta?: { paymentMethod?: "pix" | "whatsapp"; receiptUrl?: string | null }
+    meta?: {
+      paymentMethod?: "pix" | "whatsapp";
+      receiptUrl?: string | null;
+      customerInfo?: Record<string, unknown>;
+    }
   ): Promise<boolean> => {
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
@@ -576,13 +580,24 @@ const Catalogo = () => {
     });
     try {
       const isPix = meta?.paymentMethod === "pix";
+      const ci = (meta?.customerInfo ?? {}) as { cpf?: string; phone?: string; address?: Record<string, unknown> };
+      // Best-effort: persist cpf/phone/address back into the customer profile
+      if (user && (ci.cpf || ci.phone || ci.address)) {
+        supabase.from("customer_profiles").update({
+          ...(ci.cpf ? { cpf: ci.cpf } : {}),
+          ...(ci.phone ? { phone: ci.phone } : {}),
+          ...(ci.address ? { address: ci.address as never } : {}),
+        } as never).eq("id", user.id).then(() => {});
+      }
       const { data: orderRow, error: orderErr } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
-        items: orderItems as any,
+        items: orderItems as never,
         total,
         status: isPix ? "pending_payment" : "payment_confirmed",
         receipt_url: meta?.receiptUrl ?? null,
-      } as any).select("id").single();
+        payment_method: (meta?.paymentMethod ?? "whatsapp") as never,
+        customer_info: (meta?.customerInfo ?? {}) as never,
+      } as never).select("id").single();
       if (orderErr) throw orderErr;
 
       // Verify trigger ran by checking inventory_audit rows for this order

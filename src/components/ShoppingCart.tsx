@@ -27,7 +27,18 @@ interface ShoppingCartProps {
   onOrderPlaced?: (
     items: CartItem[],
     total: number,
-    meta?: { paymentMethod?: "pix" | "whatsapp"; receiptUrl?: string | null }
+    meta?: {
+      paymentMethod?: "pix" | "whatsapp";
+      receiptUrl?: string | null;
+      customerInfo?: {
+        name?: string;
+        email?: string;
+        cpf?: string;
+        phone?: string;
+        address?: ShippingInfo & { complement?: string };
+        deliveryMethod?: "pickup" | "shipping";
+      };
+    }
   ) => void | Promise<boolean | void>;
   fabsVisible?: boolean;
 }
@@ -42,6 +53,11 @@ interface ShippingInfo {
   state: string;
   cep: string;
   shippingMethod: "pac" | "sedex" | "transportadora" | "";
+}
+
+interface CustomerExtra {
+  cpf: string;
+  phone: string;
 }
 
 interface FreightEstimate {
@@ -93,6 +109,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
   const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | null>(null);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+  const [customerExtra, setCustomerExtra] = useState<CustomerExtra>({ cpf: "", phone: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
   const { profile, user } = useCustomerAuth();
@@ -102,6 +119,16 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | null>(null);
+
+  // Pre-fill cpf/phone from saved profile
+  useEffect(() => {
+    if (profile) {
+      setCustomerExtra((p) => ({
+        cpf: p.cpf || (profile.cpf ?? ""),
+        phone: p.phone || (profile.phone ?? ""),
+      }));
+    }
+  }, [profile]);
 
   // Auto-fetch freight when CEP has 8+ digits
   useEffect(() => {
@@ -197,7 +224,20 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     setDeliveryDialogOpen(true);
   };
 
+  const buildCustomerInfo = () => ({
+    name: profile?.display_name ?? "",
+    email: user?.email ?? "",
+    cpf: customerExtra.cpf.trim(),
+    phone: customerExtra.phone.trim(),
+    address: deliveryMethod === "shipping" ? { ...shippingInfo } : undefined,
+    deliveryMethod: deliveryMethod ?? undefined,
+  });
+
   const confirmDeliveryAndProceed = () => {
+    if (!customerExtra.cpf.trim() || !customerExtra.phone.trim()) {
+      toast.error("Informe seu CPF e telefone para concluir o pedido.");
+      return;
+    }
     if (deliveryMethod === "shipping") {
       if (!shippingInfo.street || !shippingInfo.neighborhood || !shippingInfo.city || !shippingInfo.state || !shippingInfo.cep || !shippingInfo.shippingMethod) {
         toast.error("Preencha todos os campos de endereço.");
@@ -205,7 +245,6 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       }
     }
     setDeliveryDialogOpen(false);
-    // Open the confirmation step before actually submitting
     setPendingChannel(pendingAction);
     setOrderError(null);
     setConfirmOrderOpen(true);
@@ -223,7 +262,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         return;
       }
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
+        const result = await onOrderPlaced(items, total, {
+          paymentMethod: "whatsapp",
+          customerInfo: buildCustomerInfo(),
+        });
         if (result === false) {
           setOrderError("Não foi possível confirmar a baixa de estoque do servidor. Tente reenviar ou volte ao carrinho.");
           return;
@@ -272,7 +314,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       let msg = buildMessage();
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, { paymentMethod: "pix", receiptUrl: urlData.publicUrl });
+        const result = await onOrderPlaced(items, total, {
+          paymentMethod: "pix",
+          receiptUrl: urlData.publicUrl,
+          customerInfo: buildCustomerInfo(),
+        });
         if (result === false) {
           toast.error("Não foi possível registrar o pedido. Tente novamente.");
           return;
@@ -449,6 +495,19 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                 <span className="text-[10px] text-muted-foreground text-center">Correios / Transportadora</span>
               </button>
             </div>
+
+            {deliveryMethod && (
+              <div className="grid grid-cols-2 gap-2 animate-fade-in">
+                <div>
+                  <Label className="text-xs text-muted-foreground">CPF *</Label>
+                  <Input placeholder="000.000.000-00" value={customerExtra.cpf} onChange={(e) => setCustomerExtra((p) => ({ ...p, cpf: e.target.value }))} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Telefone *</Label>
+                  <Input placeholder="(11) 99999-9999" value={customerExtra.phone} onChange={(e) => setCustomerExtra((p) => ({ ...p, phone: e.target.value }))} className="h-8 text-sm" />
+                </div>
+              </div>
+            )}
 
             {deliveryMethod === "shipping" && (
               <div className="space-y-3 animate-fade-in">

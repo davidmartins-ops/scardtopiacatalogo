@@ -21,6 +21,8 @@ import AdminOrdersPanel from "@/components/AdminOrdersPanel";
 import AdminDisputesPanel from "@/components/AdminDisputesPanel";
 import InventoryAuditPanel from "@/components/InventoryAuditPanel";
 import SalesDashboard from "@/components/SalesDashboard";
+import OrderAuditPanel from "@/components/OrderAuditPanel";
+import SlaRulesPanel from "@/components/SlaRulesPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -187,6 +189,12 @@ const Index = () => {
                 <TabsTrigger value="audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ClipboardList className="h-3.5 w-3.5" /> Auditoria
                 </TabsTrigger>
+                <TabsTrigger value="order-audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <ClipboardList className="h-3.5 w-3.5" /> Hist. Pedidos
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                  <Link to="/admin/relatorios"><ClipboardList className="h-3.5 w-3.5" /> Relatórios</Link>
+                </TabsTrigger>
                 <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <Shield className="h-3.5 w-3.5" /> Admins
                 </TabsTrigger>
@@ -215,6 +223,12 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="audit">
                 <div><InventoryAuditPanel /></div>
+              </TabsContent>
+              <TabsContent value="order-audit">
+                <div className="space-y-4">
+                  <SlaRulesPanel />
+                  <OrderAuditPanel />
+                </div>
               </TabsContent>
               <TabsContent value="admins">
                 <div><AdminRolesManager /></div>

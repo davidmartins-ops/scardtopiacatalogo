@@ -6,6 +6,9 @@ interface CustomerProfile {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  cpf?: string | null;
+  phone?: string | null;
+  address?: Record<string, unknown> | null;
 }
 
 export const useCustomerAuth = () => {
@@ -20,7 +23,7 @@ export const useCustomerAuth = () => {
       .select("*")
       .eq("id", userId)
       .maybeSingle();
-    setProfile(data);
+    setProfile(data as unknown as CustomerProfile | null);
   }, []);
 
   useEffect(() => {
