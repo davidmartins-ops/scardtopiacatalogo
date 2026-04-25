@@ -70,7 +70,7 @@ const OrderAuditPanel = () => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link
-                    to={`/conta/pedido/${e.order_id}`}
+                    to={`/conta/pedidos/${e.order_id}`}
                     className="text-xs font-mono text-primary hover:underline inline-flex items-center gap-1"
                   >
                     #{e.order_id.slice(0, 8)}
