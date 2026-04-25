@@ -496,6 +496,19 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               </button>
             </div>
 
+            {deliveryMethod && (
+              <div className="grid grid-cols-2 gap-2 animate-fade-in">
+                <div>
+                  <Label className="text-xs text-muted-foreground">CPF *</Label>
+                  <Input placeholder="000.000.000-00" value={customerExtra.cpf} onChange={(e) => setCustomerExtra((p) => ({ ...p, cpf: e.target.value }))} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Telefone *</Label>
+                  <Input placeholder="(11) 99999-9999" value={customerExtra.phone} onChange={(e) => setCustomerExtra((p) => ({ ...p, phone: e.target.value }))} className="h-8 text-sm" />
+                </div>
+              </div>
+            )}
+
             {deliveryMethod === "shipping" && (
               <div className="space-y-3 animate-fade-in">
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
