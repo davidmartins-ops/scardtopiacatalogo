@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
-import { Plus, Upload, X } from "lucide-react";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { uploadProductImage } from "@/lib/storage";
+import MultiImageUpload, { type UploadedImage } from "@/components/MultiImageUpload";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -33,9 +33,8 @@ const AddItemDialog = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // CORREÇÃO 30: multi-upload — primeira imagem vira image_url principal, restante vai para drop_singles_images.
+  const [images, setImages] = useState<UploadedImage[]>([]);
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
@@ -78,26 +77,11 @@ const AddItemDialog = () => {
     setForm((prev) => ({ ...prev, id: value }));
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Selecione um arquivo de imagem."); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB."); return; }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const clearImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileRef.current) fileRef.current.value = "";
-  };
-
   const resetForm = () => {
     setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
     setIdParts({ set: "", num: "" });
     setIdAutoTouched(false);
-    clearImage();
+    setImages([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
