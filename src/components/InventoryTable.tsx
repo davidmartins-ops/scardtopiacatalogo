@@ -378,6 +378,63 @@ const InventoryTable = ({ data }: Props) => {
               )}
             </div>
           )}
+          {/* Classificação (status) */}
+          <div
+            className="flex items-center gap-1.5 sm:gap-2 flex-wrap"
+            role="group"
+            aria-label="Filtrar por classificação"
+          >
+            <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-medium shrink-0">
+              Classificação:
+            </span>
+            {([
+              { v: "all", label: "Todos" },
+              { v: "launch", label: "Lançamento" },
+              { v: "pre_sale", label: "Pré-venda" },
+              { v: "none", label: "Sem informação" },
+            ] as const).map((opt) => {
+              const active = filterStatus === opt.v;
+              const count =
+                opt.v === "all"
+                  ? data.length
+                  : data.filter((i) => (i.status ?? "none") === opt.v).length;
+              return (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setFilterStatus(opt.v)}
+                  aria-pressed={active}
+                  className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all border ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-transparent hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                  <span className={`ml-1 ${active ? "opacity-90" : "opacity-60"}`}>
+                    ({count})
+                  </span>
+                </button>
+              );
+            })}
+            {filterStatus !== "all" && (
+              <button
+                type="button"
+                className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
+                onClick={() => setFilterStatus("all")}
+              >
+                Limpar
+              </button>
+            )}
+            <span
+              aria-live="polite"
+              className="ml-auto text-[10px] sm:text-xs text-muted-foreground font-medium"
+            >
+              Mostrando {filtered.length} de {data.length}
+            </span>
+          </div>
+
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Preço:</span>
