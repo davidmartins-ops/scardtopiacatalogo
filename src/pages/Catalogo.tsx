@@ -117,6 +117,7 @@ const ItemGrid = ({
   const [sortOrder, setSortOrder] = useState<string>("default");
   const [foilFilter, setFoilFilter] = useState<string>("all");
   const [setFilter, setSetFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "launch" | "pre_sale" | "none">("all");
   const { sets: allSets } = useMtgSets();
 
   useEffect(() => {
