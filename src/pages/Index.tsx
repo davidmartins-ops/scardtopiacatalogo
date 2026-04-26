@@ -163,7 +163,7 @@ const Index = () => {
           </div>
           <div className="xl:col-span-3">
             <Tabs defaultValue="drops" className="w-full">
-              <TabsList className="w-full max-w-lg mb-4 bg-muted/50 backdrop-blur-sm flex-wrap h-auto gap-1 p-1">
+              <TabsList className="w-full mb-4 bg-muted/50 backdrop-blur-sm flex flex-wrap h-auto gap-1 p-1 justify-start">
                 <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
                 <TabsTrigger value="singles" className="flex-1 font-display text-xs sm:text-sm">Singles ({singles.length})</TabsTrigger>
                 <TabsTrigger value="banners" className="flex-1 font-display text-xs sm:text-sm gap-1">
