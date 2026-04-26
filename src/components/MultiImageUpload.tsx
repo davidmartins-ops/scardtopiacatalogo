@@ -122,9 +122,9 @@ const MultiImageUpload = ({
     let rejected = 0;
     for (const file of files.slice(0, remainingSlots)) {
       const v = validateImageFile(file);
-      if (!v.ok) {
+      if (v.ok !== true) {
         rejected++;
-        toast.error(`${file.name}: ${v.reason}`);
+        toast.error(`${file.name}: ${(v as { ok: false; reason: string }).reason}`);
         continue;
       }
       accepted.push({
