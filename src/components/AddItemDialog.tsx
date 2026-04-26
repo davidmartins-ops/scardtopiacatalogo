@@ -240,28 +240,15 @@ const AddItemDialog = () => {
             </Select>
           </div>
 
-          {/* Image upload */}
-          <div className="space-y-2">
-            <Label>Imagem do Produto</Label>
-            {imagePreview ? (
-              <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                <button type="button" onClick={clearImage} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="w-full h-28 rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/10 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Upload className="h-5 w-5" />
-                <span className="text-xs">Clique para selecionar (max 5MB)</span>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-          </div>
+          {/* Multi image upload — primeira imagem vira principal, demais formam a galeria */}
+          <MultiImageUpload
+            label="Imagens do Produto (1ª = principal, demais = galeria)"
+            maxImages={10}
+            value={images}
+            onUploaded={(image) => setImages((prev) => [...prev, image])}
+            onRemove={(image) => setImages((prev) => prev.filter((i) => i.id !== image.id))}
+            onReorder={(reordered) => setImages(reordered)}
+          />
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
