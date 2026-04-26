@@ -78,6 +78,7 @@ const InventoryTable = ({ data }: Props) => {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterSet, setFilterSet] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "launch" | "pre_sale" | "none">("all");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const { sets: allSets } = useMtgSets();
   const [priceMin, setPriceMin] = useState("");
