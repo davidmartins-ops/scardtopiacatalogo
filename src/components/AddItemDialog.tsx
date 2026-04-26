@@ -97,41 +97,45 @@ const AddItemDialog = () => {
 
     setLoading(true);
 
-    let image_url: string | null = null;
-    if (imageFile) {
-      try {
-        image_url = await uploadProductImage(imageFile);
-      } catch {
-        toast.error("Erro ao enviar imagem.");
-        setLoading(false);
-        return;
-      }
-    }
+    // First image (if any) becomes the main inventory.image_url; the rest go to drop_singles_images.
+    const primary = images[0]?.url ?? null;
+    const gallery = images.slice(1);
 
     const pricePix = parseFloat(form.price_pix || "0");
+    const itemId = form.id.trim().toUpperCase();
 
     const { error } = await supabase.from("inventory").insert({
-      id: form.id.trim().toUpperCase(),
+      id: itemId,
       name: form.name.trim(),
       description: form.description,
       price, price_pix: pricePix, quantity,
       category: form.category,
-      image_url,
+      image_url: primary,
       language: form.language,
       condition: form.condition,
       status: form.status,
       drop_description: form.drop_description,
     } as any);
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       if (error.code === "23505") toast.error("Já existe um item com este ID.");
       else toast.error("Erro ao adicionar item.");
       return;
     }
 
-    toast.success("Item adicionado com sucesso!");
+    if (gallery.length > 0) {
+      const rows = gallery.map((img, idx) => ({
+        inventory_item_id: itemId,
+        image_url: img.url,
+        sort_order: idx,
+      }));
+      const { error: galleryError } = await supabase.from("drop_singles_images").insert(rows as any);
+      if (galleryError) toast.warning("Item criado, mas algumas imagens da galeria falharam.");
+    }
+
+    setLoading(false);
+    toast.success(`Item adicionado${images.length > 1 ? ` com ${images.length} imagens` : ""}!`);
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     resetForm();
     setOpen(false);
