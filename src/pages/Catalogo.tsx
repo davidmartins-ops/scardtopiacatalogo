@@ -117,6 +117,7 @@ const ItemGrid = ({
   const [sortOrder, setSortOrder] = useState<string>("default");
   const [foilFilter, setFoilFilter] = useState<string>("all");
   const [setFilter, setSetFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "launch" | "pre_sale" | "none">("all");
   const { sets: allSets } = useMtgSets();
 
   useEffect(() => {
@@ -197,6 +198,7 @@ const ItemGrid = ({
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
       const matchesFoil = foilFilter === "all" || item.description === foilFilter;
       const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
+      const matchesStatus = statusFilter === "all" || (item.status ?? "none") === statusFilter;
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
         const profile = manaProfiles[item.id];
         if (!profile) return false;
@@ -205,9 +207,9 @@ const ItemGrid = ({
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet;
+      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesStatus;
     });
-  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter]);
 
   // Sets present in current items (only for singles)
   const availableSets = useMemo(() => {
@@ -293,6 +295,35 @@ const ItemGrid = ({
             {selectedColors.length > 0 && <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setSelectedColors([])}>Limpar</button>}
           </div>
         )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Flame className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Classificação:</span>
+          {([
+            { v: "all", label: "Todos" },
+            { v: "launch", label: "Lançamento" },
+            { v: "pre_sale", label: "Pré-venda" },
+            { v: "none", label: "Sem informação" },
+          ] as const).map((opt) => {
+            const count = opt.v === "all"
+              ? (items ?? []).length
+              : (items ?? []).filter((i) => (i.status ?? "none") === opt.v).length;
+            const active = statusFilter === opt.v;
+            return (
+              <button
+                key={opt.v}
+                type="button"
+                onClick={() => setStatusFilter(opt.v)}
+                aria-pressed={active}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+              >
+                {opt.label} ({count})
+              </button>
+            );
+          })}
+          {statusFilter !== "all" && (
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setStatusFilter("all")}>Limpar</button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
@@ -303,7 +334,7 @@ const ItemGrid = ({
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">{filteredItems.length} {filteredItems.length === 1 ? "item" : "itens"} encontrados</p>
+      <p className="text-sm text-muted-foreground" aria-live="polite">Mostrando {filteredItems.length} de {(items ?? []).length} {(items ?? []).length === 1 ? "item" : "itens"}</p>
 
       {groupedItems.length === 0 ? (
         <div className="text-center py-16">
