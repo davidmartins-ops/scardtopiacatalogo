@@ -292,7 +292,7 @@ const PendingTile = ({ item, onRetry, onCancel }: { item: PendingItem; onRetry: 
             </div>
           </>
         ) : item.status === "done" ? (
-          <CheckCircle2 className="h-6 w-6 text-emerald-500" aria-hidden="true" />
+          <CheckCircle2 className="h-6 w-6 text-primary" aria-hidden="true" />
         ) : (
           <>
             <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
