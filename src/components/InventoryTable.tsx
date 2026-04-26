@@ -93,8 +93,6 @@ const InventoryTable = ({ data }: Props) => {
   // Singles images dialog
   const [singlesDialogItem, setSinglesDialogItem] = useState<InventoryItem | null>(null);
   const [singlesImages, setSinglesImages] = useState<any[]>([]);
-  const [uploadingSingles, setUploadingSingles] = useState(false);
-  const singlesInputRef = useRef<HTMLInputElement>(null);
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
