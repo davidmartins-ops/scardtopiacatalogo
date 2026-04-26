@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
-import { Plus, Upload, X } from "lucide-react";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { uploadProductImage } from "@/lib/storage";
+import MultiImageUpload, { type UploadedImage } from "@/components/MultiImageUpload";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -33,9 +33,8 @@ const AddItemDialog = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // CORREÇÃO 30: multi-upload — primeira imagem vira image_url principal, restante vai para drop_singles_images.
+  const [images, setImages] = useState<UploadedImage[]>([]);
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
@@ -78,26 +77,11 @@ const AddItemDialog = () => {
     setForm((prev) => ({ ...prev, id: value }));
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Selecione um arquivo de imagem."); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB."); return; }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const clearImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileRef.current) fileRef.current.value = "";
-  };
-
   const resetForm = () => {
     setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
     setIdParts({ set: "", num: "" });
     setIdAutoTouched(false);
-    clearImage();
+    setImages([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,41 +97,45 @@ const AddItemDialog = () => {
 
     setLoading(true);
 
-    let image_url: string | null = null;
-    if (imageFile) {
-      try {
-        image_url = await uploadProductImage(imageFile);
-      } catch {
-        toast.error("Erro ao enviar imagem.");
-        setLoading(false);
-        return;
-      }
-    }
+    // First image (if any) becomes the main inventory.image_url; the rest go to drop_singles_images.
+    const primary = images[0]?.url ?? null;
+    const gallery = images.slice(1);
 
     const pricePix = parseFloat(form.price_pix || "0");
+    const itemId = form.id.trim().toUpperCase();
 
     const { error } = await supabase.from("inventory").insert({
-      id: form.id.trim().toUpperCase(),
+      id: itemId,
       name: form.name.trim(),
       description: form.description,
       price, price_pix: pricePix, quantity,
       category: form.category,
-      image_url,
+      image_url: primary,
       language: form.language,
       condition: form.condition,
       status: form.status,
       drop_description: form.drop_description,
     } as any);
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       if (error.code === "23505") toast.error("Já existe um item com este ID.");
       else toast.error("Erro ao adicionar item.");
       return;
     }
 
-    toast.success("Item adicionado com sucesso!");
+    if (gallery.length > 0) {
+      const rows = gallery.map((img, idx) => ({
+        inventory_item_id: itemId,
+        image_url: img.url,
+        sort_order: idx,
+      }));
+      const { error: galleryError } = await supabase.from("drop_singles_images").insert(rows as any);
+      if (galleryError) toast.warning("Item criado, mas algumas imagens da galeria falharam.");
+    }
+
+    setLoading(false);
+    toast.success(`Item adicionado${images.length > 1 ? ` com ${images.length} imagens` : ""}!`);
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     resetForm();
     setOpen(false);
@@ -252,28 +240,15 @@ const AddItemDialog = () => {
             </Select>
           </div>
 
-          {/* Image upload */}
-          <div className="space-y-2">
-            <Label>Imagem do Produto</Label>
-            {imagePreview ? (
-              <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                <button type="button" onClick={clearImage} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="w-full h-28 rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/10 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Upload className="h-5 w-5" />
-                <span className="text-xs">Clique para selecionar (max 5MB)</span>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-          </div>
+          {/* Multi image upload — primeira imagem vira principal, demais formam a galeria */}
+          <MultiImageUpload
+            label="Imagens do Produto (1ª = principal, demais = galeria)"
+            maxImages={10}
+            value={images}
+            onUploaded={(image) => setImages((prev) => [...prev, image])}
+            onRemove={(image) => setImages((prev) => prev.filter((i) => i.id !== image.id))}
+            onReorder={(reordered) => setImages(reordered)}
+          />
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">

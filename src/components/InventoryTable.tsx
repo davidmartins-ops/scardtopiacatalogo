@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { type InventoryItem } from "@/data/inventory";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 import SetCombobox from "@/components/SetCombobox";
+import MultiImageUpload, { type UploadedImage } from "@/components/MultiImageUpload";
 
 const descriptionStyles: Record<string, string> = {
   "Foil": "bg-foil/15 text-foil border-foil/30",
@@ -92,8 +93,6 @@ const InventoryTable = ({ data }: Props) => {
   // Singles images dialog
   const [singlesDialogItem, setSinglesDialogItem] = useState<InventoryItem | null>(null);
   const [singlesImages, setSinglesImages] = useState<any[]>([]);
-  const [uploadingSingles, setUploadingSingles] = useState(false);
-  const singlesInputRef = useRef<HTMLInputElement>(null);
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
@@ -312,38 +311,8 @@ const InventoryTable = ({ data }: Props) => {
     setSinglesImages(data ?? []);
   };
 
-  const handleSinglesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !singlesDialogItem) return;
-    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem."); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB."); return; }
+  // CORREÇÃO 30: handlers de imagens secundárias agora são gerenciados pelo MultiImageUpload no JSX abaixo.
 
-    setUploadingSingles(true);
-    try {
-      const url = await uploadProductImage(file);
-      const { error } = await supabase.from("drop_singles_images").insert({
-        inventory_item_id: singlesDialogItem.id,
-        image_url: url,
-        sort_order: singlesImages.length,
-      } as any);
-      if (error) throw error;
-      const { data } = await supabase.from("drop_singles_images").select("*").eq("inventory_item_id", singlesDialogItem.id).order("sort_order");
-      setSinglesImages(data ?? []);
-      toast.success("Imagem adicionada!");
-    } catch {
-      toast.error("Erro ao adicionar imagem.");
-    } finally {
-      setUploadingSingles(false);
-      if (singlesInputRef.current) singlesInputRef.current.value = "";
-    }
-  };
-
-  const removeSinglesImage = async (imageId: string) => {
-    const { error } = await supabase.from("drop_singles_images").delete().eq("id", imageId);
-    if (error) { toast.error("Erro ao remover."); return; }
-    setSinglesImages((prev) => prev.filter((img) => img.id !== imageId));
-    toast.success("Imagem removida!");
-  };
 
   const SortHeader = ({ label, k }: { label: string; k: SortKey }) => (
     <th className="px-2 sm:px-3 py-3 text-left text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none whitespace-nowrap" onClick={() => handleSort(k)}>
@@ -734,28 +703,44 @@ const InventoryTable = ({ data }: Props) => {
         </DialogContent>
       </Dialog>
 
-      {/* Singles Images Dialog */}
+      {/* Singles Images Dialog — multi upload + drag-and-drop reorder */}
       <Dialog open={!!singlesDialogItem} onOpenChange={(open) => !open && setSinglesDialogItem(null)}>
         <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-foreground text-base">Singles — {singlesDialogItem?.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-2">
-              {singlesImages.map((img) => (
-                <div key={img.id} className="relative rounded-lg overflow-hidden border border-border group">
-                  <img src={img.image_url} alt={img.caption || ""} className="w-full aspect-[2.5/3.5] object-cover" />
-                  <button onClick={() => removeSinglesImage(img.id)} className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive/80 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <input ref={singlesInputRef} type="file" accept="image/*" className="hidden" onChange={handleSinglesUpload} />
-            <Button variant="outline" className="w-full gap-2" onClick={() => singlesInputRef.current?.click()} disabled={uploadingSingles}>
-              <ImagePlus className="h-4 w-4" /> {uploadingSingles ? "Enviando..." : "Adicionar Imagem"}
-            </Button>
-          </div>
+          <MultiImageUpload
+            label="Imagens da Galeria"
+            maxImages={20}
+            value={singlesImages.map((img) => ({ id: img.id, url: img.image_url, alt: img.caption || "" }))}
+            onUploaded={async (image) => {
+              if (!singlesDialogItem) return;
+              const { data, error } = await supabase.from("drop_singles_images").insert({
+                inventory_item_id: singlesDialogItem.id,
+                image_url: image.url,
+                sort_order: singlesImages.length,
+              } as any).select("*").single();
+              if (error || !data) { toast.error("Erro ao salvar imagem."); return; }
+              setSinglesImages((prev) => [...prev, data]);
+            }}
+            onRemove={async (image) => {
+              const { error } = await supabase.from("drop_singles_images").delete().eq("id", image.id);
+              if (error) { toast.error("Erro ao remover."); return; }
+              setSinglesImages((prev) => prev.filter((i) => i.id !== image.id));
+              toast.success("Imagem removida!");
+            }}
+            onReorder={async (reordered: UploadedImage[]) => {
+              const updates = reordered.map((img, idx) => ({ id: img.id, sort_order: idx }));
+              setSinglesImages((prev) => {
+                const map = new Map(prev.map((p) => [p.id, p]));
+                return reordered.map((r, idx) => ({ ...(map.get(r.id) || {}), sort_order: idx }));
+              });
+              await Promise.all(
+                updates.map((u) => supabase.from("drop_singles_images").update({ sort_order: u.sort_order }).eq("id", u.id)),
+              );
+              toast.success("Ordem atualizada!");
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>
