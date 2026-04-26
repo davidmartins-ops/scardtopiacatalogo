@@ -132,6 +132,7 @@ const InventoryTable = ({ data }: Props) => {
         (filterType === "all" || item.description === filterType) &&
         (filterCategory === "all" || item.category === filterCategory) &&
         (filterSet === "all" || extractSetCode(item.id) === filterSet) &&
+        (filterStatus === "all" || (item.status ?? "none") === filterStatus) &&
         (minP === null || item.price >= minP) &&
         (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -144,7 +145,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, priceMin, priceMax]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, filterStatus, priceMin, priceMax]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
