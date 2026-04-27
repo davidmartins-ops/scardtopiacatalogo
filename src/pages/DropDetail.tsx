@@ -23,9 +23,25 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Silver Scroll": { label: "Silver Scroll", icon: Sparkles, className: "bg-muted/40 text-foreground border-border" },
 };
 
-const sharePage = async (name: string, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
+const formatBRL = (value: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+const sharePage = async (
+  name: string,
+  method: "whatsapp" | "twitter" | "instagram" | "copy",
+  prices?: { priceCard?: number; pricePix?: number },
+) => {
   const url = window.location.href;
-  const text = `${name} — Confira no catálogo da Spencer's Cardtopia!`;
+  const priceCard = prices?.priceCard && prices.priceCard > 0 ? prices.priceCard : 0;
+  const pricePix = prices?.pricePix && prices.pricePix > 0 && prices.pricePix !== priceCard ? prices.pricePix : 0;
+
+  const priceLines: string[] = [];
+  if (priceCard > 0) priceLines.push(`Valor Cartão: ${formatBRL(priceCard)}`);
+  if (pricePix > 0) priceLines.push(`Valor PIX: ${formatBRL(pricePix)}`);
+
+  const text = priceLines.length
+    ? `${name}\n${priceLines.join("\n")}\n\nConfira no catálogo da Spencer's Cardtopia!`
+    : `${name} — Confira no catálogo da Spencer's Cardtopia!`;
   const shareText = `${text}\n${url}`;
 
   if (method === "copy") {
@@ -105,18 +121,28 @@ const DropDetail = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "whatsapp")} className="gap-2 cursor-pointer">
-                  <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "twitter")} className="gap-2 cursor-pointer">
-                  <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "instagram")} className="gap-2 cursor-pointer">
-                  <Instagram className="h-4 w-4 text-pink-500" /> Instagram
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "copy")} className="gap-2 cursor-pointer">
-                  <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
-                </DropdownMenuItem>
+                {(() => {
+                  const discount = drop.discount ?? 0;
+                  const priceCard = Math.max(0, drop.price * (1 - discount / 100));
+                  const pricePix = Number(drop.price_pix ?? 0);
+                  const prices = { priceCard, pricePix };
+                  return (
+                    <>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "whatsapp", prices)} className="gap-2 cursor-pointer">
+                        <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "twitter", prices)} className="gap-2 cursor-pointer">
+                        <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "instagram", prices)} className="gap-2 cursor-pointer">
+                        <Instagram className="h-4 w-4 text-pink-500" /> Instagram
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "copy", prices)} className="gap-2 cursor-pointer">
+                        <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                      </DropdownMenuItem>
+                    </>
+                  );
+                })()}
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
