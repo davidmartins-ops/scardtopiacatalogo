@@ -51,11 +51,23 @@ const trackEvent = async (eventType: string, item: InventoryItem) => {
   } catch {}
 };
 
+const formatBRL = (value: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
 const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
-  const finalPrice = item.price * (1 - discount / 100);
-  const priceStr = `R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  const text = `${item.name} - ${priceStr}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
+  const priceCard = Math.max(0, item.price * (1 - discount / 100));
+  const priceCardStr = formatBRL(priceCard);
+  const rawPix = Number(item.price_pix ?? 0);
+  const hasPix = rawPix > 0 && rawPix !== priceCard;
+  const pricePix = hasPix ? rawPix : 0;
+  const pricePixStr = hasPix ? formatBRL(pricePix) : "";
+
+  const priceLines = hasPix
+    ? `Valor Cartão: ${priceCardStr}\nValor PIX: ${pricePixStr}`
+    : `Valor Cartão: ${priceCardStr}`;
+
+  const text = `${item.name}\n${priceLines}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
   const url = window.location.href;
 
   if (method === "copy") {
