@@ -23,9 +23,25 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Silver Scroll": { label: "Silver Scroll", icon: Sparkles, className: "bg-muted/40 text-foreground border-border" },
 };
 
-const sharePage = async (name: string, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
+const formatBRL = (value: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+const sharePage = async (
+  name: string,
+  method: "whatsapp" | "twitter" | "instagram" | "copy",
+  prices?: { priceCard?: number; pricePix?: number },
+) => {
   const url = window.location.href;
-  const text = `${name} — Confira no catálogo da Spencer's Cardtopia!`;
+  const priceCard = prices?.priceCard && prices.priceCard > 0 ? prices.priceCard : 0;
+  const pricePix = prices?.pricePix && prices.pricePix > 0 && prices.pricePix !== priceCard ? prices.pricePix : 0;
+
+  const priceLines: string[] = [];
+  if (priceCard > 0) priceLines.push(`Valor Cartão: ${formatBRL(priceCard)}`);
+  if (pricePix > 0) priceLines.push(`Valor PIX: ${formatBRL(pricePix)}`);
+
+  const text = priceLines.length
+    ? `${name}\n${priceLines.join("\n")}\n\nConfira no catálogo da Spencer's Cardtopia!`
+    : `${name} — Confira no catálogo da Spencer's Cardtopia!`;
   const shareText = `${text}\n${url}`;
 
   if (method === "copy") {
