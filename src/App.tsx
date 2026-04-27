@@ -22,6 +22,7 @@ import OrderDetail from "./pages/OrderDetail.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminReports from "./pages/AdminReports.tsx";
+import AdminNotifications from "./pages/AdminNotifications.tsx";
 import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+          <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
