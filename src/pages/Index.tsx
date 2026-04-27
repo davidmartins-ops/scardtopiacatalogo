@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import logo from "@/assets/logo.png";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useInventory } from "@/hooks/use-inventory";
 import { useAuth } from "@/hooks/use-auth";
+import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import { Button } from "@/components/ui/button";
 import StatCard from "@/components/StatCard";
 import InventoryTable from "@/components/InventoryTable";
@@ -27,7 +28,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { data: inventoryData = [], isLoading, error } = useInventory();
+  const { unreadCount: notifUnread } = useAdminNotifications();
   const [pendingCount, setPendingCount] = useState<number>(0);
 
   // Live count of orders awaiting action (pending_payment + payment_confirmed)
@@ -106,19 +109,19 @@ const Index = () => {
                 variant="outline"
                 size="icon"
                 className="glass-card hover:border-primary/40 hover:text-primary transition-all duration-300"
-                title={`${pendingCount} pedido(s) aguardando ação`}
-                aria-label={`${pendingCount} pedidos pendentes`}
-                onClick={() => {
-                  const el = document.querySelector('[data-tab-orders]') as HTMLElement | null;
-                  el?.click();
-                  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }}
+                title={`${notifUnread} notificação(ões) não lida(s)`}
+                aria-label={`${notifUnread} notificações não lidas`}
+                onClick={() => navigate("/admin/notificacoes")}
               >
                 <Bell className="h-4 w-4" />
               </Button>
-              {pendingCount > 0 && (
-                <Badge className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full text-[10px] bg-primary text-primary-foreground border-2 border-background">
-                  {pendingCount > 99 ? "99+" : pendingCount}
+              {notifUnread > 0 && (
+                <Badge
+                  role="status"
+                  aria-live="polite"
+                  className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full text-[10px] bg-primary text-primary-foreground border-2 border-background"
+                >
+                  {notifUnread > 99 ? "99+" : notifUnread}
                 </Badge>
               )}
             </div>

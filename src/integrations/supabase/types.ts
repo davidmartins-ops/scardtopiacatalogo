@@ -47,6 +47,68 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notification_reads: {
+        Row: {
+          admin_id: string
+          notification_id: string
+          read_at: string
+        }
+        Insert: {
+          admin_id: string
+          notification_id: string
+          read_at?: string
+        }
+        Update: {
+          admin_id?: string
+          notification_id?: string
+          read_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notification_reads_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "admin_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          link: string | null
+          message: string
+          metadata: Json
+          title: string
+          type: Database["public"]["Enums"]["admin_notification_type"]
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          message?: string
+          metadata?: Json
+          title: string
+          type: Database["public"]["Enums"]["admin_notification_type"]
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          message?: string
+          metadata?: Json
+          title?: string
+          type?: Database["public"]["Enums"]["admin_notification_type"]
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           category: string | null
@@ -923,6 +985,14 @@ export type Database = {
       }
     }
     Enums: {
+      admin_notification_type:
+        | "new_order"
+        | "new_dispute"
+        | "low_stock"
+        | "out_of_stock"
+        | "payment_confirmed"
+        | "sla_breach"
+        | "system"
       app_role: "admin" | "user"
       dispute_status: "open" | "in_review" | "resolved" | "rejected"
       order_status:
@@ -1060,6 +1130,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_notification_type: [
+        "new_order",
+        "new_dispute",
+        "low_stock",
+        "out_of_stock",
+        "payment_confirmed",
+        "sla_breach",
+        "system",
+      ],
       app_role: ["admin", "user"],
       dispute_status: ["open", "in_review", "resolved", "rejected"],
       order_status: [
