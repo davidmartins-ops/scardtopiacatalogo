@@ -121,18 +121,28 @@ const DropDetail = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "whatsapp")} className="gap-2 cursor-pointer">
-                  <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "twitter")} className="gap-2 cursor-pointer">
-                  <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "instagram")} className="gap-2 cursor-pointer">
-                  <Instagram className="h-4 w-4 text-pink-500" /> Instagram
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePage(drop.name, "copy")} className="gap-2 cursor-pointer">
-                  <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
-                </DropdownMenuItem>
+                {(() => {
+                  const discount = drop.discount ?? 0;
+                  const priceCard = Math.max(0, drop.price * (1 - discount / 100));
+                  const pricePix = Number(drop.price_pix ?? 0);
+                  const prices = { priceCard, pricePix };
+                  return (
+                    <>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "whatsapp", prices)} className="gap-2 cursor-pointer">
+                        <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "twitter", prices)} className="gap-2 cursor-pointer">
+                        <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "instagram", prices)} className="gap-2 cursor-pointer">
+                        <Instagram className="h-4 w-4 text-pink-500" /> Instagram
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => sharePage(drop.name, "copy", prices)} className="gap-2 cursor-pointer">
+                        <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                      </DropdownMenuItem>
+                    </>
+                  );
+                })()}
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
