@@ -208,13 +208,9 @@ const SiteFooter = () => {
                 </a>
               </li>
               <li>
-                <a
-                  href={`mailto:${CONTACT_EMAIL}?subject=Dúvida%20-%20FAQ`}
-                  className={linkClass}
-                  aria-label="Enviar dúvida por e-mail"
-                >
+                <Link to="/faq" className={linkClass} aria-label="Ver FAQ e dúvidas frequentes">
                   FAQ / Dúvidas
-                </a>
+                </Link>
               </li>
               <li>
                 <Link to="/conta" className={linkClass} aria-label="Acessar minha conta">
