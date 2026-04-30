@@ -245,7 +245,7 @@ const AdminOrdersPanel = () => {
             const cfg = statusConfig(order.status);
             const Icon = cfg.icon;
             const ci = ((order as any).customer_info ?? {}) as { name?: string; full_name?: string; email?: string; phone?: string };
-            const customerName = ci.name || ci.full_name || ci.email || (order.user_id ? "Cliente" : "Visitante");
+            const customerName = (ci.name || ci.full_name || ci.email || "").trim();
             return (
               <div key={order.id} className="border border-border rounded-lg p-3 bg-muted/10 space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -257,9 +257,11 @@ const AdminOrdersPanel = () => {
                     <span className="text-[11px] text-muted-foreground">
                       {new Date(order.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
-                    <Badge variant="outline" className="text-[10px] bg-primary/5 text-foreground border-primary/30">
-                      {customerName}
-                    </Badge>
+                    {customerName && (
+                      <Badge variant="outline" className="text-[10px] bg-primary/5 text-foreground border-primary/30">
+                        {customerName}
+                      </Badge>
+                    )}
                     <Badge variant="outline" className="text-[10px]">
                       {order.user_id ? "Cliente" : "Visitante"}
                     </Badge>
