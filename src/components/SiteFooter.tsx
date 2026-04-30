@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Clock, Instagram, MessageCircle, ShieldCheck } from "lucide-react";
 
 const CONTACT_EMAIL = "contato@spencerscardtopia.com.br";
@@ -12,7 +12,10 @@ const HOURS = "Todos os dias, 08h às 22h";
 
 const SiteFooter = () => {
   const year = new Date().getFullYear();
-  const location = useLocation();
+
+  const openCookieSettings = () => {
+    window.dispatchEvent(new CustomEvent("open-cookie-settings"));
+  };
 
   // Hide floating social buttons when footer is mounted (memory: floating buttons hidden on footer)
   useEffect(() => {
