@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import logo from "@/assets/logo.png";
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawRedirect = searchParams.get("redirect");
+  const redirectTo = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/catalogo";
   const { signInWithEmail, signUpWithEmail } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -35,7 +38,7 @@ const CustomerLogin = () => {
       toast.error(error.message === "Invalid login credentials" ? "Email ou senha incorretos." : error.message);
     } else {
       toast.success("Bem-vindo de volta!");
-      navigate("/catalogo");
+      navigate(redirectTo);
     }
   };
 
@@ -57,7 +60,7 @@ const CustomerLogin = () => {
     setGoogleLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/catalogo`,
+        redirect_uri: `${window.location.origin}${redirectTo}`,
       });
       if (result?.error) toast.error("Erro ao fazer login com Google.");
     } catch {
