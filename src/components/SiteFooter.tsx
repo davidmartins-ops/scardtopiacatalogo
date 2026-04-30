@@ -159,7 +159,7 @@ const SiteFooter = () => {
             </h2>
             <ul className="space-y-1">
               <li>
-                <Link to="/catalogo" className={linkClass} aria-label="Sobre a Spencer's Cardtopia">
+                <Link to="/sobre" className={linkClass} aria-label="Sobre a Spencer's Cardtopia">
                   Sobre
                 </Link>
               </li>
