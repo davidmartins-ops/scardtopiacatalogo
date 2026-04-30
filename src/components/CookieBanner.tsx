@@ -19,6 +19,16 @@ const CookieBanner = () => {
     }
   }, []);
 
+  // Allow other components (e.g. footer) to reopen the cookie settings
+  useEffect(() => {
+    const handler = () => {
+      setShowSettings(true);
+      setOpen(true);
+    };
+    window.addEventListener("open-cookie-settings", handler);
+    return () => window.removeEventListener("open-cookie-settings", handler);
+  }, []);
+
   const persist = async (prefs: CookiePrefs) => {
     await saveConsent(prefs, showSettings ? "settings" : "banner");
     setOpen(false);

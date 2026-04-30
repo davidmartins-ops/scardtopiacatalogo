@@ -22,11 +22,10 @@ const SiteFooter = () => {
     };
   }, []);
 
-  // JSON-LD Organization for SEO
+  // JSON-LD Organization for SEO — injected once, deduped across navigations
   useEffect(() => {
     const id = "site-footer-org-jsonld";
-    const existing = document.getElementById(id);
-    if (existing) existing.remove();
+    if (document.getElementById(id)) return;
 
     const jsonLd = {
       "@context": "https://schema.org",
@@ -50,12 +49,7 @@ const SiteFooter = () => {
     script.type = "application/ld+json";
     script.textContent = JSON.stringify(jsonLd);
     document.head.appendChild(script);
-
-    return () => {
-      const s = document.getElementById(id);
-      if (s) s.remove();
-    };
-  }, [location.pathname]);
+  }, []);
 
   const linkClass =
     "inline-flex items-center min-h-[44px] py-2 text-sm hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded";
