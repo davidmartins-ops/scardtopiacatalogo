@@ -60,7 +60,7 @@ const CustomerLogin = () => {
     setGoogleLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/catalogo`,
+        redirect_uri: `${window.location.origin}${redirectTo}`,
       });
       if (result?.error) toast.error("Erro ao fazer login com Google.");
     } catch {
