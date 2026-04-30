@@ -10,6 +10,7 @@ import {
   Heading,
   Html,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -22,23 +23,31 @@ export const RecoveryEmail = ({
   siteName,
   confirmationUrl,
 }: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Reset your password for {siteName}</Preview>
+    <Preview>Redefina sua senha na {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Reset your password</Heading>
-        <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Reset Password
-        </Button>
-        <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
-        </Text>
+        <Section style={header}>
+          <Text style={brandMark}>SPENCER'S CARDTOPIA</Text>
+        </Section>
+        <Section style={card}>
+          <Heading style={h1}>Redefinir sua senha</Heading>
+          <Text style={text}>
+            Recebemos um pedido para redefinir a senha da sua conta na{' '}
+            <strong>{siteName}</strong>. Clique no botão abaixo para escolher
+            uma nova senha.
+          </Text>
+          <Section style={{ textAlign: 'center', margin: '32px 0' }}>
+            <Button style={button} href={confirmationUrl}>
+              Redefinir senha
+            </Button>
+          </Section>
+          <Text style={footer}>
+            Se você não solicitou a redefinição, pode ignorar este e-mail com
+            segurança — sua senha continuará a mesma.
+          </Text>
+        </Section>
       </Container>
     </Body>
   </Html>
@@ -46,26 +55,58 @@ export const RecoveryEmail = ({
 
 export default RecoveryEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: "'Open Sans', Arial, sans-serif",
+  margin: 0,
+  padding: '24px 0',
+}
+const container = { maxWidth: '560px', margin: '0 auto', padding: '0 16px' }
+const header = {
+  backgroundColor: '#0E1729',
+  borderRadius: '12px 12px 0 0',
+  padding: '20px 28px',
+  textAlign: 'center' as const,
+}
+const brandMark = {
+  color: '#E0A82E',
+  fontSize: '14px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  letterSpacing: '3px',
+  margin: 0,
+}
+const card = {
+  backgroundColor: '#ffffff',
+  border: '1px solid #E5E0D5',
+  borderTop: 'none',
+  borderRadius: '0 0 12px 12px',
+  padding: '32px 28px',
+}
+const h1 = {
+  fontSize: '24px',
+  fontWeight: 'bold' as const,
+  color: '#1a1a1a',
   margin: '0 0 20px',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: '#3d3d3d',
+  lineHeight: '1.6',
+  margin: '0 0 16px',
 }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  backgroundColor: '#E0A82E',
+  color: '#0E1729',
+  fontSize: '15px',
+  fontWeight: 'bold' as const,
+  borderRadius: '12px',
+  padding: '14px 28px',
   textDecoration: 'none',
+  display: 'inline-block',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = {
+  fontSize: '12px',
+  color: '#888888',
+  margin: '24px 0 0',
+  lineHeight: '1.5',
+}
