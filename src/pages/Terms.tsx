@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import useSEO from "@/hooks/use-seo";
-import SiteFooter from "@/components/SiteFooter";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -104,7 +104,7 @@ const Terms = () => {
           </section>
         </div>
       </main>
-      <SiteFooter />
+      
     </div>
   );
 };
