@@ -15,11 +15,12 @@ import {
   ScrollText,
   RefreshCcw,
   Mail,
+  AlertTriangle,
 } from "lucide-react";
 
 const WHATSAPP_URL = "https://wa.me/5511947154555?text=Ol%C3%A1!%20Tenho%20uma%20d%C3%BAvida%20sobre%20a%20Spencer%27s%20Cardtopia.";
 
-type QA = { q: string; a: React.ReactNode };
+type QA = { q: string; a: React.ReactNode; aText: string };
 
 type Section = {
   id: string;
