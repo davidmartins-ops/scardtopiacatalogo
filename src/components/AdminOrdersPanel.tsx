@@ -261,7 +261,11 @@ const AdminOrdersPanel = () => {
             const cfg = statusConfig(order.status);
             const Icon = cfg.icon;
             const ci = ((order as any).customer_info ?? {}) as { name?: string; full_name?: string; email?: string; phone?: string };
-            const customerName = (ci.name || ci.full_name || ci.email || "").trim();
+            const ciName = (ci.name || ci.full_name || "").trim();
+            const ciEmail = (ci.email || "").trim();
+            const ciPhone = (ci.phone || "").trim();
+            const isIdentified = !!(ciName || ciEmail);
+            const primaryLabel = ciName || ciEmail || "Cliente";
             return (
               <div key={order.id} className="border border-border rounded-lg p-3 bg-muted/10 space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -273,14 +277,35 @@ const AdminOrdersPanel = () => {
                     <span className="text-[11px] text-muted-foreground">
                       {new Date(order.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
-                    {customerName && (
-                      <Badge variant="outline" className="text-[10px] bg-primary/5 text-foreground border-primary/30">
-                        {customerName}
+                    {isIdentified ? (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] gap-1 bg-primary/5 text-foreground border-primary/30 cursor-help"
+                            >
+                              <UserCircle2 className="h-3 w-3" />
+                              <span className="max-w-[160px] truncate">{primaryLabel}</span>
+                              {ciName && ciEmail && (
+                                <span className="text-muted-foreground/80 hidden sm:inline">· {ciEmail}</span>
+                              )}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            <div className="space-y-0.5">
+                              <div><span className="text-muted-foreground">Nome:</span> {ciName || "—"}</div>
+                              <div><span className="text-muted-foreground">E-mail:</span> {ciEmail || "—"}</div>
+                              <div><span className="text-muted-foreground">Telefone:</span> {ciPhone || "—"}</div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] gap-1 bg-muted/30 text-muted-foreground border-border">
+                        <User className="h-3 w-3" /> Visitante
                       </Badge>
                     )}
-                    <Badge variant="outline" className="text-[10px]">
-                      {order.user_id ? "Cliente" : "Visitante"}
-                    </Badge>
                     {order.tracking_code && (
                       <Badge variant="outline" className="text-[10px] gap-1 bg-accent/5">
                         <Truck className="h-3 w-3" /> {order.tracking_code}
