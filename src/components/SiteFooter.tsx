@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Clock, Instagram, MessageCircle, ShieldCheck } from "lucide-react";
 
 const CONTACT_EMAIL = "contato@spencerscardtopia.com.br";
@@ -12,7 +12,10 @@ const HOURS = "Todos os dias, 08h às 22h";
 
 const SiteFooter = () => {
   const year = new Date().getFullYear();
-  const location = useLocation();
+
+  const openCookieSettings = () => {
+    window.dispatchEvent(new CustomEvent("open-cookie-settings"));
+  };
 
   // Hide floating social buttons when footer is mounted (memory: floating buttons hidden on footer)
   useEffect(() => {
@@ -22,11 +25,10 @@ const SiteFooter = () => {
     };
   }, []);
 
-  // JSON-LD Organization for SEO
+  // JSON-LD Organization for SEO — injected once, deduped across navigations
   useEffect(() => {
     const id = "site-footer-org-jsonld";
-    const existing = document.getElementById(id);
-    if (existing) existing.remove();
+    if (document.getElementById(id)) return;
 
     const jsonLd = {
       "@context": "https://schema.org",
@@ -50,15 +52,10 @@ const SiteFooter = () => {
     script.type = "application/ld+json";
     script.textContent = JSON.stringify(jsonLd);
     document.head.appendChild(script);
-
-    return () => {
-      const s = document.getElementById(id);
-      if (s) s.remove();
-    };
-  }, [location.pathname]);
+  }, []);
 
   const linkClass =
-    "inline-flex items-center min-h-[44px] py-2 text-sm hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded";
+    "inline-flex items-center min-h-[44px] py-2 text-sm text-[hsl(var(--brand-header-foreground))]/85 hover:text-[hsl(var(--brand-gold))] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--brand-header))] rounded";
 
   return (
     <footer
@@ -195,12 +192,39 @@ const SiteFooter = () => {
           </section>
         </div>
 
-        {/* Linha inferior */}
-        <div className="mt-10 pt-6 border-t border-[hsl(var(--brand-header-border))] flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[hsl(var(--brand-header-foreground))]/70">
-          <p>© {year} Spencer's Cardtopia. Todos os direitos reservados.</p>
-          <p>
-            CNPJ informado mediante solicitação · {LOCATION}
+        {/* Bloco LGPD — consentimento de dados */}
+        <div className="mt-10 pt-6 border-t border-[hsl(var(--brand-header-border))] space-y-4">
+          <p className="text-xs text-[hsl(var(--brand-header-foreground))]/75 leading-relaxed max-w-3xl">
+            Ao navegar neste site você concorda com a coleta e o tratamento dos seus dados pessoais
+            conforme nossa{" "}
+            <Link
+              to="/privacidade"
+              className="underline underline-offset-2 text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] rounded"
+            >
+              Política de Privacidade
+            </Link>{" "}
+            e os{" "}
+            <Link
+              to="/termos"
+              className="underline underline-offset-2 text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] rounded"
+            >
+              Termos de Uso
+            </Link>
+            , em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+            Você pode revisar suas preferências de cookies a qualquer momento.
           </p>
+
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[hsl(var(--brand-header-foreground))]/70">
+            <p>© {year} Spencer's Cardtopia. Todos os direitos reservados. · {LOCATION}</p>
+            <button
+              type="button"
+              onClick={openCookieSettings}
+              className="inline-flex items-center min-h-[44px] py-2 px-3 text-xs underline underline-offset-2 text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--brand-header))] rounded"
+              aria-label="Abrir preferências de cookies"
+            >
+              Gerenciar cookies
+            </button>
+          </div>
         </div>
       </div>
     </footer>

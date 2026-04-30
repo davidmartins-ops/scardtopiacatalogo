@@ -19,6 +19,16 @@ const CookieBanner = () => {
     }
   }, []);
 
+  // Allow other components (e.g. footer) to reopen the cookie settings
+  useEffect(() => {
+    const handler = () => {
+      setShowSettings(true);
+      setOpen(true);
+    };
+    window.addEventListener("open-cookie-settings", handler);
+    return () => window.removeEventListener("open-cookie-settings", handler);
+  }, []);
+
   const persist = async (prefs: CookiePrefs) => {
     await saveConsent(prefs, showSettings ? "settings" : "banner");
     setOpen(false);
@@ -104,7 +114,7 @@ const CookieBanner = () => {
           <button
             onClick={rejectAll}
             aria-label="Fechar e recusar opcionais"
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:text-foreground transition-colors"
+            className="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X className="h-4 w-4" />
           </button>
