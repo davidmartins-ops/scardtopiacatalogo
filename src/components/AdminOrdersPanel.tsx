@@ -72,20 +72,24 @@ const AdminOrdersPanel = () => {
       const ts = new Date(o.created_at).getTime();
       if (fromTs !== null && ts < fromTs) return false;
       if (toTs !== null && ts > toTs) return false;
+      const ci = ((o as any).customer_info ?? {}) as { name?: string; full_name?: string; cpf?: string; phone?: string; email?: string };
+      const isIdentified = !!((ci.name || ci.full_name || ci.email || "").trim());
+      if (customerFilter === "identified" && !isIdentified) return false;
+      if (customerFilter === "visitor" && isIdentified) return false;
       if (!search.trim()) return true;
       const s = search.toLowerCase();
       if (o.id.toLowerCase().includes(s)) return true;
       if ((o.user_id ?? "").toLowerCase().includes(s)) return true;
       if ((o.tracking_code ?? "").toLowerCase().includes(s)) return true;
       if ((o.items as any[]).some((it) => (it.name ?? "").toLowerCase().includes(s))) return true;
-      const ci = ((o as any).customer_info ?? {}) as { name?: string; cpf?: string; phone?: string; email?: string };
       if ((ci.name ?? "").toLowerCase().includes(s)) return true;
+      if ((ci.full_name ?? "").toLowerCase().includes(s)) return true;
       if ((ci.email ?? "").toLowerCase().includes(s)) return true;
       if ((ci.cpf ?? "").replace(/\D/g, "").includes(s.replace(/\D/g, ""))) return true;
       if ((ci.phone ?? "").replace(/\D/g, "").includes(s.replace(/\D/g, ""))) return true;
       return false;
     });
-  }, [orders, search, statusFilter, dateFrom, dateTo]);
+  }, [orders, search, statusFilter, customerFilter, dateFrom, dateTo]);
 
   const openEdit = (orderId: string, currentStatus: OrderStatus, currentTracking: string | null) => {
     setEditingOrderId(orderId);
