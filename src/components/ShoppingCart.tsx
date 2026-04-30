@@ -432,7 +432,19 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setLoginPromptOpen(false)}>Cancelar</Button>
-            <Button onClick={() => { setLoginPromptOpen(false); setOpen(false); navigate("/conta/login"); }} className="gap-2">
+            <Button
+              onClick={() => {
+                try {
+                  const guestCart = items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty }));
+                  localStorage.setItem("spencer_guest_cart", JSON.stringify(guestCart));
+                } catch {}
+                setLoginPromptOpen(false);
+                setOpen(false);
+                const redirect = encodeURIComponent("/catalogo?openCart=1");
+                navigate(`/conta/login?redirect=${redirect}`);
+              }}
+              className="gap-2"
+            >
               <LogIn className="h-4 w-4" /> Ir para login
             </Button>
           </DialogFooter>
