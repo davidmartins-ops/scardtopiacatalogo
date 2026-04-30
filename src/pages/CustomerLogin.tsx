@@ -12,6 +12,9 @@ import logo from "@/assets/logo.png";
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawRedirect = searchParams.get("redirect");
+  const redirectTo = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/catalogo";
   const { signInWithEmail, signUpWithEmail } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
