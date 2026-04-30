@@ -212,6 +212,14 @@ const AdminOrdersPanel = () => {
               {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={customerFilter} onValueChange={setCustomerFilter}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[180px]" aria-label="Filtrar por tipo de cliente"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os clientes</SelectItem>
+              <SelectItem value="identified">Identificados</SelectItem>
+              <SelectItem value="visitor">Visitantes</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
