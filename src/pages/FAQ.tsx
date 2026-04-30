@@ -38,22 +38,75 @@ const sections: Section[] = [
       {
         q: "Quais formas de pagamento são aceitas?",
         a: <p>Aceitamos cartão de crédito, PIX e boleto.</p>,
+        aText: "Aceitamos cartão de crédito, PIX e boleto.",
       },
       {
         q: "Posso parcelar minha compra?",
         a: (
-          <div className="space-y-2">
-            <p>Sim!</p>
+          <div className="space-y-3">
+            <p>Sim! Veja as condições de parcelamento no cartão de crédito:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>1 drop: até 3x sem juros</li>
               <li>4 drops: até 6x sem juros</li>
               <li>7+ drops: até 10x sem juros</li>
             </ul>
-            <p className="text-sm">
-              <strong>Observação:</strong> valores com desconto não é possível parcelamento.
+            <div
+              role="note"
+              className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground"
+            >
+              <AlertTriangle
+                className="h-4 w-4 mt-0.5 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
+              <p>
+                <strong>Atenção:</strong> valores com desconto não permitem parcelamento — o
+                pagamento deve ser à vista (PIX ou cartão em 1x).
+              </p>
+            </div>
+          </div>
+        ),
+        aText:
+          "Sim. Parcelamento no cartão de crédito: 1 drop em até 3x sem juros, 4 drops em até 6x sem juros, 7 ou mais drops em até 10x sem juros. Atenção: valores com desconto não permitem parcelamento — o pagamento deve ser à vista (PIX ou cartão em 1x).",
+      },
+      {
+        q: "Quando um valor é considerado “com desconto”?",
+        a: (
+          <div className="space-y-2">
+            <p>
+              Consideramos “com desconto” qualquer pedido em que pelo menos um item esteja com
+              preço promocional aplicado, incluindo:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Descontos individuais ou em lote configurados pela loja;</li>
+              <li>Preço PIX (já reduzido em relação ao preço de cartão);</li>
+              <li>Cupons ou campanhas promocionais ativas no momento da compra.</li>
+            </ul>
+            <p className="text-sm text-muted-foreground">
+              Nesses casos, o pagamento deve ser à vista (PIX ou cartão em 1x). Para parcelar,
+              utilize o valor cheio sem desconto.
             </p>
           </div>
         ),
+        aText:
+          "Consideramos com desconto qualquer pedido em que pelo menos um item esteja com preço promocional aplicado: descontos individuais ou em lote, preço PIX, ou cupons e campanhas ativas. Nesses casos o pagamento deve ser à vista (PIX ou cartão em 1x). Para parcelar, utilize o valor cheio sem desconto.",
+      },
+      {
+        q: "Quais os prazos de confirmação do pagamento?",
+        a: (
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              <strong>PIX:</strong> confirmação imediata após o envio do comprovante.
+            </li>
+            <li>
+              <strong>Cartão de crédito:</strong> aprovação em poucos minutos pela operadora.
+            </li>
+            <li>
+              <strong>Boleto:</strong> compensação em até 2 dias úteis após o pagamento.
+            </li>
+          </ul>
+        ),
+        aText:
+          "PIX: confirmação imediata após o envio do comprovante. Cartão de crédito: aprovação em poucos minutos. Boleto: compensação em até 2 dias úteis.",
       },
     ],
   },
@@ -76,14 +129,18 @@ const sections: Section[] = [
             </p>
           </div>
         ),
+        aText:
+          "Os pedidos seguem o prazo informado na página do produto (pré-venda ou pronta entrega). Para produtos em pré-venda, a estimativa de entrega é de até 90 dias após o recebimento do produto em nossas instalações nos EUA.",
       },
       {
         q: "Vocês enviam para todo o Brasil?",
         a: <p>Sim, realizamos envios para todo o país.</p>,
+        aText: "Sim, realizamos envios para todo o país.",
       },
       {
         q: "Como acompanho meu pedido?",
         a: <p>Você receberá um código de rastreio por e-mail após o envio.</p>,
+        aText: "Você receberá um código de rastreio por e-mail após o envio.",
       },
     ],
   },
@@ -95,10 +152,12 @@ const sections: Section[] = [
       {
         q: "Os produtos são originais?",
         a: <p>Sim, todos os produtos são originais e lacrados.</p>,
+        aText: "Sim, todos os produtos são originais e lacrados.",
       },
       {
         q: "Os drops são limitados?",
         a: <p>Sim. Secret Lair é edição limitada — pode esgotar rapidamente.</p>,
+        aText: "Sim. Secret Lair é edição limitada — pode esgotar rapidamente.",
       },
       {
         q: "Qual a diferença entre os acabamentos?",
@@ -113,6 +172,8 @@ const sections: Section[] = [
             </li>
           </ul>
         ),
+        aText:
+          "Non-Foil: acabamento padrão, sem brilho. Foil: acabamento brilhante tradicional. Rainbow Foil: efeito holográfico com variação de cores conforme a luz. Confetti Foil: acabamento premium com partículas brilhantes estilo confete, mais raro e altamente colecionável.",
       },
     ],
   },
@@ -124,6 +185,7 @@ const sections: Section[] = [
       {
         q: "Posso trocar meu produto?",
         a: <p>Sim, em caso de defeito ou avaria.</p>,
+        aText: "Sim, em caso de defeito ou avaria.",
       },
       {
         q: "Aceitam devolução?",
@@ -132,6 +194,8 @@ const sections: Section[] = [
             Sim, conforme o Código de Defesa do Consumidor (até 7 dias após o recebimento).
           </p>
         ),
+        aText:
+          "Sim, conforme o Código de Defesa do Consumidor (até 7 dias após o recebimento).",
       },
     ],
   },
@@ -177,10 +241,12 @@ const sections: Section[] = [
             </ul>
           </div>
         ),
+        aText: "Você pode falar com a gente via WhatsApp, Instagram ou e-mail.",
       },
       {
         q: "Não encontrei minha dúvida, e agora?",
         a: <p>Entre em contato conosco — teremos prazer em ajudar!</p>,
+        aText: "Entre em contato conosco — teremos prazer em ajudar!",
       },
     ],
   },
