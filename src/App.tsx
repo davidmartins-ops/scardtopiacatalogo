@@ -19,6 +19,7 @@ import TrendingCards from "./pages/TrendingCards.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Terms from "./pages/Terms.tsx";
 import Sobre from "./pages/Sobre.tsx";
+import FAQ from "./pages/FAQ.tsx";
 import OrderDetail from "./pages/OrderDetail.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -94,6 +95,7 @@ const App = () => (
           <Route path="/privacidade" element={<Privacy />} />
           <Route path="/termos" element={<Terms />} />
           <Route path="/sobre" element={<Sobre />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <SiteFooter />
