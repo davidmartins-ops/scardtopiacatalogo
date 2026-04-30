@@ -192,12 +192,39 @@ const SiteFooter = () => {
           </section>
         </div>
 
-        {/* Linha inferior */}
-        <div className="mt-10 pt-6 border-t border-[hsl(var(--brand-header-border))] flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[hsl(var(--brand-header-foreground))]/70">
-          <p>© {year} Spencer's Cardtopia. Todos os direitos reservados.</p>
-          <p>
-            CNPJ informado mediante solicitação · {LOCATION}
+        {/* Bloco LGPD — consentimento de dados */}
+        <div className="mt-10 pt-6 border-t border-[hsl(var(--brand-header-border))] space-y-4">
+          <p className="text-xs text-[hsl(var(--brand-header-foreground))]/75 leading-relaxed max-w-3xl">
+            Ao navegar neste site você concorda com a coleta e o tratamento dos seus dados pessoais
+            conforme nossa{" "}
+            <Link
+              to="/privacidade"
+              className="underline underline-offset-2 text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] rounded"
+            >
+              Política de Privacidade
+            </Link>{" "}
+            e os{" "}
+            <Link
+              to="/termos"
+              className="underline underline-offset-2 text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] rounded"
+            >
+              Termos de Uso
+            </Link>
+            , em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+            Você pode revisar suas preferências de cookies a qualquer momento.
           </p>
+
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[hsl(var(--brand-header-foreground))]/70">
+            <p>© {year} Spencer's Cardtopia. Todos os direitos reservados. · {LOCATION}</p>
+            <button
+              type="button"
+              onClick={openCookieSettings}
+              className="inline-flex items-center min-h-[44px] py-2 px-3 text-xs underline underline-offset-2 text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--brand-header))] rounded"
+              aria-label="Abrir preferências de cookies"
+            >
+              Gerenciar cookies
+            </button>
+          </div>
         </div>
       </div>
     </footer>
