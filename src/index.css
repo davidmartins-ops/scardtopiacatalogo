@@ -157,3 +157,20 @@
   .animate-badge-glow { animation: badge-glow 2s ease-in-out infinite; }
   .animate-badge-glow-primary { animation: badge-glow-primary 2s ease-in-out infinite; }
 }
+
+@layer base {
+  /* Default spacing between Label and the next sibling (input/select/etc.) */
+  /* in simple forms without space-y wrappers. Inside space-y-*, the parent's */
+  /* gap takes precedence and label margin is reset to avoid double spacing.  */
+  [data-ui="label"] {
+    display: inline-block;
+    margin-bottom: 0.375rem; /* 6px - matches space-y-1.5 visual rhythm */
+  }
+  [data-ui="label"]:last-child,
+  [data-ui="label"]:only-child {
+    margin-bottom: 0;
+  }
+  [class*="space-y-"] > [data-ui="label"] {
+    margin-bottom: 0;
+  }
+}
