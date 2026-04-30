@@ -270,7 +270,7 @@ const FAQ = () => {
         name: item.q,
         acceptedAnswer: {
           "@type": "Answer",
-          text: typeof item.a === "string" ? item.a : item.q,
+          text: item.aText,
         },
       })),
     ),
