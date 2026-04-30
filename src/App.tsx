@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound.tsx";
 import AdminReports from "./pages/AdminReports.tsx";
 import AdminNotifications from "./pages/AdminNotifications.tsx";
 import CookieBanner from "./components/CookieBanner";
+import SiteFooter from "./components/SiteFooter";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => (
           <Route path="/termos" element={<Terms />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <SiteFooter />
         <CookieBanner />
       </BrowserRouter>
     </TooltipProvider>
