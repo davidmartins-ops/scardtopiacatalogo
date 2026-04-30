@@ -547,6 +547,33 @@ const Catalogo = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Restore guest cart from localStorage (preserved across login redirects)
+  useEffect(() => {
+    if (inventoryData.length === 0) return;
+    try {
+      const raw = localStorage.getItem("spencer_guest_cart");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { inventory_item_id: string; quantity: number }[];
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      const restored: CartItem[] = [];
+      parsed.forEach((g) => {
+        const item = inventoryData.find((inv) => inv.id === g.inventory_item_id);
+        if (item) restored.push({ item, qty: Math.min(g.quantity, item.quantity) });
+      });
+      if (restored.length > 0) {
+        setCartItems((prev) => {
+          const merged = [...prev];
+          restored.forEach((r) => { if (!merged.find((m) => m.item.id === r.item.id)) merged.push(r); });
+          return merged;
+        });
+      }
+      // Clear only after we've successfully restored (or had nothing to restore)
+      localStorage.removeItem("spencer_guest_cart");
+    } catch {
+      localStorage.removeItem("spencer_guest_cart");
+    }
+  }, [inventoryData]);
+
   useEffect(() => {
     if (!user || savedCartLoading || cartLoadedFromDb.current || inventoryData.length === 0) return;
     if (savedItems.length > 0) {
