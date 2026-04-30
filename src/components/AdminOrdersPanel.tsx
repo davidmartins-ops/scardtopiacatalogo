@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { User, UserCircle2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +38,7 @@ const AdminOrdersPanel = () => {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [customerFilter, setCustomerFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -69,20 +72,24 @@ const AdminOrdersPanel = () => {
       const ts = new Date(o.created_at).getTime();
       if (fromTs !== null && ts < fromTs) return false;
       if (toTs !== null && ts > toTs) return false;
+      const ci = ((o as any).customer_info ?? {}) as { name?: string; full_name?: string; cpf?: string; phone?: string; email?: string };
+      const isIdentified = !!((ci.name || ci.full_name || ci.email || "").trim());
+      if (customerFilter === "identified" && !isIdentified) return false;
+      if (customerFilter === "visitor" && isIdentified) return false;
       if (!search.trim()) return true;
       const s = search.toLowerCase();
       if (o.id.toLowerCase().includes(s)) return true;
       if ((o.user_id ?? "").toLowerCase().includes(s)) return true;
       if ((o.tracking_code ?? "").toLowerCase().includes(s)) return true;
       if ((o.items as any[]).some((it) => (it.name ?? "").toLowerCase().includes(s))) return true;
-      const ci = ((o as any).customer_info ?? {}) as { name?: string; cpf?: string; phone?: string; email?: string };
       if ((ci.name ?? "").toLowerCase().includes(s)) return true;
+      if ((ci.full_name ?? "").toLowerCase().includes(s)) return true;
       if ((ci.email ?? "").toLowerCase().includes(s)) return true;
       if ((ci.cpf ?? "").replace(/\D/g, "").includes(s.replace(/\D/g, ""))) return true;
       if ((ci.phone ?? "").replace(/\D/g, "").includes(s.replace(/\D/g, ""))) return true;
       return false;
     });
-  }, [orders, search, statusFilter, dateFrom, dateTo]);
+  }, [orders, search, statusFilter, customerFilter, dateFrom, dateTo]);
 
   const openEdit = (orderId: string, currentStatus: OrderStatus, currentTracking: string | null) => {
     setEditingOrderId(orderId);
@@ -154,6 +161,7 @@ const AdminOrdersPanel = () => {
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("all");
+    setCustomerFilter("all");
     setDateFrom("");
     setDateTo("");
   };
@@ -167,7 +175,7 @@ const AdminOrdersPanel = () => {
   }
 
   const totalRevenue = filtered.filter((o) => o.status !== "cancelled").reduce((s, o) => s + Number(o.total ?? 0), 0);
-  const hasActiveFilters = search.trim() || statusFilter !== "all" || dateFrom || dateTo;
+  const hasActiveFilters = search.trim() || statusFilter !== "all" || customerFilter !== "all" || dateFrom || dateTo;
 
   return (
     <div className="glass-card p-4 space-y-4">
@@ -202,6 +210,14 @@ const AdminOrdersPanel = () => {
             <SelectContent>
               <SelectItem value="all">Todos os status</SelectItem>
               {STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={customerFilter} onValueChange={setCustomerFilter}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 w-[180px]" aria-label="Filtrar por tipo de cliente"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os clientes</SelectItem>
+              <SelectItem value="identified">Identificados</SelectItem>
+              <SelectItem value="visitor">Visitantes</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -245,7 +261,11 @@ const AdminOrdersPanel = () => {
             const cfg = statusConfig(order.status);
             const Icon = cfg.icon;
             const ci = ((order as any).customer_info ?? {}) as { name?: string; full_name?: string; email?: string; phone?: string };
-            const customerName = (ci.name || ci.full_name || ci.email || "").trim();
+            const ciName = (ci.name || ci.full_name || "").trim();
+            const ciEmail = (ci.email || "").trim();
+            const ciPhone = (ci.phone || "").trim();
+            const isIdentified = !!(ciName || ciEmail);
+            const primaryLabel = ciName || ciEmail || "Cliente";
             return (
               <div key={order.id} className="border border-border rounded-lg p-3 bg-muted/10 space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -257,14 +277,35 @@ const AdminOrdersPanel = () => {
                     <span className="text-[11px] text-muted-foreground">
                       {new Date(order.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
-                    {customerName && (
-                      <Badge variant="outline" className="text-[10px] bg-primary/5 text-foreground border-primary/30">
-                        {customerName}
+                    {isIdentified ? (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] gap-1 bg-primary/5 text-foreground border-primary/30 cursor-help"
+                            >
+                              <UserCircle2 className="h-3 w-3" />
+                              <span className="max-w-[160px] truncate">{primaryLabel}</span>
+                              {ciName && ciEmail && (
+                                <span className="text-muted-foreground/80 hidden sm:inline">· {ciEmail}</span>
+                              )}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            <div className="space-y-0.5">
+                              <div><span className="text-muted-foreground">Nome:</span> {ciName || "—"}</div>
+                              <div><span className="text-muted-foreground">E-mail:</span> {ciEmail || "—"}</div>
+                              <div><span className="text-muted-foreground">Telefone:</span> {ciPhone || "—"}</div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] gap-1 bg-muted/30 text-muted-foreground border-border">
+                        <User className="h-3 w-3" /> Visitante
                       </Badge>
                     )}
-                    <Badge variant="outline" className="text-[10px]">
-                      {order.user_id ? "Cliente" : "Visitante"}
-                    </Badge>
                     {order.tracking_code && (
                       <Badge variant="outline" className="text-[10px] gap-1 bg-accent/5">
                         <Truck className="h-3 w-3" /> {order.tracking_code}
