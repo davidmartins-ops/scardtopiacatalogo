@@ -48,6 +48,9 @@ const sections: Section[] = [
               <li>4 drops: até 6x sem juros</li>
               <li>7+ drops: até 10x sem juros</li>
             </ul>
+            <p className="text-sm">
+              <strong>Observação:</strong> valores com desconto não é possível parcelamento.
+            </p>
           </div>
         ),
       },
