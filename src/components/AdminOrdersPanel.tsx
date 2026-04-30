@@ -161,6 +161,7 @@ const AdminOrdersPanel = () => {
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("all");
+    setCustomerFilter("all");
     setDateFrom("");
     setDateTo("");
   };
@@ -174,7 +175,7 @@ const AdminOrdersPanel = () => {
   }
 
   const totalRevenue = filtered.filter((o) => o.status !== "cancelled").reduce((s, o) => s + Number(o.total ?? 0), 0);
-  const hasActiveFilters = search.trim() || statusFilter !== "all" || dateFrom || dateTo;
+  const hasActiveFilters = search.trim() || statusFilter !== "all" || customerFilter !== "all" || dateFrom || dateTo;
 
   return (
     <div className="glass-card p-4 space-y-4">
