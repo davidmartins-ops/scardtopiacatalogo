@@ -55,7 +55,7 @@ const SiteFooter = () => {
   }, []);
 
   const linkClass =
-    "inline-flex items-center min-h-[44px] py-2 text-sm hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded";
+    "inline-flex items-center min-h-[44px] py-2 text-sm text-[hsl(var(--brand-header-foreground))]/85 hover:text-[hsl(var(--brand-gold))] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-gold))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--brand-header))] rounded";
 
   return (
     <footer
