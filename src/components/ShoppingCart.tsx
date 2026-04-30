@@ -98,6 +98,20 @@ const fetchFreight = async (cep: string): Promise<Omit<FreightEstimate, "loading
 
 const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fabsVisible = true }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
+
+  // Auto-open cart when returning from login with ?openCart=1
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openCart") === "1") {
+      setOpen(true);
+      params.delete("openCart");
+      const qs = params.toString();
+      const newUrl = window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
+
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
