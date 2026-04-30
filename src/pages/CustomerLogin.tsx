@@ -38,7 +38,7 @@ const CustomerLogin = () => {
       toast.error(error.message === "Invalid login credentials" ? "Email ou senha incorretos." : error.message);
     } else {
       toast.success("Bem-vindo de volta!");
-      navigate("/catalogo");
+      navigate(redirectTo);
     }
   };
 
