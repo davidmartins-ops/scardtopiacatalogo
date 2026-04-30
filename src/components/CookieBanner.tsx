@@ -24,6 +24,22 @@ const CookieBanner = () => {
     const handler = () => {
       setShowSettings(true);
       setOpen(true);
+      // Telemetria discreta: confirma que o banner abriu via solicitação externa
+      // e que o consentimento atual foi preservado entre rotas.
+      try {
+        const stored = getStoredConsent();
+        // eslint-disable-next-line no-console
+        console.info("[telemetry] cookie_banner_opened", {
+          via: "footer",
+          route: window.location.pathname,
+          consentPreserved: !!stored,
+          analytics: stored?.analytics ?? null,
+          marketing: stored?.marketing ?? null,
+          ts: Date.now(),
+        });
+      } catch {
+        /* no-op */
+      }
     };
     window.addEventListener("open-cookie-settings", handler);
     return () => window.removeEventListener("open-cookie-settings", handler);
@@ -112,9 +128,10 @@ const CookieBanner = () => {
             </div>
           </div>
           <button
+            type="button"
             onClick={rejectAll}
-            aria-label="Fechar e recusar opcionais"
-            className="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Fechar banner e recusar cookies opcionais"
+            className="shrink-0 inline-flex items-center justify-center h-11 w-11 min-h-[44px] min-w-[44px] rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <X className="h-4 w-4" />
           </button>
