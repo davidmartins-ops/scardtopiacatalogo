@@ -203,22 +203,26 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
-  const buildMessage = () => {
+  const buildMessage = (channel: "whatsapp" | "pix" | null = pendingChannel) => {
+    const isPix = channel === "pix";
+    const channelTotal = amountForChannel(channel);
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
     items.forEach((ci, i) => {
       const discount = ci.item.discount ?? 0;
-      const finalPrice = ci.item.price * (1 - discount / 100);
+      const base = isPix && (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+      const finalPrice = base * (1 - discount / 100);
       msg += `${i + 1}. ${ci.item.name} (${ci.item.id})\n`;
       msg += `   Tipo: ${ci.item.description}`;
       if (ci.item.language) msg += ` | Idioma: ${ci.item.language}`;
       if (ci.item.condition) msg += ` | Estado: ${ci.item.condition}`;
       msg += `\n   Qtd: ${ci.qty} x R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} = R$ ${(finalPrice * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     });
-    msg += `Subtotal: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+    msg += `Forma de pagamento: ${isPix ? "PIX" : "Cartão / WhatsApp"}\n`;
+    msg += `Subtotal: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
 
     if (deliveryMethod === "pickup") {
       msg += `\n📦 Entrega: RETIRADA NO LOCAL\n`;
-      msg += `Total: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
+      msg += `Total: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     } else if (deliveryMethod === "shipping") {
       const methodLabel = shippingInfo.shippingMethod === "pac" ? "PAC" : shippingInfo.shippingMethod === "sedex" ? "SEDEX" : "Transportadora";
       const freightVal = getFreightValue();
@@ -229,7 +233,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += `📮 CEP: ${shippingInfo.cep}\n`;
       if (freightVal > 0) {
         msg += `🚚 Frete estimado: R$ ${freightVal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
-        msg += `Total (com frete): R$ ${(total + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+        msg += `Total (com frete): R$ ${(channelTotal + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
       }
       msg += "\n";
     }
