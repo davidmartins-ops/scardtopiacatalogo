@@ -664,7 +664,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             </div>
             <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
               <p className="text-xs text-muted-foreground">Valor a transferir</p>
-              <p className="text-2xl font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p className="text-2xl font-bold text-primary font-display">R$ {pixTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Anexar comprovante de pagamento</p>
