@@ -182,7 +182,20 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return s + finalPrice * ci.qty;
   }, 0);
 
+  // PIX total: uses price_pix when available, otherwise falls back to card price.
+  // Always reflects the active payment method so the PIX modal shows the correct amount.
+  const pixTotal = items.reduce((s, ci) => {
+    const discount = ci.item.discount ?? 0;
+    const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+    const finalPrice = base * (1 - discount / 100);
+    return s + finalPrice * ci.qty;
+  }, 0);
+
   const totalItems = items.reduce((s, ci) => s + ci.qty, 0);
+
+  // Resolve the amount to charge for the currently selected payment channel.
+  const amountForChannel = (channel: "whatsapp" | "pix" | null) =>
+    channel === "pix" ? pixTotal : total;
 
   const getFreightValue = () => {
     if (shippingInfo.shippingMethod === "pac" && freight.pac) return parseFloat(freight.pac.price);
