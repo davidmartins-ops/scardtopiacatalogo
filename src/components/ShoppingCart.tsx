@@ -182,7 +182,20 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return s + finalPrice * ci.qty;
   }, 0);
 
+  // PIX total: uses price_pix when available, otherwise falls back to card price.
+  // Always reflects the active payment method so the PIX modal shows the correct amount.
+  const pixTotal = items.reduce((s, ci) => {
+    const discount = ci.item.discount ?? 0;
+    const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+    const finalPrice = base * (1 - discount / 100);
+    return s + finalPrice * ci.qty;
+  }, 0);
+
   const totalItems = items.reduce((s, ci) => s + ci.qty, 0);
+
+  // Resolve the amount to charge for the currently selected payment channel.
+  const amountForChannel = (channel: "whatsapp" | "pix" | null) =>
+    channel === "pix" ? pixTotal : total;
 
   const getFreightValue = () => {
     if (shippingInfo.shippingMethod === "pac" && freight.pac) return parseFloat(freight.pac.price);
@@ -190,22 +203,26 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
-  const buildMessage = () => {
+  const buildMessage = (channel: "whatsapp" | "pix" | null = pendingChannel) => {
+    const isPix = channel === "pix";
+    const channelTotal = amountForChannel(channel);
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
     items.forEach((ci, i) => {
       const discount = ci.item.discount ?? 0;
-      const finalPrice = ci.item.price * (1 - discount / 100);
+      const base = isPix && (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+      const finalPrice = base * (1 - discount / 100);
       msg += `${i + 1}. ${ci.item.name} (${ci.item.id})\n`;
       msg += `   Tipo: ${ci.item.description}`;
       if (ci.item.language) msg += ` | Idioma: ${ci.item.language}`;
       if (ci.item.condition) msg += ` | Estado: ${ci.item.condition}`;
       msg += `\n   Qtd: ${ci.qty} x R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} = R$ ${(finalPrice * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     });
-    msg += `Subtotal: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+    msg += `Forma de pagamento: ${isPix ? "PIX" : "Cartão / WhatsApp"}\n`;
+    msg += `Subtotal: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
 
     if (deliveryMethod === "pickup") {
       msg += `\n📦 Entrega: RETIRADA NO LOCAL\n`;
-      msg += `Total: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
+      msg += `Total: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     } else if (deliveryMethod === "shipping") {
       const methodLabel = shippingInfo.shippingMethod === "pac" ? "PAC" : shippingInfo.shippingMethod === "sedex" ? "SEDEX" : "Transportadora";
       const freightVal = getFreightValue();
@@ -216,7 +233,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += `📮 CEP: ${shippingInfo.cep}\n`;
       if (freightVal > 0) {
         msg += `🚚 Frete estimado: R$ ${freightVal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
-        msg += `Total (com frete): R$ ${(total + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+        msg += `Total (com frete): R$ ${(channelTotal + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
       }
       msg += "\n";
     }
@@ -276,7 +293,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         return;
       }
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, {
+        const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
           customerInfo: buildCustomerInfo(),
         });
@@ -286,7 +303,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         }
       }
       setConfirmOrderOpen(false);
-      const msg = buildMessage();
+      const msg = buildMessage("whatsapp");
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
       setOrderError(err?.message ?? "Erro inesperado ao registrar pedido. Tente novamente.");
@@ -296,9 +313,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   };
 
   const handleBuyWhatsApp = () => {
-    const msg = buildMessage();
+    const msg = buildMessage("whatsapp");
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-    if (onOrderPlaced) onOrderPlaced(items, total, { paymentMethod: "whatsapp" });
+    if (onOrderPlaced) onOrderPlaced(items, amountForChannel("whatsapp"), { paymentMethod: "whatsapp" });
   };
 
   const handlePixSelect = () => { setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false); };
@@ -325,10 +342,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       if (uploadError) throw uploadError;
       const { data: signed } = await supabase.storage.from("receipts").createSignedUrl(fileName, 60 * 60 * 24 * 7);
       const urlData = { publicUrl: signed?.signedUrl ?? "" };
-      let msg = buildMessage();
+      let msg = buildMessage("pix");
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, {
+        const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
           receiptUrl: urlData.publicUrl,
           customerInfo: buildCustomerInfo(),
@@ -464,7 +481,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : "WhatsApp"}</span></div>
-              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total</span><span className="font-bold text-primary">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-bold text-primary">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             </div>
             <p className="text-xs text-muted-foreground">
               Ao confirmar, registramos seu pedido e damos baixa no estoque automaticamente.
@@ -647,7 +664,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             </div>
             <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
               <p className="text-xs text-muted-foreground">Valor a transferir</p>
-              <p className="text-2xl font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p className="text-2xl font-bold text-primary font-display">R$ {pixTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Anexar comprovante de pagamento</p>
