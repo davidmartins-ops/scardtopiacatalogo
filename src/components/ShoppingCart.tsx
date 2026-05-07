@@ -342,10 +342,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       if (uploadError) throw uploadError;
       const { data: signed } = await supabase.storage.from("receipts").createSignedUrl(fileName, 60 * 60 * 24 * 7);
       const urlData = { publicUrl: signed?.signedUrl ?? "" };
-      let msg = buildMessage();
+      let msg = buildMessage("pix");
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, {
+        const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
           receiptUrl: urlData.publicUrl,
           customerInfo: buildCustomerInfo(),
