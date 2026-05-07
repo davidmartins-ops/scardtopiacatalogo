@@ -359,7 +359,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       setReceiptSent(true);
       toast.success("Comprovante enviado e pedido registrado!");
       setPixDialogOpen(false);
-    } catch { toast.error("Erro ao enviar comprovante. Tente novamente."); }
+    } catch (err) {
+      console.error("[PIX] Falha no checkout:", err);
+      const msg = (err as { message?: string })?.message;
+      toast.error(msg ? `Erro: ${msg}` : "Erro ao enviar comprovante. Tente novamente.");
+    }
     finally { setUploadingReceipt(false); }
   };
 
