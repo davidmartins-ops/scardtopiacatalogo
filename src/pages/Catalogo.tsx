@@ -656,18 +656,12 @@ const Catalogo = () => {
         payment_method: (meta?.paymentMethod ?? "whatsapp") as never,
         customer_info: (meta?.customerInfo ?? {}) as never,
       } as never).select("id").single();
-      if (orderErr) throw orderErr;
-
-      // Verify trigger ran by checking inventory_audit rows for this order
-      const { data: auditRows, error: auditErr } = await supabase
-        .from("inventory_audit")
-        .select("inventory_item_id, quantity_delta")
-        .eq("order_id", (orderRow as any)?.id ?? "");
-
-      if (auditErr || !auditRows || auditRows.length === 0) {
-        console.error("[CHECKOUT] Stock decrement trigger failed to log audit rows", { auditErr, orderId: (orderRow as any)?.id });
-        return false;
+      if (orderErr) {
+        console.error("[CHECKOUT] Falha ao inserir pedido:", orderErr);
+        toast.error(`Erro ao salvar pedido: ${orderErr.message}`);
+        throw orderErr;
       }
+      console.info("[CHECKOUT] Pedido criado", { orderId: (orderRow as any)?.id, isPix, total });
 
       // Track analytics
       for (const ci of items) {
