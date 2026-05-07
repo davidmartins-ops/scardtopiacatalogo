@@ -293,7 +293,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         return;
       }
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, total, {
+        const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
           customerInfo: buildCustomerInfo(),
         });
@@ -303,7 +303,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         }
       }
       setConfirmOrderOpen(false);
-      const msg = buildMessage();
+      const msg = buildMessage("whatsapp");
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
       setOrderError(err?.message ?? "Erro inesperado ao registrar pedido. Tente novamente.");
