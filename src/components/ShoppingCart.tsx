@@ -481,7 +481,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : "WhatsApp"}</span></div>
-              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total</span><span className="font-bold text-primary">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-bold text-primary">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             </div>
             <p className="text-xs text-muted-foreground">
               Ao confirmar, registramos seu pedido e damos baixa no estoque automaticamente.
