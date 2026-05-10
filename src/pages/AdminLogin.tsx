@@ -20,7 +20,7 @@ const AdminLogin = () => {
     try {
       setLoading(true);
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/`,
+        redirect_uri: `${window.location.origin}/admin`,
       });
       if (result?.error) toast.error("Erro ao fazer login. Tente novamente.");
     } catch (err) {
