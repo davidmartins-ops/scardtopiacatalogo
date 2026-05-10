@@ -639,7 +639,6 @@ const Catalogo = () => {
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
-      const isPix = meta?.paymentMethod === "pix";
       const ci = (meta?.customerInfo ?? {}) as { cpf?: string; phone?: string; address?: Record<string, unknown> };
       // Best-effort: persist cpf/phone/address back into the customer profile
       if (user && (ci.cpf || ci.phone || ci.address)) {
