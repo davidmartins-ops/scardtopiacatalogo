@@ -631,13 +631,14 @@ const Catalogo = () => {
       customerInfo?: Record<string, unknown>;
     }
   ): Promise<boolean> => {
+    const isPix = meta?.paymentMethod === "pix";
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
-      const unitPrice = ci.item.price * (1 - discount / 100);
+      const base = isPix && (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+      const unitPrice = base * (1 - discount / 100);
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {
-      const isPix = meta?.paymentMethod === "pix";
       const ci = (meta?.customerInfo ?? {}) as { cpf?: string; phone?: string; address?: Record<string, unknown> };
       // Best-effort: persist cpf/phone/address back into the customer profile
       if (user && (ci.cpf || ci.phone || ci.address)) {

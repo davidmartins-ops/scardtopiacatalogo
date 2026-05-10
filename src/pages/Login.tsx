@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { lovable } from "@/integrations/lovable/index";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import useSEO from "@/hooks/use-seo";
@@ -7,20 +7,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Loader2, Share2 } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
 import { useActiveBanners } from "@/hooks/use-banners";
 
+// Allowlist of internal redirect targets (prevents open redirect / phishing).
+const REDIRECT_ALLOWLIST = [
+  "/catalogo",
+  "/conta",
+  "/tendencias",
+  "/sobre",
+  "/faq",
+  "/colecao",
+  "/privacidade",
+  "/termos",
+];
+
+const sanitizeRedirect = (raw: string | null): string => {
+  if (!raw) return "/catalogo";
+  // Must be a relative internal path
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/catalogo";
+  // Prevent protocol-relative or backslash tricks
+  if (raw.includes("\\") || raw.includes("@")) return "/catalogo";
+  // Strip query/hash before matching
+  const path = raw.split(/[?#]/)[0];
+  const ok = REDIRECT_ALLOWLIST.some((p) => path === p || path.startsWith(`${p}/`));
+  return ok ? raw : "/catalogo";
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const rawRedirect = searchParams.get("redirect");
-  const redirectTo =
-    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/catalogo";
+  const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get("redirect")), [searchParams]);
 
-  const { session: customerSession, signInWithEmail, signUpWithEmail, loading: authLoading } = useCustomerAuth();
+  const {
+    session: customerSession,
+    signInWithEmail,
+    signUpWithEmail,
+    requestPasswordReset,
+    loading: authLoading,
+  } = useCustomerAuth();
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -29,10 +66,15 @@ const Login = () => {
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [keepLogged, setKeepLogged] = useState(true);
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useSEO({
     title: "Entre na sua conta",
@@ -60,7 +102,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signInWithEmail(loginEmail, loginPassword);
+    const { error } = await signInWithEmail(loginEmail, loginPassword, { persist: keepLogged });
     setLoading(false);
     if (error) {
       toast.error(
@@ -106,6 +148,21 @@ const Login = () => {
     }
   };
 
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    const { error } = await requestPasswordReset(forgotEmail);
+    setForgotLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Se o e-mail existir, enviaremos as instruções de recuperação.");
+    setForgotOpen(false);
+    setForgotEmail("");
+  };
+
   const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
   const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % banners.length);
 
@@ -140,7 +197,7 @@ const Login = () => {
       {/* Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img src={loginBg} alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background/95" />
       </div>
 
       {/* Header */}
@@ -152,9 +209,10 @@ const Login = () => {
             className="w-24 sm:w-32 md:w-36 drop-shadow-2xl animate-float"
           />
         </Link>
+        {/* Admin link only on desktop in header (mobile is below the card) */}
         <Link
           to="/admin/login"
-          className="hidden sm:inline-flex items-center text-xs sm:text-sm text-muted-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="hidden sm:inline-flex items-center text-xs sm:text-sm text-foreground/70 hover:text-primary transition-colors px-3 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Acesso administrativo
         </Link>
@@ -167,14 +225,17 @@ const Login = () => {
       >
         {/* Hero */}
         <div className="w-full max-w-md text-center mb-6 animate-fade-in">
+          <p className="text-xs sm:text-sm font-bold tracking-wider text-primary mb-3 uppercase font-body drop-shadow">
+            ✨ Seu universo Secret Lair começa aqui! ✨
+          </p>
           <h1
             className="text-2xl sm:text-3xl font-bold text-foreground"
             style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: "0.05em" }}
           >
             <span className="text-gradient">Entre na sua conta</span>
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2 font-body">
-            Acompanhe pedidos, favoritos, decks e novidades.
+          <p className="text-sm sm:text-base text-foreground/85 mt-2 font-body drop-shadow">
+            Suas cartas favoritas, tendências, decks e novidades, tudo em um só lugar!
           </p>
         </div>
 
@@ -214,6 +275,28 @@ const Login = () => {
                     onChange={(e) => setLoginPassword(e.target.value)}
                   />
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs sm:text-sm text-foreground/85 cursor-pointer select-none">
+                    <Checkbox
+                      checked={keepLogged}
+                      onCheckedChange={(v) => setKeepLogged(v === true)}
+                      aria-label="Manter conectado neste dispositivo"
+                    />
+                    Manter conectado neste dispositivo
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(loginEmail);
+                      setForgotOpen(true);
+                    }}
+                    className="text-xs sm:text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
+
                 <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar como cliente"}
                 </Button>
@@ -255,7 +338,7 @@ const Login = () => {
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                   />
-                  <p id="reg-pw-help" className="text-xs text-muted-foreground mt-1">
+                  <p id="reg-pw-help" className="text-xs text-foreground/70 mt-1">
                     Mínimo 6 caracteres.
                   </p>
                 </div>
@@ -288,7 +371,7 @@ const Login = () => {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">ou</span>
+              <span className="bg-card px-2 text-foreground/70">ou</span>
             </div>
           </div>
 
@@ -303,10 +386,20 @@ const Login = () => {
           </Button>
 
           <div className="mt-4 text-center">
-            <Link to="/catalogo" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link to="/catalogo" className="text-sm text-foreground/80 hover:text-primary transition-colors">
               Continuar como visitante e ver o catálogo
             </Link>
           </div>
+        </div>
+
+        {/* Discreet admin link — mobile placement, right below the card */}
+        <div className="sm:hidden w-full max-w-md mt-4 flex justify-center">
+          <Link
+            to="/admin/login"
+            className="text-xs text-foreground/75 hover:text-primary transition-colors px-4 py-3 rounded-md min-h-[44px] inline-flex items-center"
+          >
+            Acesso administrativo
+          </Link>
         </div>
 
         {/* Banner carousel (secondary) */}
@@ -339,7 +432,7 @@ const Login = () => {
                 <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">
                   {banners[currentBanner]?.title}
                 </h2>
-                <p className="text-sm text-foreground/60 font-body mt-1">{banners[currentBanner]?.subtitle}</p>
+                <p className="text-sm text-foreground/80 font-body mt-1">{banners[currentBanner]?.subtitle}</p>
               </div>
 
               {banners.length > 1 && (
@@ -393,17 +486,39 @@ const Login = () => {
             </div>
           </div>
         )}
-
-        {/* Discreet admin link — mobile placement */}
-        <div className="sm:hidden mt-8">
-          <Link
-            to="/admin/login"
-            className="text-xs text-muted-foreground/70 hover:text-primary transition-colors px-3 py-2"
-          >
-            Acesso administrativo
-          </Link>
-        </div>
       </main>
+
+      {/* Forgot password dialog */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="sm:max-w-sm bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display">Recuperar senha</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail e enviaremos um link para criar uma nova senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgot} className="space-y-3">
+            <div>
+              <Label htmlFor="forgot-email">E-mail</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                required
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={forgotLoading}>
+                {forgotLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

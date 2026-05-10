@@ -26,6 +26,7 @@ import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminReports from "./pages/AdminReports.tsx";
 import AdminNotifications from "./pages/AdminNotifications.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
 
@@ -61,7 +62,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;
@@ -79,9 +80,11 @@ const App = () => (
         </a>
         <Routes>
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
