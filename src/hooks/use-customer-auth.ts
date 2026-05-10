@@ -56,8 +56,33 @@ export const useCustomerAuth = () => {
     await supabase.auth.signOut();
   }, []);
 
-  const signInWithEmail = useCallback(async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
+  const signInWithEmail = useCallback(
+    async (email: string, password: string, options?: { persist?: boolean }) => {
+      const result = await supabase.auth.signInWithPassword({ email, password });
+      // "Manter conectado": when persist=false, move token to sessionStorage so it
+      // is cleared once the browser/tab is closed.
+      if (!result.error && options?.persist === false) {
+        try {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          const key = `sb-${projectId}-auth-token`;
+          const v = localStorage.getItem(key);
+          if (v) {
+            sessionStorage.setItem(key, v);
+            localStorage.removeItem(key);
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      return result;
+    },
+    [],
+  );
+
+  const requestPasswordReset = useCallback(async (email: string) => {
+    return supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, name: string) => {
@@ -71,5 +96,5 @@ export const useCustomerAuth = () => {
     });
   }, []);
 
-  return { session, user, profile, loading, signOut, signInWithEmail, signUpWithEmail, fetchProfile };
+  return { session, user, profile, loading, signOut, signInWithEmail, signUpWithEmail, requestPasswordReset, fetchProfile };
 };
