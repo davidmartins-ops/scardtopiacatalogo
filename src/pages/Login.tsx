@@ -406,6 +406,25 @@ const Login = () => {
                 <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
                 </Button>
+
+                {signupSuccessEmail && (
+                  <div className="rounded-md border border-primary/30 bg-primary/10 p-3 text-xs sm:text-sm text-foreground/90 space-y-2">
+                    <p>
+                      Enviamos um e-mail de confirmação para <strong>{signupSuccessEmail}</strong>. Confira sua
+                      caixa de entrada e a pasta de spam.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResendEmail(signupSuccessEmail);
+                        setResendOpen(true);
+                      }}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Reenviar e-mail de confirmação
+                    </button>
+                  </div>
+                )}
               </form>
             </TabsContent>
           </Tabs>
