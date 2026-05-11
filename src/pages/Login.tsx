@@ -56,6 +56,7 @@ const Login = () => {
     signInWithEmail,
     signUpWithEmail,
     requestPasswordReset,
+    resendConfirmationEmail,
     loading: authLoading,
   } = useCustomerAuth();
 
@@ -71,10 +72,15 @@ const Login = () => {
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+  const [signupSuccessEmail, setSignupSuccessEmail] = useState<string | null>(null);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  const [resendOpen, setResendOpen] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   useSEO({
     title: "Entre na sua conta",
@@ -105,11 +111,19 @@ const Login = () => {
     const { error } = await signInWithEmail(loginEmail, loginPassword, { persist: keepLogged });
     setLoading(false);
     if (error) {
-      toast.error(
-        error.message === "Invalid login credentials"
-          ? "Não foi possível entrar com os dados informados. Verifique e-mail e senha e tente novamente."
-          : error.message,
-      );
+      const msg = error.message || "";
+      const notConfirmed = /confirm/i.test(msg) || /not.*confirmed/i.test(msg);
+      if (notConfirmed) {
+        toast.error("E-mail ainda não confirmado. Reenvie o e-mail de confirmação.");
+        setResendEmail(loginEmail);
+        setResendOpen(true);
+      } else {
+        toast.error(
+          msg === "Invalid login credentials"
+            ? "Não foi possível entrar com os dados informados. Verifique e-mail e senha e tente novamente."
+            : msg,
+        );
+      }
     } else {
       toast.success("Bem-vindo de volta!");
       navigate(redirectTo);
@@ -130,7 +144,24 @@ const Login = () => {
     const { error } = await signUpWithEmail(regEmail, regPassword, regName);
     setLoading(false);
     if (error) toast.error(error.message);
-    else toast.success("Conta criada! Verifique seu email para confirmar o cadastro.");
+    else {
+      toast.success("Conta criada! Verifique seu email para confirmar o cadastro.");
+      setSignupSuccessEmail(regEmail);
+    }
+  };
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail) return;
+    setResendLoading(true);
+    const { error } = await resendConfirmationEmail(resendEmail);
+    setResendLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Se houver um cadastro pendente, o e-mail de confirmação foi reenviado.");
+    setResendOpen(false);
   };
 
   const handleGoogle = async () => {
@@ -300,6 +331,19 @@ const Login = () => {
                 <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar como cliente"}
                 </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResendEmail(loginEmail);
+                      setResendOpen(true);
+                    }}
+                    className="text-xs sm:text-sm text-foreground/80 hover:text-primary hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
+                  >
+                    Não recebeu o e-mail? Reenviar confirmação
+                  </button>
+                </div>
               </form>
             </TabsContent>
 
@@ -362,6 +406,25 @@ const Login = () => {
                 <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
                 </Button>
+
+                {signupSuccessEmail && (
+                  <div className="rounded-md border border-primary/30 bg-primary/10 p-3 text-xs sm:text-sm text-foreground/90 space-y-2">
+                    <p>
+                      Enviamos um e-mail de confirmação para <strong>{signupSuccessEmail}</strong>. Confira sua
+                      caixa de entrada e a pasta de spam.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResendEmail(signupSuccessEmail);
+                        setResendOpen(true);
+                      }}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Reenviar e-mail de confirmação
+                    </button>
+                  </div>
+                )}
               </form>
             </TabsContent>
           </Tabs>
@@ -514,6 +577,37 @@ const Login = () => {
               </Button>
               <Button type="submit" disabled={forgotLoading}>
                 {forgotLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resendOpen} onOpenChange={setResendOpen}>
+        <DialogContent className="sm:max-w-sm bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display">Reenviar e-mail de confirmação</DialogTitle>
+            <DialogDescription>
+              Informe o e-mail usado no cadastro para receber um novo link de confirmação.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResend} className="space-y-3">
+            <div>
+              <Label htmlFor="resend-email">E-mail</Label>
+              <Input
+                id="resend-email"
+                type="email"
+                required
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setResendOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={resendLoading}>
+                {resendLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reenviar"}
               </Button>
             </DialogFooter>
           </form>

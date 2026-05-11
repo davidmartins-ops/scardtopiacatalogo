@@ -85,6 +85,14 @@ export const useCustomerAuth = () => {
     });
   }, []);
 
+  const resendConfirmationEmail = useCallback(async (email: string) => {
+    return supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+  }, []);
+
   const signUpWithEmail = useCallback(async (email: string, password: string, name: string) => {
     return supabase.auth.signUp({
       email,
@@ -96,5 +104,5 @@ export const useCustomerAuth = () => {
     });
   }, []);
 
-  return { session, user, profile, loading, signOut, signInWithEmail, signUpWithEmail, requestPasswordReset, fetchProfile };
+  return { session, user, profile, loading, signOut, signInWithEmail, signUpWithEmail, requestPasswordReset, resendConfirmationEmail, fetchProfile };
 };
