@@ -331,6 +331,19 @@ const Login = () => {
                 <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar como cliente"}
                 </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResendEmail(loginEmail);
+                      setResendOpen(true);
+                    }}
+                    className="text-xs sm:text-sm text-foreground/80 hover:text-primary hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
+                  >
+                    Não recebeu o e-mail? Reenviar confirmação
+                  </button>
+                </div>
               </form>
             </TabsContent>
 
