@@ -104,5 +104,5 @@ export const useCustomerAuth = () => {
     });
   }, []);
 
-  return { session, user, profile, loading, signOut, signInWithEmail, signUpWithEmail, requestPasswordReset, fetchProfile };
+  return { session, user, profile, loading, signOut, signInWithEmail, signUpWithEmail, requestPasswordReset, resendConfirmationEmail, fetchProfile };
 };
