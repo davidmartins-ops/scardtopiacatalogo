@@ -111,11 +111,19 @@ const Login = () => {
     const { error } = await signInWithEmail(loginEmail, loginPassword, { persist: keepLogged });
     setLoading(false);
     if (error) {
-      toast.error(
-        error.message === "Invalid login credentials"
-          ? "Não foi possível entrar com os dados informados. Verifique e-mail e senha e tente novamente."
-          : error.message,
-      );
+      const msg = error.message || "";
+      const notConfirmed = /confirm/i.test(msg) || /not.*confirmed/i.test(msg);
+      if (notConfirmed) {
+        toast.error("E-mail ainda não confirmado. Reenvie o e-mail de confirmação.");
+        setResendEmail(loginEmail);
+        setResendOpen(true);
+      } else {
+        toast.error(
+          msg === "Invalid login credentials"
+            ? "Não foi possível entrar com os dados informados. Verifique e-mail e senha e tente novamente."
+            : msg,
+        );
+      }
     } else {
       toast.success("Bem-vindo de volta!");
       navigate(redirectTo);
@@ -136,7 +144,24 @@ const Login = () => {
     const { error } = await signUpWithEmail(regEmail, regPassword, regName);
     setLoading(false);
     if (error) toast.error(error.message);
-    else toast.success("Conta criada! Verifique seu email para confirmar o cadastro.");
+    else {
+      toast.success("Conta criada! Verifique seu email para confirmar o cadastro.");
+      setSignupSuccessEmail(regEmail);
+    }
+  };
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail) return;
+    setResendLoading(true);
+    const { error } = await resendConfirmationEmail(resendEmail);
+    setResendLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Se houver um cadastro pendente, o e-mail de confirmação foi reenviado.");
+    setResendOpen(false);
   };
 
   const handleGoogle = async () => {
