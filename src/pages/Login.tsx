@@ -56,6 +56,7 @@ const Login = () => {
     signInWithEmail,
     signUpWithEmail,
     requestPasswordReset,
+    resendConfirmationEmail,
     loading: authLoading,
   } = useCustomerAuth();
 
@@ -71,10 +72,15 @@ const Login = () => {
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+  const [signupSuccessEmail, setSignupSuccessEmail] = useState<string | null>(null);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  const [resendOpen, setResendOpen] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   useSEO({
     title: "Entre na sua conta",
