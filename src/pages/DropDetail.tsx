@@ -206,6 +206,36 @@ const DropDetail = () => {
               </p>
             </div>
 
+            <Button
+              size="lg"
+              className="w-full gap-2 font-semibold"
+              disabled={drop.quantity <= 0}
+              onClick={() => {
+                try {
+                  const raw = localStorage.getItem("spencer_guest_cart");
+                  const current = raw ? (JSON.parse(raw) as { inventory_item_id: string; quantity: number }[]) : [];
+                  const idx = current.findIndex((c) => c.inventory_item_id === drop.id);
+                  if (idx >= 0) {
+                    if (current[idx].quantity >= drop.quantity) {
+                      toast.error("Quantidade máxima atingida.");
+                      return;
+                    }
+                    current[idx].quantity += 1;
+                  } else {
+                    current.push({ inventory_item_id: drop.id, quantity: 1 });
+                  }
+                  localStorage.setItem("spencer_guest_cart", JSON.stringify(current));
+                  toast.success(`${drop.name} adicionado ao carrinho!`);
+                  navigate("/catalogo");
+                } catch {
+                  toast.error("Não foi possível adicionar ao carrinho.");
+                }
+              }}
+            >
+              <Plus className="h-5 w-5" />
+              {drop.quantity <= 0 ? "Esgotado" : "Adicionar ao carrinho"}
+            </Button>
+
             {(drop as any).drop_description && (
               <div className="glass-card p-4 rounded-xl">
                 <h3 className="text-sm font-semibold text-foreground mb-2">Descrição</h3>
