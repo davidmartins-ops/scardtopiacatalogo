@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Package, Sparkles, Circle, Rainbow, Share2, MessageCircle, Twitter, Instagram, Copy } from "lucide-react";
+import { ArrowLeft, Package, Sparkles, Circle, Rainbow, Share2, MessageCircle, Twitter, Instagram, Copy, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
