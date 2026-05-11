@@ -582,6 +582,37 @@ const Login = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={resendOpen} onOpenChange={setResendOpen}>
+        <DialogContent className="sm:max-w-sm bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display">Reenviar e-mail de confirmação</DialogTitle>
+            <DialogDescription>
+              Informe o e-mail usado no cadastro para receber um novo link de confirmação.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResend} className="space-y-3">
+            <div>
+              <Label htmlFor="resend-email">E-mail</Label>
+              <Input
+                id="resend-email"
+                type="email"
+                required
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setResendOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={resendLoading}>
+                {resendLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reenviar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
