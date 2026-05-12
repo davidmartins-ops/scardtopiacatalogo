@@ -108,6 +108,40 @@ const InventoryTable = ({ data }: Props) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // Dedicated pricing dialog (Precificação) — clean focused editor for price, price_pix and discount.
+  const [pricingItem, setPricingItem] = useState<InventoryItem | null>(null);
+  const [pricingForm, setPricingForm] = useState({ price: "", price_pix: "", discount: "" });
+  const [savingPricing, setSavingPricing] = useState(false);
+
+  const openPricingDialog = (item: InventoryItem) => {
+    setPricingItem(item);
+    setPricingForm({
+      price: String(item.price ?? 0),
+      price_pix: String(item.price_pix ?? 0),
+      discount: String(item.discount ?? 0),
+    });
+  };
+
+  const savePricing = async () => {
+    if (!pricingItem) return;
+    const price = parseFloat(pricingForm.price);
+    const pricePix = parseFloat(pricingForm.price_pix || "0");
+    const discount = parseFloat(pricingForm.discount || "0");
+    if (isNaN(price) || price < 0) { toast.error("Preço cartão inválido."); return; }
+    if (isNaN(pricePix) || pricePix < 0) { toast.error("Preço PIX inválido."); return; }
+    if (pricePix > price) { toast.error("PIX não pode ser maior que o preço cartão."); return; }
+    if (isNaN(discount) || discount < 0 || discount > 100) { toast.error("Desconto deve estar entre 0 e 100."); return; }
+    setSavingPricing(true);
+    const { error } = await supabase.from("inventory")
+      .update({ price, price_pix: pricePix, discount } as any)
+      .eq("id", pricingItem.id);
+    setSavingPricing(false);
+    if (error) { toast.error("Erro ao salvar precificação."); return; }
+    toast.success("Precificação atualizada!");
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    setPricingItem(null);
+  };
+
   const queryClient = useQueryClient();
 
   const categories = useMemo(() => [...new Set(data.map((i) => i.category))].sort(), [data]);
