@@ -329,31 +329,31 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             </Button>
           )}
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex w-full min-w-0 items-center gap-1.5 box-border">
             {isSingle ? (
-              <Link to={`/catalogo/single/${encodeURIComponent(item.id)}`} className="flex-1" onClick={() => trackEvent("more_info_click", item)}>
+              <Link to={`/catalogo/single/${encodeURIComponent(item.id)}`} className="flex-1 min-w-0" onClick={() => trackEvent("more_info_click", item)}>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1"
+                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1 truncate"
                 >
-                  🧐 Mais Informações
+                  <span className="truncate">🧐 Mais Informações</span>
                 </Button>
               </Link>
             ) : (
-              <Link to={`/catalogo/drop/${item.id}`} className="flex-1" onClick={() => trackEvent("drop_content_click", item)}>
+              <Link to={`/catalogo/drop/${item.id}`} className="flex-1 min-w-0" onClick={() => trackEvent("drop_content_click", item)}>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
+                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 truncate"
                 >
-                  🔍 Conteúdo do Drop
+                  <span className="truncate">🔍 Conteúdo do Drop</span>
                 </Button>
               </Link>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-150 shrink-0">
+                <Button size="icon" variant="ghost" aria-label="Compartilhar" className="h-9 w-9 shrink-0 basis-9 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-150">
                   <Share2 className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
