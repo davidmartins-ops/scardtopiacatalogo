@@ -582,7 +582,16 @@ const InventoryTable = ({ data }: Props) => {
                           </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
-                          <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-sm bg-muted border-border w-20" />
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[9px] uppercase text-muted-foreground w-8">Cart.</span>
+                              <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-7 text-xs bg-muted border-border w-20" />
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[9px] uppercase text-muted-foreground w-8">PIX</span>
+                              <Input type="number" min="0" step="0.01" value={editForm.price_pix} onChange={(e) => setEditForm((p) => ({ ...p, price_pix: e.target.value }))} className="h-7 text-xs bg-muted border-border w-20" />
+                            </div>
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
                           <div className="flex items-center gap-1 justify-center">
