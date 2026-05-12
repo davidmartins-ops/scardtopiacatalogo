@@ -853,6 +853,59 @@ const InventoryTable = ({ data }: Props) => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Pricing Dialog — Precificação dedicada (cartão, PIX, desconto) com preview e validação */}
+      <Dialog open={!!pricingItem} onOpenChange={(open) => !open && setPricingItem(null)}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground text-base flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-emerald-500" /> Precificação — {pricingItem?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 font-body">
+            <div className="space-y-2">
+              <Label htmlFor="pricing-card">Preço cartão (R$) *</Label>
+              <Input id="pricing-card" type="number" min="0" step="0.01" value={pricingForm.price} onChange={(e) => setPricingForm((p) => ({ ...p, price: e.target.value }))} className="bg-muted border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pricing-pix">Preço PIX (R$)</Label>
+              <Input id="pricing-pix" type="number" min="0" step="0.01" value={pricingForm.price_pix} onChange={(e) => setPricingForm((p) => ({ ...p, price_pix: e.target.value }))} className="bg-muted border-border" placeholder="Deixe 0 para não exibir PIX" />
+              <p className="text-[11px] text-muted-foreground">PIX deve ser menor ou igual ao preço cartão. Use 0 para ocultar.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pricing-discount">Desconto (%)</Label>
+              <Input id="pricing-discount" type="number" min="0" max="100" step="1" value={pricingForm.discount} onChange={(e) => setPricingForm((p) => ({ ...p, discount: e.target.value }))} className="bg-muted border-border" />
+            </div>
+
+            {(() => {
+              const p = parseFloat(pricingForm.price || "0");
+              const pix = parseFloat(pricingForm.price_pix || "0");
+              const d = parseFloat(pricingForm.discount || "0");
+              const finalCard = p * (1 - (isNaN(d) ? 0 : d) / 100);
+              const installment = finalCard / 3;
+              const economy = pix > 0 && pix < finalCard ? finalCard - pix : 0;
+              return (
+                <div className="rounded-lg bg-muted/40 border border-border p-3 space-y-1.5 text-xs">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Final cartão</span><span className="font-semibold tabular-nums">R$ {finalCard.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Em até 3x s/ juros</span><span className="tabular-nums">R$ {installment.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                  {pix > 0 && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">PIX</span><span className="font-semibold tabular-nums text-emerald-500">R$ {pix.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                  )}
+                  {economy > 0 && (
+                    <div className="flex justify-between text-emerald-500"><span>Economia no PIX</span><span className="tabular-nums">R$ {economy.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPricingItem(null)}>Cancelar</Button>
+            <Button onClick={savePricing} disabled={savingPricing} className="gap-1">
+              <Check className="h-4 w-4" /> {savingPricing ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
