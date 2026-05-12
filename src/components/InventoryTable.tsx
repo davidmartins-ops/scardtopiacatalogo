@@ -680,6 +680,9 @@ const InventoryTable = ({ data }: Props) => {
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-emerald-400 hover:bg-emerald-400/10" onClick={() => openSinglesDialog(item)} title="Singles do drop">
                               <Plus className="h-3.5 w-3.5" />
                             </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10" onClick={() => openPricingDialog(item)} title="Precificação (cartão / PIX / desconto)">
+                              <DollarSign className="h-3.5 w-3.5" />
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => startEdit(item)}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
