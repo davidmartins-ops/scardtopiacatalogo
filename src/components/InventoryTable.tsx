@@ -638,8 +638,13 @@ const InventoryTable = ({ data }: Props) => {
                             <span className="text-muted-foreground text-[10px]">—</span>
                           )}
                         </td>
-                        <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs">
-                          R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs whitespace-nowrap">
+                          <div className="flex flex-col leading-tight">
+                            <span>R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            {item.price_pix && item.price_pix > 0 ? (
+                              <span className="text-[10px] text-emerald-500 font-semibold">PIX R$ {item.price_pix.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            ) : null}
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 text-center">
                           {discountEditId === item.id ? (
