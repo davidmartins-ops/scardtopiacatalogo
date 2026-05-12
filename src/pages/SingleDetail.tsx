@@ -20,6 +20,7 @@ const SingleDetail = () => {
   const [loadingCard, setLoadingCard] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     if (!item) return;
@@ -108,9 +109,29 @@ const SingleDetail = () => {
                 className="absolute inset-0 w-full h-full object-contain"
                 containerClassName="absolute inset-0"
                 onLoad={() => setImgLoaded(true)}
-                onError={() => {
+                onError={async () => {
                   setImgError(true);
-                  console.warn("[SingleDetail] image failed to load", { src: bestImage, id: item.id });
+                  // Diagnostic: try to determine cause (network/CORS/4xx/5xx)
+                  let diagnosis = "unknown";
+                  try {
+                    if (!bestImage) diagnosis = "empty_src";
+                    else {
+                      const res = await fetch(bestImage, { method: "HEAD", mode: "cors" });
+                      diagnosis = `http_${res.status}`;
+                    }
+                  } catch (e) {
+                    diagnosis = `network_or_cors:${(e as Error).message}`;
+                  }
+                  console.warn("[SingleDetail] image failed", { src: bestImage, id: item.id, diagnosis });
+                  try {
+                    supabase.from("analytics_events").insert({
+                      event_type: "image_load_error",
+                      inventory_item_id: item.id,
+                      item_name: item.name,
+                      category: item.category,
+                      metadata: { src: bestImage, diagnosis } as any,
+                    } as any);
+                  } catch {}
                 }}
               />
               {!imgLoaded && (
@@ -205,9 +226,11 @@ const SingleDetail = () => {
 
           <Button
             size="lg"
-            className="w-full gap-2 font-semibold min-h-11"
-            disabled={item.quantity <= 0}
+            className="w-full gap-2 font-semibold min-h-[44px]"
+            disabled={item.quantity <= 0 || addingToCart}
+            aria-busy={addingToCart}
             onClick={() => {
+              setAddingToCart(true);
               try {
                 const raw = localStorage.getItem("spencer_guest_cart");
                 const current = raw ? (JSON.parse(raw) as { inventory_item_id: string; quantity: number }[]) : [];
@@ -215,6 +238,7 @@ const SingleDetail = () => {
                 if (idx >= 0) {
                   if (current[idx].quantity >= item.quantity) {
                     toast.error("Quantidade máxima atingida.");
+                    setAddingToCart(false);
                     return;
                   }
                   current[idx].quantity += 1;
@@ -223,14 +247,15 @@ const SingleDetail = () => {
                 }
                 localStorage.setItem("spencer_guest_cart", JSON.stringify(current));
                 toast.success(`${item.name} adicionado ao carrinho!`);
-                navigate("/catalogo");
+                setTimeout(() => navigate("/catalogo"), 250);
               } catch {
                 toast.error("Não foi possível adicionar ao carrinho.");
+                setAddingToCart(false);
               }
             }}
           >
-            <Plus className="h-5 w-5" />
-            {item.quantity <= 0 ? "Esgotado" : "Adicionar ao carrinho"}
+            {addingToCart ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+            {item.quantity <= 0 ? "Esgotado" : addingToCart ? "Adicionando..." : "Adicionar ao carrinho"}
           </Button>
         </div>
       </div>
