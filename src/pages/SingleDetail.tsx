@@ -157,7 +157,7 @@ const SingleDetail = () => {
               {card.mana_cost && (
                 <div>
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Custo de Mana</p>
-                  <p className="text-lg font-mono text-foreground">{card.mana_cost}</p>
+                  <ManaCost cost={card.mana_cost} className="text-base mt-1" />
                 </div>
               )}
               {displayType && (
@@ -202,6 +202,36 @@ const SingleDetail = () => {
             {(item.price_pix ?? 0) > 0 && <p className="text-sm font-semibold text-success">💰 PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>}
             <p className="text-sm text-muted-foreground">{item.quantity <= 0 ? "Esgotado" : `📦 ${item.quantity} em estoque`}</p>
           </div>
+
+          <Button
+            size="lg"
+            className="w-full gap-2 font-semibold min-h-11"
+            disabled={item.quantity <= 0}
+            onClick={() => {
+              try {
+                const raw = localStorage.getItem("spencer_guest_cart");
+                const current = raw ? (JSON.parse(raw) as { inventory_item_id: string; quantity: number }[]) : [];
+                const idx = current.findIndex((c) => c.inventory_item_id === item.id);
+                if (idx >= 0) {
+                  if (current[idx].quantity >= item.quantity) {
+                    toast.error("Quantidade máxima atingida.");
+                    return;
+                  }
+                  current[idx].quantity += 1;
+                } else {
+                  current.push({ inventory_item_id: item.id, quantity: 1 });
+                }
+                localStorage.setItem("spencer_guest_cart", JSON.stringify(current));
+                toast.success(`${item.name} adicionado ao carrinho!`);
+                navigate("/catalogo");
+              } catch {
+                toast.error("Não foi possível adicionar ao carrinho.");
+              }
+            }}
+          >
+            <Plus className="h-5 w-5" />
+            {item.quantity <= 0 ? "Esgotado" : "Adicionar ao carrinho"}
+          </Button>
         </div>
       </div>
     </div>
