@@ -7,14 +7,16 @@ interface ImageZoomProps {
   alt: string;
   className?: string;
   containerClassName?: string;
+  onLoad?: () => void;
+  onError?: () => void;
 }
 
-const ImageZoom = ({ src, alt, className = "", containerClassName = "" }: ImageZoomProps) => {
+const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, onError }: ImageZoomProps) => {
   const [open, setOpen] = useState(false);
 
   return (
     <div className={`relative group/zoom ${containerClassName}`}>
-      <img src={src} alt={alt} className={className} />
+      <img src={src} alt={alt} className={className} loading="lazy" decoding="async" onLoad={onLoad} onError={onError} />
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
-import { ArrowLeft, Loader2, Package, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Sparkles, Plus, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 import ImageZoom from "@/components/ImageZoom";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchScryfallCard, pickBestImageUrl, type ScryfallCardData } from "@/lib/scryfall-cache";
+import ManaCost from "@/components/ManaCost";
+import { toast } from "sonner";
 
 const SingleDetail = () => {
   const { singleId } = useParams<{ singleId: string }>();
@@ -16,6 +18,8 @@ const SingleDetail = () => {
   const item = inventoryData.find((i) => i.id === singleId && i.product_type === "single");
   const [card, setCard] = useState<ScryfallCardData | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     if (!item) return;
@@ -96,18 +100,39 @@ const SingleDetail = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Fixed-aspect container prevents layout shift between low/high-res versions */}
         <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative aspect-[2.5/3.5] w-full max-w-[420px] mx-auto">
-          {bestImage ? (
-            <ImageZoom
-              src={bestImage}
-              alt={displayName}
-              className="absolute inset-0 w-full h-full object-contain"
-              containerClassName="absolute inset-0"
-            />
+          {bestImage && !imgError ? (
+            <>
+              <ImageZoom
+                src={bestImage}
+                alt={displayName}
+                className="absolute inset-0 w-full h-full object-contain"
+                containerClassName="absolute inset-0"
+                onLoad={() => setImgLoaded(true)}
+                onError={() => {
+                  setImgError(true);
+                  console.warn("[SingleDetail] image failed to load", { src: bestImage, id: item.id });
+                }}
+              />
+              {!imgLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+            </>
+          ) : imgError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2 p-4 text-center">
+              <ImageOff className="h-10 w-10" />
+              <p className="text-xs">Não foi possível carregar a imagem.</p>
+            </div>
+          ) : loadingCard ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground"><Package className="h-12 w-12" /></div>
-          )}
-          {loadingCard && !bestImage && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/40"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
+              <Package className="h-12 w-12" />
+              <p className="text-xs">Sem imagem cadastrada</p>
+            </div>
           )}
         </div>
 
@@ -132,7 +157,7 @@ const SingleDetail = () => {
               {card.mana_cost && (
                 <div>
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Custo de Mana</p>
-                  <p className="text-lg font-mono text-foreground">{card.mana_cost}</p>
+                  <ManaCost cost={card.mana_cost} className="text-base mt-1" />
                 </div>
               )}
               {displayType && (
@@ -177,6 +202,36 @@ const SingleDetail = () => {
             {(item.price_pix ?? 0) > 0 && <p className="text-sm font-semibold text-success">💰 PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>}
             <p className="text-sm text-muted-foreground">{item.quantity <= 0 ? "Esgotado" : `📦 ${item.quantity} em estoque`}</p>
           </div>
+
+          <Button
+            size="lg"
+            className="w-full gap-2 font-semibold min-h-11"
+            disabled={item.quantity <= 0}
+            onClick={() => {
+              try {
+                const raw = localStorage.getItem("spencer_guest_cart");
+                const current = raw ? (JSON.parse(raw) as { inventory_item_id: string; quantity: number }[]) : [];
+                const idx = current.findIndex((c) => c.inventory_item_id === item.id);
+                if (idx >= 0) {
+                  if (current[idx].quantity >= item.quantity) {
+                    toast.error("Quantidade máxima atingida.");
+                    return;
+                  }
+                  current[idx].quantity += 1;
+                } else {
+                  current.push({ inventory_item_id: item.id, quantity: 1 });
+                }
+                localStorage.setItem("spencer_guest_cart", JSON.stringify(current));
+                toast.success(`${item.name} adicionado ao carrinho!`);
+                navigate("/catalogo");
+              } catch {
+                toast.error("Não foi possível adicionar ao carrinho.");
+              }
+            }}
+          >
+            <Plus className="h-5 w-5" />
+            {item.quantity <= 0 ? "Esgotado" : "Adicionar ao carrinho"}
+          </Button>
         </div>
       </div>
     </div>
