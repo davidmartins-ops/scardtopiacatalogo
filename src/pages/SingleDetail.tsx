@@ -100,18 +100,39 @@ const SingleDetail = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Fixed-aspect container prevents layout shift between low/high-res versions */}
         <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative aspect-[2.5/3.5] w-full max-w-[420px] mx-auto">
-          {bestImage ? (
-            <ImageZoom
-              src={bestImage}
-              alt={displayName}
-              className="absolute inset-0 w-full h-full object-contain"
-              containerClassName="absolute inset-0"
-            />
+          {bestImage && !imgError ? (
+            <>
+              <ImageZoom
+                src={bestImage}
+                alt={displayName}
+                className="absolute inset-0 w-full h-full object-contain"
+                containerClassName="absolute inset-0"
+                onLoad={() => setImgLoaded(true)}
+                onError={() => {
+                  setImgError(true);
+                  console.warn("[SingleDetail] image failed to load", { src: bestImage, id: item.id });
+                }}
+              />
+              {!imgLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+            </>
+          ) : imgError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2 p-4 text-center">
+              <ImageOff className="h-10 w-10" />
+              <p className="text-xs">Não foi possível carregar a imagem.</p>
+            </div>
+          ) : loadingCard ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground"><Package className="h-12 w-12" /></div>
-          )}
-          {loadingCard && !bestImage && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/40"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
+              <Package className="h-12 w-12" />
+              <p className="text-xs">Sem imagem cadastrada</p>
+            </div>
           )}
         </div>
 
