@@ -166,15 +166,16 @@ const DropDetail = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Main Product */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 flex items-center justify-center">
-            {drop.image_url ? (
-              <ImageZoom src={drop.image_url} alt={drop.name} className="w-full h-auto object-contain" containerClassName="w-full" />
-            ) : (
-              <div className="w-full aspect-square flex items-center justify-center text-muted-foreground bg-muted/10">
-                <Package className="h-16 w-16" />
-              </div>
-            )}
-          </div>
+          <ProductMedia
+            src={drop.image_url}
+            alt={drop.name}
+            itemId={drop.id}
+            itemName={drop.name}
+            category={drop.category}
+            className="rounded-2xl border border-border/40 aspect-square w-full"
+            imageClassName="absolute inset-0 w-full h-full object-contain"
+          />
+
 
           <div className="space-y-4">
             <div>
@@ -211,7 +212,8 @@ const DropDetail = () => {
               </p>
             </div>
 
-            <AddToCartButton drop={drop} navigate={navigate} />
+            <AddToCartButton item={drop} />
+
 
             {(drop as any).drop_description && (
               <div className="glass-card p-4 rounded-xl">
