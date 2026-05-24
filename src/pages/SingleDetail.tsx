@@ -103,62 +103,24 @@ const SingleDetail = () => {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Fixed-aspect container prevents layout shift between low/high-res versions */}
-        <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative aspect-[2.5/3.5] w-full max-w-[420px] mx-auto">
-          {bestImage && !imgError ? (
-            <>
-              <ImageZoom
-                src={bestImage}
-                alt={displayName}
-                className="absolute inset-0 w-full h-full object-contain"
-                containerClassName="absolute inset-0"
-                onLoad={() => setImgLoaded(true)}
-                onError={async () => {
-                  setImgError(true);
-                  // Diagnostic: try to determine cause (network/CORS/4xx/5xx)
-                  let diagnosis = "unknown";
-                  try {
-                    if (!bestImage) diagnosis = "empty_src";
-                    else {
-                      const res = await fetch(bestImage, { method: "HEAD", mode: "cors" });
-                      diagnosis = `http_${res.status}`;
-                    }
-                  } catch (e) {
-                    diagnosis = `network_or_cors:${(e as Error).message}`;
-                  }
-                  console.warn("[SingleDetail] image failed", { src: bestImage, id: item.id, diagnosis });
-                  try {
-                    supabase.from("analytics_events").insert({
-                      event_type: "image_load_error",
-                      inventory_item_id: item.id,
-                      item_name: item.name,
-                      category: item.category,
-                      metadata: { src: bestImage, diagnosis } as any,
-                    } as any);
-                  } catch {}
-                }}
-              />
-              {!imgLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              )}
-            </>
-          ) : imgError ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2 p-4 text-center">
-              <ImageOff className="h-10 w-10" />
-              <p className="text-xs">Não foi possível carregar a imagem.</p>
-            </div>
-          ) : loadingCard ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+        <div className="w-full max-w-[420px] mx-auto">
+          {loadingCard && !bestImage ? (
+            <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative aspect-[2.5/3.5] w-full flex items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
-              <Package className="h-12 w-12" />
-              <p className="text-xs">Sem imagem cadastrada</p>
-            </div>
+            <ProductMedia
+              src={bestImage}
+              alt={displayName}
+              itemId={item.id}
+              itemName={item.name}
+              category={item.category}
+              className="rounded-2xl border border-border/40 aspect-[2.5/3.5] w-full"
+              imageClassName="absolute inset-0 w-full h-full object-contain"
+            />
           )}
         </div>
+
 
         <div className="space-y-4">
           <div>
@@ -228,39 +190,8 @@ const SingleDetail = () => {
             <p className="text-sm text-muted-foreground">{item.quantity <= 0 ? "Esgotado" : `📦 ${item.quantity} em estoque`}</p>
           </div>
 
-          <Button
-            size="lg"
-            className="w-full gap-2 font-semibold min-h-[44px]"
-            disabled={item.quantity <= 0 || addingToCart}
-            aria-busy={addingToCart}
-            onClick={() => {
-              setAddingToCart(true);
-              try {
-                const raw = localStorage.getItem("spencer_guest_cart");
-                const current = raw ? (JSON.parse(raw) as { inventory_item_id: string; quantity: number }[]) : [];
-                const idx = current.findIndex((c) => c.inventory_item_id === item.id);
-                if (idx >= 0) {
-                  if (current[idx].quantity >= item.quantity) {
-                    toast.error("Quantidade máxima atingida.");
-                    setAddingToCart(false);
-                    return;
-                  }
-                  current[idx].quantity += 1;
-                } else {
-                  current.push({ inventory_item_id: item.id, quantity: 1 });
-                }
-                localStorage.setItem("spencer_guest_cart", JSON.stringify(current));
-                toast.success(`${item.name} adicionado ao carrinho!`);
-                setTimeout(() => navigate("/catalogo"), 250);
-              } catch {
-                toast.error("Não foi possível adicionar ao carrinho.");
-                setAddingToCart(false);
-              }
-            }}
-          >
-            {addingToCart ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-            {item.quantity <= 0 ? "Esgotado" : addingToCart ? "Adicionando..." : "Adicionar ao carrinho"}
-          </Button>
+          <AddToCartButton item={item} />
+
         </div>
       </div>
     </div>
