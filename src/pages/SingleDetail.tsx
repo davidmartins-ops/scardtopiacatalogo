@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
-import { ArrowLeft, Loader2, Package, Sparkles, Plus, ImageOff } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
-import ImageZoom from "@/components/ImageZoom";
+import ProductMedia from "@/components/ProductMedia";
+import AddToCartButton from "@/components/AddToCartButton";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchScryfallCard, pickBestImageUrl, type ScryfallCardData } from "@/lib/scryfall-cache";
 import ManaCost from "@/components/ManaCost";
-import { toast } from "sonner";
+
 
 const SingleDetail = () => {
   const { singleId } = useParams<{ singleId: string }>();
@@ -18,9 +19,7 @@ const SingleDetail = () => {
   const item = inventoryData.find((i) => i.id === singleId && i.product_type === "single");
   const [card, setCard] = useState<ScryfallCardData | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
-  const [imgError, setImgError] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [addingToCart, setAddingToCart] = useState(false);
+
 
   useEffect(() => {
     if (!item) return;
