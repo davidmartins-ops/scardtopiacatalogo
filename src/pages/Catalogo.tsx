@@ -471,7 +471,9 @@ const PromoHighlights = ({
       <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide items-stretch">
         {promoItems.map((item) => {
           const discount = item.discount ?? 0;
-          const finalPrice = item.price * (1 - discount / 100);
+          // Desconto aplica APENAS ao PIX.
+          const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
+          const finalPrice = Math.max(0, pixBase * (1 - discount / 100));
 
           return (
             <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col h-auto">
@@ -502,14 +504,13 @@ const PromoHighlights = ({
                 <div className="min-h-[40px]">
                   <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3]">{item.name}</h3>
                 </div>
-                {/* Prices - fixed min height to align across cards */}
+                {/* Prices - PIX em destaque (desconto vale só p/ PIX) */}
                 <div className="space-y-0.5 mt-1.5 min-h-[52px]">
-                  <span className="text-[22px] sm:text-[24px] font-bold text-primary font-display block leading-none">
+                  <span className="text-[22px] sm:text-[24px] font-bold text-success font-display block leading-none">
                     R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
-                  <span className="text-[12px] text-muted-foreground line-through block">
-                    R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
+                  <span className="text-[10px] font-semibold text-success/90 uppercase tracking-wide block">💰 no PIX · -{discount}%</span>
+                  <span className="text-[12px] text-muted-foreground block">💳 Cartão R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
                 {/* Button anchored to bottom */}
                 <div className="mt-auto pt-2">
