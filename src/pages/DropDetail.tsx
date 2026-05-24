@@ -1,56 +1,18 @@
-import { useState } from "react";
-import { useParams, Link, useNavigate, type NavigateFunction } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useInventory } from "@/hooks/use-inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Package, Sparkles, Circle, Rainbow, Share2, MessageCircle, Twitter, Instagram, Copy, Plus } from "lucide-react";
+import { ArrowLeft, Package, Sparkles, Circle, Rainbow, Share2, MessageCircle, Twitter, Instagram, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.png";
 import ImageZoom from "@/components/ImageZoom";
+import ProductMedia from "@/components/ProductMedia";
+import AddToCartButton from "@/components/AddToCartButton";
 import { toast } from "sonner";
-import type { InventoryItem } from "@/data/inventory";
 
-const AddToCartButton = ({ drop, navigate }: { drop: InventoryItem; navigate: NavigateFunction }) => {
-  const [loading, setLoading] = useState(false);
-  return (
-    <Button
-      size="lg"
-      className="w-full gap-2 font-semibold min-h-[44px]"
-      disabled={drop.quantity <= 0 || loading}
-      aria-busy={loading}
-      onClick={() => {
-        setLoading(true);
-        try {
-          const raw = localStorage.getItem("spencer_guest_cart");
-          const current = raw ? (JSON.parse(raw) as { inventory_item_id: string; quantity: number }[]) : [];
-          const idx = current.findIndex((c) => c.inventory_item_id === drop.id);
-          if (idx >= 0) {
-            if (current[idx].quantity >= drop.quantity) {
-              toast.error("Quantidade máxima atingida.");
-              setLoading(false);
-              return;
-            }
-            current[idx].quantity += 1;
-          } else {
-            current.push({ inventory_item_id: drop.id, quantity: 1 });
-          }
-          localStorage.setItem("spencer_guest_cart", JSON.stringify(current));
-          toast.success(`${drop.name} adicionado ao carrinho!`);
-          setTimeout(() => navigate("/catalogo"), 250);
-        } catch {
-          toast.error("Não foi possível adicionar ao carrinho.");
-          setLoading(false);
-        }
-      }}
-    >
-      {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-      {drop.quantity <= 0 ? "Esgotado" : loading ? "Adicionando..." : "Adicionar ao carrinho"}
-    </Button>
-  );
-};
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
@@ -204,15 +166,16 @@ const DropDetail = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Main Product */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-2xl overflow-hidden border border-border/40 bg-muted/20 flex items-center justify-center">
-            {drop.image_url ? (
-              <ImageZoom src={drop.image_url} alt={drop.name} className="w-full h-auto object-contain" containerClassName="w-full" />
-            ) : (
-              <div className="w-full aspect-square flex items-center justify-center text-muted-foreground bg-muted/10">
-                <Package className="h-16 w-16" />
-              </div>
-            )}
-          </div>
+          <ProductMedia
+            src={drop.image_url}
+            alt={drop.name}
+            itemId={drop.id}
+            itemName={drop.name}
+            category={drop.category}
+            className="rounded-2xl border border-border/40 aspect-square w-full"
+            imageClassName="absolute inset-0 w-full h-full object-contain"
+          />
+
 
           <div className="space-y-4">
             <div>
@@ -249,7 +212,8 @@ const DropDetail = () => {
               </p>
             </div>
 
-            <AddToCartButton drop={drop} navigate={navigate} />
+            <AddToCartButton item={drop} />
+
 
             {(drop as any).drop_description && (
               <div className="glass-card p-4 rounded-xl">
