@@ -56,16 +56,16 @@ const formatBRL = (value: number) =>
 
 const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
   const discount = item.discount ?? 0;
-  const priceCard = Math.max(0, item.price * (1 - discount / 100));
+  // Desconto aplica SOMENTE ao PIX. Preço cartão é sempre item.price cheio.
+  const priceCard = item.price;
+  const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
+  const pricePix = Math.max(0, pixBase * (1 - discount / 100));
   const priceCardStr = formatBRL(priceCard);
-  const rawPix = Number(item.price_pix ?? 0);
-  const hasPix = rawPix > 0 && rawPix !== priceCard;
-  const pricePix = hasPix ? rawPix : 0;
-  const pricePixStr = hasPix ? formatBRL(pricePix) : "";
+  const pricePixStr = formatBRL(pricePix);
 
-  const priceLines = hasPix
-    ? `Valor Cartão: ${priceCardStr}\nValor PIX: ${pricePixStr}`
-    : `Valor Cartão: ${priceCardStr}`;
+  const priceLines = pricePix < priceCard
+    ? `Valor PIX: ${pricePixStr}\nValor Cartão: ${priceCardStr}`
+    : `Valor: ${priceCardStr}`;
 
   const text = `${item.name}\n${priceLines}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
   const url = window.location.href;
@@ -175,7 +175,11 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
   const config = descriptionConfig[item.description];
   const Icon = config?.icon ?? Circle;
   const discount = item.discount ?? 0;
-  const finalPrice = item.price * (1 - discount / 100);
+  // Desconto aplica SOMENTE ao PIX. Cartão permanece com valor cheio.
+  const cardPrice = item.price;
+  const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
+  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
+  const hasPixHighlight = pixFinal < cardPrice;
   const isOutOfStock = item.quantity <= 0;
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -280,29 +284,33 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             </div>
           ) : (
             <>
-              {discount > 0 ? (
+              {hasPixHighlight ? (
                 <div className="space-y-0.5">
-                  <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-primary font-display leading-none">
-                    R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {/* PIX como valor primário (maior destaque) */}
+                  <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-success font-display leading-none block">
+                    R$ {pixFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
-                  <span className="text-[13px] sm:text-[14px] text-muted-foreground line-through block">
-                    R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
-                  <p className="text-[9px] text-muted-foreground italic">* Parcelamento s/ juros apenas para valores não promocionais</p>
+                  <p className="text-[11px] sm:text-[12px] font-semibold text-success/90 uppercase tracking-wide">
+                    💰 no PIX{discount > 0 ? ` · -${discount}%` : ""}
+                  </p>
+                  {/* Preço cartão como referência secundária */}
+                  <p className="text-[13px] sm:text-[14px] text-muted-foreground">
+                    💳 Cartão: R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                  {!isSingle && cardPrice >= 50 && (
+                    <p className="text-[11px] sm:text-[12px] text-muted-foreground">
+                      até 3x de R$ {(cardPrice / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s/ juros
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-0.5">
                   <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-primary font-display leading-none block">
-                    R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
-                  {(item.price_pix ?? 0) > 0 && (
-                    <p className="text-[12px] sm:text-[13px] font-semibold text-success">
-                      💰 PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                  )}
-                  {!isSingle && item.price >= 50 && (
+                  {!isSingle && cardPrice >= 50 && (
                     <p className="text-[12px] sm:text-[13px] text-muted-foreground">
-                      💳 até 3x de R$ {(item.price / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s/ juros
+                      💳 até 3x de R$ {(cardPrice / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s/ juros
                     </p>
                   )}
                 </div>
