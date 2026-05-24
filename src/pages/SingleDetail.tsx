@@ -76,7 +76,11 @@ const SingleDetail = () => {
   }
 
   const discount = item.discount ?? 0;
-  const finalPrice = item.price * (1 - discount / 100);
+  // Desconto aplica SOMENTE ao PIX. Cartão permanece com valor cheio.
+  const cardPrice = item.price;
+  const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
+  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
+  const hasPixHighlight = pixFinal < cardPrice;
   const displayName = card?.printed_name || card?.name || item.name;
   const displayType = card?.printed_type_line || card?.type_line || "";
   const displayText = card?.printed_text || card?.oracle_text || "";
@@ -211,16 +215,17 @@ const SingleDetail = () => {
           )}
 
           <div className="space-y-1">
-            {discount > 0 ? (
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-lg text-muted-foreground line-through">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                <span className="text-3xl font-bold text-gradient">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                <Badge className="bg-destructive/10 text-destructive border-destructive/30">-{discount}%</Badge>
+            {hasPixHighlight ? (
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <span className="text-3xl font-bold text-success font-display">R$ {pixFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  <Badge className="bg-success/10 text-success border-success/30">💰 PIX{discount > 0 ? ` · -${discount}%` : ""}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">💳 Cartão: R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
               </div>
             ) : (
-              <span className="text-3xl font-bold text-gradient">R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+              <span className="text-3xl font-bold text-gradient">R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
             )}
-            {(item.price_pix ?? 0) > 0 && <p className="text-sm font-semibold text-success">💰 PIX: R$ {(item.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>}
             <p className="text-sm text-muted-foreground">{item.quantity <= 0 ? "Esgotado" : `📦 ${item.quantity} em estoque`}</p>
           </div>
 
