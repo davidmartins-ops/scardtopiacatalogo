@@ -634,8 +634,10 @@ const Catalogo = () => {
     const isPix = meta?.paymentMethod === "pix";
     const orderItems: OrderItem[] = items.map((ci) => {
       const discount = ci.item.discount ?? 0;
-      const base = isPix && (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
-      const unitPrice = base * (1 - discount / 100);
+      // Desconto aplica APENAS no PIX. Cartão fica com valor cheio.
+      const unitPrice = isPix
+        ? ((ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price) * (1 - discount / 100)
+        : ci.item.price;
       return { id: ci.item.id, name: ci.item.name, description: ci.item.description, language: ci.item.language, condition: ci.item.condition, quantity: ci.qty, unit_price: unitPrice, total_price: unitPrice * ci.qty };
     });
     try {

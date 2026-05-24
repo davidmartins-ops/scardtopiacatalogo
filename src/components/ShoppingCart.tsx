@@ -176,14 +176,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }
   }, [shippingInfo.cep]);
 
-  const total = items.reduce((s, ci) => {
-    const discount = ci.item.discount ?? 0;
-    const finalPrice = ci.item.price * (1 - discount / 100);
-    return s + finalPrice * ci.qty;
-  }, 0);
+  // Total no cartão: SEM desconto (o desconto vale apenas para PIX).
+  const total = items.reduce((s, ci) => s + ci.item.price * ci.qty, 0);
 
-  // PIX total: uses price_pix when available, otherwise falls back to card price.
-  // Always reflects the active payment method so the PIX modal shows the correct amount.
+  // Total PIX: aplica o desconto sobre price_pix (ou price quando price_pix não existir).
   const pixTotal = items.reduce((s, ci) => {
     const discount = ci.item.discount ?? 0;
     const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
@@ -209,8 +205,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
     items.forEach((ci, i) => {
       const discount = ci.item.discount ?? 0;
-      const base = isPix && (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
-      const finalPrice = base * (1 - discount / 100);
+      // Desconto aplica APENAS no PIX.
+      const finalPrice = isPix
+        ? ((ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price) * (1 - discount / 100)
+        : ci.item.price;
       msg += `${i + 1}. ${ci.item.name} (${ci.item.id})\n`;
       msg += `   Tipo: ${ci.item.description}`;
       if (ci.item.language) msg += ` | Idioma: ${ci.item.language}`;
@@ -399,7 +397,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <div className="flex-1 overflow-y-auto space-y-3 py-4">
                 {items.map((ci) => {
                   const discount = ci.item.discount ?? 0;
-                  const finalPrice = ci.item.price * (1 - discount / 100);
+                  // Linha do carrinho mostra preço cartão (cheio) e, se houver, o PIX como alternativa em destaque.
+                  const cardLine = ci.item.price;
+                  const pixBase = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+                  const pixLine = pixBase * (1 - discount / 100);
+                  const showPix = pixLine < cardLine;
                   return (
                     <div key={ci.item.id} className="flex gap-3 p-3 rounded-lg border border-border bg-muted/20">
                       {ci.item.image_url ? (
@@ -416,7 +418,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                             <span className="text-sm font-medium w-6 text-center">{ci.qty}</span>
                             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onUpdateQty(ci.item.id, ci.qty + 1)} disabled={ci.qty >= ci.item.quantity}><Plus className="h-3 w-3" /></Button>
                           </div>
-                          <span className="text-sm font-bold text-primary">R$ {(finalPrice * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          <div className="text-right">
+                            {showPix && (
+                              <span className="block text-sm font-bold text-success">PIX R$ {(pixLine * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            )}
+                            <span className={`block ${showPix ? "text-[11px] text-muted-foreground" : "text-sm font-bold text-primary"}`}>
+                              {showPix ? "Cartão " : ""}R$ {(cardLine * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onRemove(ci.item.id)}><Trash2 className="h-3.5 w-3.5" /></Button>

@@ -142,7 +142,11 @@ const DropDetail = () => {
   }
 
   const discount = drop.discount ?? 0;
-  const finalPrice = drop.price * (1 - discount / 100);
+  // Desconto aplica SOMENTE ao PIX. Cartão permanece cheio.
+  const cardPrice = drop.price;
+  const pixBase = (drop.price_pix ?? 0) > 0 ? (drop.price_pix as number) : drop.price;
+  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
+  const hasPixHighlight = pixFinal < cardPrice;
   const config = descriptionConfig[drop.description];
   const Icon = config?.icon ?? Circle;
 
@@ -163,9 +167,8 @@ const DropDetail = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
                 {(() => {
-                  const discount = drop.discount ?? 0;
-                  const priceCard = Math.max(0, drop.price * (1 - discount / 100));
-                  const pricePix = Number(drop.price_pix ?? 0);
+                  const priceCard = cardPrice;
+                  const pricePix = pixFinal;
                   const prices = { priceCard, pricePix };
                   return (
                     <>
@@ -230,17 +233,16 @@ const DropDetail = () => {
             </div>
 
             <div className="space-y-1">
-              {discount > 0 ? (
-                <div className="flex items-baseline gap-3 flex-wrap">
-                  <span className="text-lg text-muted-foreground line-through">R$ {drop.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  <span className="text-3xl font-bold text-gradient font-display">R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-sm font-bold">-{discount}%</Badge>
+              {hasPixHighlight ? (
+                <div className="space-y-1">
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <span className="text-3xl font-bold text-success font-display">R$ {pixFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                    <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-sm font-bold">💰 PIX{discount > 0 ? ` · -${discount}%` : ""}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">💳 Cartão: R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                 </div>
               ) : (
-                <span className="text-3xl font-bold text-gradient font-display">R$ {drop.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-              )}
-              {(drop.price_pix ?? 0) > 0 && (
-                <p className="text-sm font-semibold text-success">💰 PIX: R$ {(drop.price_pix ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                <span className="text-3xl font-bold text-gradient font-display">R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
               )}
               <p className="text-sm text-muted-foreground">
                 {drop.quantity <= 0 ? "Esgotado" : drop.quantity === 1 ? "🔥 Última unidade!" : `📦 ${drop.quantity} em estoque`}
