@@ -289,7 +289,7 @@ const SiteFooter = () => {
           </p>
 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[hsl(var(--brand-header-foreground))]/75">
-            <p>© {year} Spencer's Cardtopia. Todos os direitos reservados. · {LOCATION}</p>
+            <p>© {year} Spencer's Cardtopia. Todos os direitos reservados. · CNPJ: {CNPJ} · {LOCATION}</p>
             <button
               type="button"
               onClick={openCookieSettings}
