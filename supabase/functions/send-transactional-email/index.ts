@@ -240,13 +240,7 @@ Deno.serve(async (req) => {
     )
   }
 
-      JSON.stringify({ success: false, reason: 'email_suppressed' }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
+
 
   // 4. Render React Email template to HTML and plain text
   const html = await renderAsync(
