@@ -67,13 +67,16 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Token is required' }, 400)
   }
 
+  // Hash the incoming plaintext token to look it up against the stored hash.
+  const tokenHash = await sha256Hex(token)
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Look up the token
+  // Look up by hash; the plaintext token is never persisted.
   const { data: tokenRecord, error: lookupError } = await supabase
     .from('email_unsubscribe_tokens')
-    .select('*')
-    .eq('token', token)
+    .select('email, used_at')
+    .eq('token_hash', tokenHash)
     .maybeSingle()
 
   if (lookupError || !tokenRecord) {
@@ -94,10 +97,11 @@ Deno.serve(async (req) => {
   const { data: updated, error: updateError } = await supabase
     .from('email_unsubscribe_tokens')
     .update({ used_at: new Date().toISOString() })
-    .eq('token', token)
+    .eq('token_hash', tokenHash)
     .is('used_at', null)
     .select()
     .maybeSingle()
+
 
   if (updateError) {
     console.error('Failed to mark token as used', { error: updateError, token })
