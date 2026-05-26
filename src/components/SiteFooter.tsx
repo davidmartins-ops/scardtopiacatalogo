@@ -9,6 +9,7 @@ const WHATSAPP_URL = `https://wa.me/${CONTACT_PHONE_TEL.replace("+", "")}`;
 const INSTAGRAM_URL = "https://instagram.com/spencerscardtopia";
 const LOCATION = "Salesópolis/SP";
 const HOURS = "Todos os dias, 08h às 22h";
+const CNPJ = "66.981.664/0001-97";
 
 const ORG_JSONLD_ID = "site-footer-org-jsonld";
 
