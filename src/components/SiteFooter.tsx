@@ -9,6 +9,7 @@ const WHATSAPP_URL = `https://wa.me/${CONTACT_PHONE_TEL.replace("+", "")}`;
 const INSTAGRAM_URL = "https://instagram.com/spencerscardtopia";
 const LOCATION = "Salesópolis/SP";
 const HOURS = "Todos os dias, 08h às 22h";
+const CNPJ = "66.981.664/0001-97";
 
 const ORG_JSONLD_ID = "site-footer-org-jsonld";
 
@@ -288,7 +289,7 @@ const SiteFooter = () => {
           </p>
 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-[hsl(var(--brand-header-foreground))]/75">
-            <p>© {year} Spencer's Cardtopia. Todos os direitos reservados. · {LOCATION}</p>
+            <p>© {year} Spencer's Cardtopia. Todos os direitos reservados. · CNPJ: {CNPJ} · {LOCATION}</p>
             <button
               type="button"
               onClick={openCookieSettings}
