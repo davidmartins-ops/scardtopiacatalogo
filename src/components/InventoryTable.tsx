@@ -98,11 +98,41 @@ const InventoryTable = ({ data }: Props) => {
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
   const [discountValue, setDiscountValue] = useState("");
+  const [discountError, setDiscountError] = useState<string | null>(null);
 
   // Batch discount state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchDiscountOpen, setBatchDiscountOpen] = useState(false);
   const [batchDiscountValue, setBatchDiscountValue] = useState("");
+  const [batchDiscountError, setBatchDiscountError] = useState<string | null>(null);
+
+  // Normaliza entrada de desconto: aceita vírgula/ponto, remove "%" e caracteres não numéricos,
+  // limita a 3 dígitos inteiros + 2 decimais, e clampa o número final em 0–100.
+  const normalizeDiscountInput = (raw: string): string => {
+    if (raw == null) return "";
+    let s = String(raw).replace(/%/g, "").replace(",", ".").trim();
+    s = s.replace(/[^0-9.]/g, "");
+    const firstDot = s.indexOf(".");
+    if (firstDot !== -1) {
+      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, "");
+    }
+    const [intPart = "", decPart] = s.split(".");
+    const intTrim = intPart.slice(0, 3);
+    s = decPart !== undefined ? `${intTrim}.${decPart.slice(0, 2)}` : intTrim;
+    if (s === "" || s === ".") return s;
+    const n = parseFloat(s);
+    if (!isNaN(n) && n > 100) return "100";
+    return s;
+  };
+
+  const validateDiscount = (raw: string): { ok: boolean; value: number; message?: string } => {
+    const s = String(raw ?? "").trim();
+    if (s === "") return { ok: true, value: 0 };
+    const n = parseFloat(s.replace(",", "."));
+    if (isNaN(n)) return { ok: false, value: NaN, message: "Informe um número válido." };
+    if (n < 0 || n > 100) return { ok: false, value: n, message: "O desconto deve estar entre 0% e 100%." };
+    return { ok: true, value: n };
+  };
 
   const [imageDialogItem, setImageDialogItem] = useState<InventoryItem | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -226,16 +256,18 @@ const InventoryTable = ({ data }: Props) => {
   };
 
   const saveDiscount = async (id: string) => {
-    const discount = parseFloat(discountValue || "0");
-    if (isNaN(discount) || discount < 0 || discount > 100) {
-      toast.error("Desconto deve ser entre 0% e 100%.");
+    const v = validateDiscount(discountValue);
+    if (!v.ok) {
+      setDiscountError(v.message ?? "Valor inválido.");
+      toast.error(v.message ?? "Desconto inválido.");
       return;
     }
+    setDiscountError(null);
     setSaving(true);
-    const { error } = await supabase.from("inventory").update({ discount }).eq("id", id);
+    const { error } = await supabase.from("inventory").update({ discount: v.value }).eq("id", id);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar desconto."); return; }
-    toast.success(`Desconto de ${discount}% aplicado!`);
+    toast.success(`Desconto de ${v.value}% aplicado!`);
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     setDiscountEditId(null);
   };
@@ -259,17 +291,19 @@ const InventoryTable = ({ data }: Props) => {
   };
 
   const applyBatchDiscount = async () => {
-    const discount = parseFloat(batchDiscountValue || "0");
-    if (isNaN(discount) || discount < 0 || discount > 100) {
-      toast.error("Desconto deve ser entre 0% e 100%.");
+    const v = validateDiscount(batchDiscountValue);
+    if (!v.ok) {
+      setBatchDiscountError(v.message ?? "Valor inválido.");
+      toast.error(v.message ?? "Desconto inválido.");
       return;
     }
+    setBatchDiscountError(null);
     setSaving(true);
     const ids = Array.from(selectedIds);
-    const { error } = await supabase.from("inventory").update({ discount }).in("id", ids);
+    const { error } = await supabase.from("inventory").update({ discount: v.value }).in("id", ids);
     setSaving(false);
     if (error) { toast.error("Erro ao aplicar desconto em lote."); return; }
-    toast.success(`Desconto de ${discount}% aplicado a ${ids.length} produto(s)!`);
+    toast.success(`Desconto de ${v.value}% aplicado a ${ids.length} produto(s)!`);
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     setBatchDiscountOpen(false);
     setBatchDiscountValue("");
@@ -594,11 +628,29 @@ const InventoryTable = ({ data }: Props) => {
                           </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
-                          <div className="flex items-center gap-1 justify-center">
-                            <Input type="number" min="0" max="100" step="1" value={editForm.discount} onChange={(e) => setEditForm((p) => ({ ...p, discount: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14 px-1 text-center" />
-                            <span className="text-xs text-muted-foreground">%</span>
-                          </div>
+                          {(() => {
+                            const editFormErr = validateDiscount(editForm.discount);
+                            const invalid = !editFormErr.ok;
+                            return (
+                              <div className="flex items-center gap-1 justify-center">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9.,]*"
+                                  value={editForm.discount}
+                                  onChange={(e) => setEditForm((p) => ({ ...p, discount: normalizeDiscountInput(e.target.value) }))}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  aria-invalid={invalid}
+                                  aria-describedby={invalid ? `edit-discount-err-${item.id}` : undefined}
+                                  className={`h-8 text-sm bg-muted w-16 min-w-[3.5rem] px-2 text-center tabular-nums ${invalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                                  placeholder="0"
+                                />
+                                <span className="text-xs text-muted-foreground">%</span>
+                              </div>
+                            );
+                          })()}
                         </td>
+
                         <td className="px-2 sm:px-3 py-2">
                           <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14" />
                         </td>
@@ -648,14 +700,45 @@ const InventoryTable = ({ data }: Props) => {
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 text-center">
                           {discountEditId === item.id ? (
-                            <div className="flex items-center gap-1 justify-center">
-                              <Input type="number" min="0" max="100" step="1" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="h-7 text-xs bg-muted border-border w-14 px-1 text-center" autoFocus onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") setDiscountEditId(null); }} />
-                              <span className="text-xs text-muted-foreground">%</span>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => saveDiscount(item.id)} disabled={saving}><Check className="h-3 w-3" /></Button>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => setDiscountEditId(null)}><X className="h-3 w-3" /></Button>
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="flex items-center gap-1 justify-center flex-wrap">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9.,]*"
+                                  value={discountValue}
+                                  onChange={(e) => {
+                                    const next = normalizeDiscountInput(e.target.value);
+                                    setDiscountValue(next);
+                                    if (discountError) {
+                                      const v = validateDiscount(next);
+                                      if (v.ok) setDiscountError(null);
+                                    }
+                                  }}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  aria-invalid={!!discountError}
+                                  aria-describedby={discountError ? `discount-err-${item.id}` : undefined}
+                                  className={`h-8 text-sm bg-muted w-16 min-w-[3.5rem] px-2 text-center tabular-nums ${discountError ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                                  autoFocus
+                                  placeholder="0"
+                                  onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") { setDiscountError(null); setDiscountEditId(null); } }}
+                                />
+                                <span className="text-xs text-muted-foreground">%</span>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => saveDiscount(item.id)} disabled={saving}><Check className="h-3 w-3" /></Button>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => { setDiscountError(null); setDiscountEditId(null); }}><X className="h-3 w-3" /></Button>
+                              </div>
+                              {discountError && (
+                                <p id={`discount-err-${item.id}`} role="alert" className="text-[10px] text-destructive max-w-[160px] leading-tight">
+                                  {discountError}
+                                </p>
+                              )}
                             </div>
                           ) : (
-                            <button onClick={() => { setDiscountEditId(item.id); setDiscountValue(String(discount)); }} className="inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-primary" title="Editar desconto">
+                            <button
+                              onClick={() => { setDiscountError(null); setDiscountEditId(item.id); setDiscountValue(String(discount)); }}
+                              className="inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-primary"
+                              title="Editar desconto"
+                            >
                               {discount > 0 ? (
                                 <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-xs gap-1"><Percent className="h-3 w-3" />{discount}%</Badge>
                               ) : (
@@ -718,19 +801,36 @@ const InventoryTable = ({ data }: Props) => {
             <p className="text-sm text-muted-foreground">
               Aplicar desconto a <strong className="text-foreground">{selectedIds.size}</strong> produto(s) selecionado(s).
             </p>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                placeholder="0"
-                value={batchDiscountValue}
-                onChange={(e) => setBatchDiscountValue(e.target.value)}
-                className="flex-1 bg-muted border-border text-center text-lg font-bold"
-                autoFocus
-              />
-              <span className="text-lg font-bold text-muted-foreground">%</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9.,]*"
+                  placeholder="0"
+                  value={batchDiscountValue}
+                  onChange={(e) => {
+                    const next = normalizeDiscountInput(e.target.value);
+                    setBatchDiscountValue(next);
+                    if (batchDiscountError) {
+                      const v = validateDiscount(next);
+                      if (v.ok) setBatchDiscountError(null);
+                    }
+                  }}
+                  onFocus={(e) => e.currentTarget.select()}
+                  aria-invalid={!!batchDiscountError}
+                  aria-describedby={batchDiscountError ? "batch-discount-err" : undefined}
+                  className={`flex-1 min-w-0 bg-muted text-center text-lg font-bold tabular-nums ${batchDiscountError ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === "Enter") applyBatchDiscount(); }}
+                />
+                <span className="text-lg font-bold text-muted-foreground">%</span>
+              </div>
+              {batchDiscountError && (
+                <p id="batch-discount-err" role="alert" className="text-xs text-destructive">
+                  {batchDiscountError}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
