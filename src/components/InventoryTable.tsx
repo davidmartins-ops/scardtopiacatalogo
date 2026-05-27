@@ -628,11 +628,29 @@ const InventoryTable = ({ data }: Props) => {
                           </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
-                          <div className="flex items-center gap-1 justify-center">
-                            <Input type="number" min="0" max="100" step="1" value={editForm.discount} onChange={(e) => setEditForm((p) => ({ ...p, discount: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14 px-1 text-center" />
-                            <span className="text-xs text-muted-foreground">%</span>
-                          </div>
+                          {(() => {
+                            const editFormErr = validateDiscount(editForm.discount);
+                            const invalid = !editFormErr.ok;
+                            return (
+                              <div className="flex items-center gap-1 justify-center">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9.,]*"
+                                  value={editForm.discount}
+                                  onChange={(e) => setEditForm((p) => ({ ...p, discount: normalizeDiscountInput(e.target.value) }))}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  aria-invalid={invalid}
+                                  aria-describedby={invalid ? `edit-discount-err-${item.id}` : undefined}
+                                  className={`h-8 text-sm bg-muted w-16 min-w-[3.5rem] px-2 text-center tabular-nums ${invalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                                  placeholder="0"
+                                />
+                                <span className="text-xs text-muted-foreground">%</span>
+                              </div>
+                            );
+                          })()}
                         </td>
+
                         <td className="px-2 sm:px-3 py-2">
                           <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14" />
                         </td>
