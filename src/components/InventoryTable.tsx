@@ -801,19 +801,36 @@ const InventoryTable = ({ data }: Props) => {
             <p className="text-sm text-muted-foreground">
               Aplicar desconto a <strong className="text-foreground">{selectedIds.size}</strong> produto(s) selecionado(s).
             </p>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                placeholder="0"
-                value={batchDiscountValue}
-                onChange={(e) => setBatchDiscountValue(e.target.value)}
-                className="flex-1 bg-muted border-border text-center text-lg font-bold"
-                autoFocus
-              />
-              <span className="text-lg font-bold text-muted-foreground">%</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9.,]*"
+                  placeholder="0"
+                  value={batchDiscountValue}
+                  onChange={(e) => {
+                    const next = normalizeDiscountInput(e.target.value);
+                    setBatchDiscountValue(next);
+                    if (batchDiscountError) {
+                      const v = validateDiscount(next);
+                      if (v.ok) setBatchDiscountError(null);
+                    }
+                  }}
+                  onFocus={(e) => e.currentTarget.select()}
+                  aria-invalid={!!batchDiscountError}
+                  aria-describedby={batchDiscountError ? "batch-discount-err" : undefined}
+                  className={`flex-1 min-w-0 bg-muted text-center text-lg font-bold tabular-nums ${batchDiscountError ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === "Enter") applyBatchDiscount(); }}
+                />
+                <span className="text-lg font-bold text-muted-foreground">%</span>
+              </div>
+              {batchDiscountError && (
+                <p id="batch-discount-err" role="alert" className="text-xs text-destructive">
+                  {batchDiscountError}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
