@@ -310,42 +310,6 @@ const InventoryTable = ({ data }: Props) => {
     setSelectedIds(new Set());
   };
 
-  // Batch discount
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filtered.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filtered.map((i) => i.id)));
-    }
-  };
-
-  const applyBatchDiscount = async () => {
-    const discount = parseFloat(batchDiscountValue || "0");
-    if (isNaN(discount) || discount < 0 || discount > 100) {
-      toast.error("Desconto deve ser entre 0% e 100%.");
-      return;
-    }
-    setSaving(true);
-    const ids = Array.from(selectedIds);
-    const { error } = await supabase.from("inventory").update({ discount }).in("id", ids);
-    setSaving(false);
-    if (error) { toast.error("Erro ao aplicar desconto em lote."); return; }
-    toast.success(`Desconto de ${discount}% aplicado a ${ids.length} produto(s)!`);
-    queryClient.invalidateQueries({ queryKey: ["inventory"] });
-    setBatchDiscountOpen(false);
-    setBatchDiscountValue("");
-    setSelectedIds(new Set());
-  };
-
   const confirmDelete = async () => {
     if (!deleteItem) return;
     setSaving(true);
