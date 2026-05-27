@@ -256,18 +256,58 @@ const InventoryTable = ({ data }: Props) => {
   };
 
   const saveDiscount = async (id: string) => {
-    const discount = parseFloat(discountValue || "0");
-    if (isNaN(discount) || discount < 0 || discount > 100) {
-      toast.error("Desconto deve ser entre 0% e 100%.");
+    const v = validateDiscount(discountValue);
+    if (!v.ok) {
+      setDiscountError(v.message ?? "Valor inválido.");
+      toast.error(v.message ?? "Desconto inválido.");
       return;
     }
+    setDiscountError(null);
     setSaving(true);
-    const { error } = await supabase.from("inventory").update({ discount }).eq("id", id);
+    const { error } = await supabase.from("inventory").update({ discount: v.value }).eq("id", id);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar desconto."); return; }
-    toast.success(`Desconto de ${discount}% aplicado!`);
+    toast.success(`Desconto de ${v.value}% aplicado!`);
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     setDiscountEditId(null);
+  };
+
+  // Batch discount
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((i) => i.id)));
+    }
+  };
+
+  const applyBatchDiscount = async () => {
+    const v = validateDiscount(batchDiscountValue);
+    if (!v.ok) {
+      setBatchDiscountError(v.message ?? "Valor inválido.");
+      toast.error(v.message ?? "Desconto inválido.");
+      return;
+    }
+    setBatchDiscountError(null);
+    setSaving(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("inventory").update({ discount: v.value }).in("id", ids);
+    setSaving(false);
+    if (error) { toast.error("Erro ao aplicar desconto em lote."); return; }
+    toast.success(`Desconto de ${v.value}% aplicado a ${ids.length} produto(s)!`);
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    setBatchDiscountOpen(false);
+    setBatchDiscountValue("");
+    setSelectedIds(new Set());
   };
 
   // Batch discount
