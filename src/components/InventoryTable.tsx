@@ -98,11 +98,41 @@ const InventoryTable = ({ data }: Props) => {
   const [saving, setSaving] = useState(false);
   const [discountEditId, setDiscountEditId] = useState<string | null>(null);
   const [discountValue, setDiscountValue] = useState("");
+  const [discountError, setDiscountError] = useState<string | null>(null);
 
   // Batch discount state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchDiscountOpen, setBatchDiscountOpen] = useState(false);
   const [batchDiscountValue, setBatchDiscountValue] = useState("");
+  const [batchDiscountError, setBatchDiscountError] = useState<string | null>(null);
+
+  // Normaliza entrada de desconto: aceita vírgula/ponto, remove "%" e caracteres não numéricos,
+  // limita a 3 dígitos inteiros + 2 decimais, e clampa o número final em 0–100.
+  const normalizeDiscountInput = (raw: string): string => {
+    if (raw == null) return "";
+    let s = String(raw).replace(/%/g, "").replace(",", ".").trim();
+    s = s.replace(/[^0-9.]/g, "");
+    const firstDot = s.indexOf(".");
+    if (firstDot !== -1) {
+      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, "");
+    }
+    const [intPart = "", decPart] = s.split(".");
+    const intTrim = intPart.slice(0, 3);
+    s = decPart !== undefined ? `${intTrim}.${decPart.slice(0, 2)}` : intTrim;
+    if (s === "" || s === ".") return s;
+    const n = parseFloat(s);
+    if (!isNaN(n) && n > 100) return "100";
+    return s;
+  };
+
+  const validateDiscount = (raw: string): { ok: boolean; value: number; message?: string } => {
+    const s = String(raw ?? "").trim();
+    if (s === "") return { ok: true, value: 0 };
+    const n = parseFloat(s.replace(",", "."));
+    if (isNaN(n)) return { ok: false, value: NaN, message: "Informe um número válido." };
+    if (n < 0 || n > 100) return { ok: false, value: n, message: "O desconto deve estar entre 0% e 100%." };
+    return { ok: true, value: n };
+  };
 
   const [imageDialogItem, setImageDialogItem] = useState<InventoryItem | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
