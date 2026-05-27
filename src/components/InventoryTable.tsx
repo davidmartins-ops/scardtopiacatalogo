@@ -700,14 +700,45 @@ const InventoryTable = ({ data }: Props) => {
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 text-center">
                           {discountEditId === item.id ? (
-                            <div className="flex items-center gap-1 justify-center">
-                              <Input type="number" min="0" max="100" step="1" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="h-7 text-xs bg-muted border-border w-14 px-1 text-center" autoFocus onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") setDiscountEditId(null); }} />
-                              <span className="text-xs text-muted-foreground">%</span>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => saveDiscount(item.id)} disabled={saving}><Check className="h-3 w-3" /></Button>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => setDiscountEditId(null)}><X className="h-3 w-3" /></Button>
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="flex items-center gap-1 justify-center flex-wrap">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9.,]*"
+                                  value={discountValue}
+                                  onChange={(e) => {
+                                    const next = normalizeDiscountInput(e.target.value);
+                                    setDiscountValue(next);
+                                    if (discountError) {
+                                      const v = validateDiscount(next);
+                                      if (v.ok) setDiscountError(null);
+                                    }
+                                  }}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  aria-invalid={!!discountError}
+                                  aria-describedby={discountError ? `discount-err-${item.id}` : undefined}
+                                  className={`h-8 text-sm bg-muted w-16 min-w-[3.5rem] px-2 text-center tabular-nums ${discountError ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                                  autoFocus
+                                  placeholder="0"
+                                  onKeyDown={(e) => { if (e.key === "Enter") saveDiscount(item.id); if (e.key === "Escape") { setDiscountError(null); setDiscountEditId(null); } }}
+                                />
+                                <span className="text-xs text-muted-foreground">%</span>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => saveDiscount(item.id)} disabled={saving}><Check className="h-3 w-3" /></Button>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => { setDiscountError(null); setDiscountEditId(null); }}><X className="h-3 w-3" /></Button>
+                              </div>
+                              {discountError && (
+                                <p id={`discount-err-${item.id}`} role="alert" className="text-[10px] text-destructive max-w-[160px] leading-tight">
+                                  {discountError}
+                                </p>
+                              )}
                             </div>
                           ) : (
-                            <button onClick={() => { setDiscountEditId(item.id); setDiscountValue(String(discount)); }} className="inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-primary" title="Editar desconto">
+                            <button
+                              onClick={() => { setDiscountError(null); setDiscountEditId(item.id); setDiscountValue(String(discount)); }}
+                              className="inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-primary"
+                              title="Editar desconto"
+                            >
                               {discount > 0 ? (
                                 <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-xs gap-1"><Percent className="h-3 w-3" />{discount}%</Badge>
                               ) : (
