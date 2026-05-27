@@ -115,7 +115,10 @@ Deno.serve(async (req) => {
 
 
   if (updateError) {
-    console.error('Failed to mark token as used', { error: updateError, token })
+    console.error('Failed to mark token as used', {
+      error: updateError,
+      token_prefix: token.slice(0, 8) + '…',
+    })
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
