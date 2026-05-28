@@ -1,24 +1,29 @@
 import { useEffect } from "react";
 
+interface SEOProduct {
+  name: string;
+  price: number;
+  currency?: string;
+  availability?: "InStock" | "OutOfStock" | "PreOrder";
+  image?: string;
+  description?: string;
+  sku?: string;
+  category?: string;
+  brand?: string;
+}
+
 interface SEOProps {
   title?: string;
   description?: string;
   canonical?: string;
   image?: string;
   type?: "website" | "product" | "article";
-  product?: {
-    name: string;
-    price: number;
-    currency?: string;
-    availability?: "InStock" | "OutOfStock" | "PreOrder";
-    image?: string;
-    description?: string;
-    sku?: string;
-    category?: string;
-  };
+  product?: SEOProduct;
+  /** Optional custom JSON-LD; if provided, overrides default WebSite/Product schema. */
+  jsonLd?: Record<string, any> | Record<string, any>[];
 }
 
-const useSEO = ({ title, description, canonical, image, type = "website", product }: SEOProps) => {
+const useSEO = ({ title, description, canonical, image, type = "website", product, jsonLd }: SEOProps) => {
   useEffect(() => {
     const siteName = "Spencer's Cardtopia";
     const fullTitle = title ? `${title} | ${siteName}` : siteName;
@@ -56,13 +61,14 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
     if (image) setMeta("twitter:image", image, "name");
 
     // JSON-LD
-    const existingLd = document.querySelector('script[data-seo-jsonld]');
-    if (existingLd) existingLd.remove();
+    document.querySelectorAll('script[data-seo-jsonld]').forEach((s) => s.remove());
 
-    let jsonLd: Record<string, any>;
+    let payload: Record<string, any> | Record<string, any>[];
 
-    if (product) {
-      jsonLd = {
+    if (jsonLd) {
+      payload = jsonLd;
+    } else if (product) {
+      payload = {
         "@context": "https://schema.org",
         "@type": "Product",
         name: product.name,
@@ -70,11 +76,15 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
         image: product.image || image,
         sku: product.sku,
         category: product.category,
+        brand: product.brand
+          ? { "@type": "Brand", name: product.brand }
+          : { "@type": "Brand", name: siteName },
         offers: {
           "@type": "Offer",
           priceCurrency: product.currency || "BRL",
           price: product.price.toFixed(2),
           availability: `https://schema.org/${product.availability || "InStock"}`,
+          url: canonical,
           seller: {
             "@type": "Organization",
             name: siteName,
@@ -82,7 +92,7 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
         },
       };
     } else {
-      jsonLd = {
+      payload = {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: siteName,
@@ -96,17 +106,20 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
       };
     }
 
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.setAttribute("data-seo-jsonld", "true");
-    script.textContent = JSON.stringify(jsonLd);
-    document.head.appendChild(script);
+    const blocks = Array.isArray(payload) ? payload : [payload];
+    blocks.forEach((block) => {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.setAttribute("data-seo-jsonld", "true");
+      script.textContent = JSON.stringify(block);
+      document.head.appendChild(script);
+    });
 
     return () => {
-      const s = document.querySelector('script[data-seo-jsonld]');
-      if (s) s.remove();
+      document.querySelectorAll('script[data-seo-jsonld]').forEach((s) => s.remove());
     };
-  }, [title, description, canonical, image, type, product]);
+  }, [title, description, canonical, image, type, product, jsonLd]);
 };
 
 export default useSEO;
+
