@@ -132,16 +132,20 @@ const Index = () => {
               onClick={signOut}
               className="glass-card hover:border-destructive/40 hover:text-destructive hover:shadow-lg hover:shadow-destructive/10 transition-all duration-300"
               title="Sair"
+              aria-label="Sair da conta"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">Sair</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-full mx-auto px-3 sm:px-4 md:px-6 -mt-4 relative z-20 space-y-4 sm:space-y-6 pb-12">
+      <main id="main-content" className="max-w-full mx-auto px-3 sm:px-4 md:px-6 -mt-4 relative z-20 space-y-4 sm:space-y-6 pb-12">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <section aria-labelledby="dashboard-stats-heading">
+          <h2 id="dashboard-stats-heading" className="sr-only">Estatísticas gerais</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
             <StatCard title="Produtos Únicos" value={String(stats.uniqueProducts)} icon={Package} />
           </div>
@@ -158,14 +162,17 @@ const Index = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0 }}>
             <StatCard title="Itens Foil" value={String(stats.foilCount)} subtitle="unidades" icon={Sparkles} />
           </div>
-        </div>
+          </div>
+        </section>
 
         {/* Chart + Tabs with Table */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6 animate-fade-in-up" style={{ animationDelay: '0.5s', opacity: 0 }}>
-          <div className="xl:col-span-1">
+          <section className="xl:col-span-1" aria-labelledby="dashboard-categories-heading">
+            <h2 id="dashboard-categories-heading" className="sr-only">Distribuição por categoria</h2>
             <CategoryChart data={inventoryData} />
-          </div>
-          <div className="xl:col-span-3">
+          </section>
+          <section className="xl:col-span-3" aria-labelledby="dashboard-inventory-heading">
+            <h2 id="dashboard-inventory-heading" className="sr-only">Inventário e gestão</h2>
             <Tabs defaultValue="drops" className="w-full">
               <TabsList className="w-full mb-4 bg-muted/50 backdrop-blur-sm flex flex-wrap h-auto gap-1 p-1 justify-start">
                 <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
@@ -238,9 +245,9 @@ const Index = () => {
                 <div><AdminRolesManager /></div>
               </TabsContent>
             </Tabs>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
