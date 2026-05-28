@@ -59,6 +59,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 import SetCombobox from "@/components/SetCombobox";
+import useSEO from "@/hooks/use-seo";
 
 const MTG_COLORS = [
   { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
@@ -714,6 +715,41 @@ const Catalogo = () => {
       </div>
     );
   }
+
+  const canonical = "https://www.spencerscardtopia.com.br/catalogo";
+  const featured = inventoryData.slice(0, 20);
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Catálogo Spencer's Cardtopia",
+    description:
+      "Catálogo completo de Drops da Secret Lair e singles de Magic: The Gathering com preços em BRL e pagamento via PIX ou cartão.",
+    url: canonical,
+    inLanguage: "pt-BR",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Spencer's Cardtopia",
+      url: "https://www.spencerscardtopia.com.br/",
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: inventoryData.length,
+      itemListElement: featured.map((p, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        url: `https://www.spencerscardtopia.com.br/${(p.product_type ?? "drop") === "single" ? "single" : "drop"}/${p.id}`,
+        name: p.name,
+      })),
+    },
+  };
+  useSEO({
+    title: "Catálogo",
+    description:
+      "Catálogo Spencer's Cardtopia: Drops da Secret Lair e singles de Magic: The Gathering. Pagamento em PIX ou cartão, envio para todo o Brasil.",
+    canonical,
+    type: "website",
+    jsonLd: collectionJsonLd,
+  });
 
   return (
     <div className="min-h-screen bg-background font-body">

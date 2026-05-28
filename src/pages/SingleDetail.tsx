@@ -10,6 +10,7 @@ import AddToCartButton from "@/components/AddToCartButton";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchScryfallCard, pickBestImageUrl, type ScryfallCardData } from "@/lib/scryfall-cache";
 import ManaCost from "@/components/ManaCost";
+import useSEO from "@/hooks/use-seo";
 
 
 const SingleDetail = () => {
@@ -84,6 +85,30 @@ const SingleDetail = () => {
   const displayType = card?.printed_type_line || card?.type_line || "";
   const displayText = card?.printed_text || card?.oracle_text || "";
   const bestImage = pickBestImageUrl(card?.image_uris, item.image_url);
+
+  const canonical = `https://www.spencerscardtopia.com.br/single/${item.id}`;
+  const availability = item.quantity <= 0 ? "OutOfStock" : "InStock";
+  const seoDesc = card?.printed_text || card?.oracle_text
+    ? `${displayName} (${card?.set_name ?? ""}${card?.collector_number ? ` #${card.collector_number}` : ""}) — ${item.description} ${item.language ?? ""} ${item.condition ?? ""}. Disponível na Spencer's Cardtopia.`
+    : `${displayName} — Magic: The Gathering single (${item.description}${item.language ? `, ${item.language}` : ""}${item.condition ? `, ${item.condition}` : ""}) na Spencer's Cardtopia.`;
+  useSEO({
+    title: displayName,
+    description: seoDesc,
+    canonical,
+    image: bestImage || item.image_url,
+    type: "product",
+    product: {
+      name: displayName,
+      price: pixFinal,
+      currency: "BRL",
+      availability,
+      image: bestImage || item.image_url,
+      description: seoDesc,
+      sku: item.id,
+      category: card?.set_name || item.category || "Magic: The Gathering",
+      brand: "Magic: The Gathering",
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background font-body">
