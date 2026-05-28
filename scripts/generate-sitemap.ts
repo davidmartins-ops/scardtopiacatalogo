@@ -37,10 +37,10 @@ const staticEntries: SitemapEntry[] = [
   { path: "/privacidade", changefreq: "monthly", priority: "0.4" },
 ];
 
-async function fetchDropIds(): Promise<string[]> {
+async function fetchInventory(productType: "drop" | "single"): Promise<string[]> {
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/inventory?select=id,product_type&product_type=eq.drop`,
+      `${SUPABASE_URL}/rest/v1/inventory?select=id,product_type,quantity&product_type=eq.${productType}`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -49,13 +49,16 @@ async function fetchDropIds(): Promise<string[]> {
       }
     );
     if (!res.ok) {
-      console.warn(`[sitemap] Could not fetch drops (${res.status}); continuing without dynamic entries.`);
+      console.warn(`[sitemap] Could not fetch ${productType}s (${res.status}); continuing.`);
       return [];
     }
-    const rows = (await res.json()) as Array<{ id: string }>;
-    return rows.map((r) => r.id);
+    const rows = (await res.json()) as Array<{ id: string; quantity?: number }>;
+    // Singles with 0 stock are hidden from catalog, so exclude them from sitemap
+    return rows
+      .filter((r) => productType === "drop" || (r.quantity ?? 0) > 0)
+      .map((r) => r.id);
   } catch (err) {
-    console.warn("[sitemap] Drop fetch failed:", err);
+    console.warn(`[sitemap] ${productType} fetch failed:`, err);
     return [];
   }
 }
