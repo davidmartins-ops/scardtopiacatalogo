@@ -84,20 +84,30 @@ function renderXml(entries: SitemapEntry[]): string {
     ``,
   ].join("\n");
 }
-
 async function main() {
-  const dropIds = await fetchDropIds();
+  const [dropIds, singleIds] = await Promise.all([
+    fetchInventory("drop"),
+    fetchInventory("single"),
+  ]);
   const dropEntries: SitemapEntry[] = dropIds.map((id) => ({
     path: `/catalogo/drop/${encodeURIComponent(id)}`,
     changefreq: "weekly",
     priority: "0.7",
   }));
+  const singleEntries: SitemapEntry[] = singleIds.map((id) => ({
+    path: `/catalogo/single/${encodeURIComponent(id)}`,
+    changefreq: "weekly",
+    priority: "0.6",
+  }));
 
-  const all = [...staticEntries, ...dropEntries];
+  const all = [...staticEntries, ...dropEntries, ...singleEntries];
   writeFileSync(resolve("public/sitemap.xml"), renderXml(all));
   console.log(
-    `[sitemap] Wrote public/sitemap.xml — ${staticEntries.length} static + ${dropEntries.length} drops = ${all.length} URLs`
+    `[sitemap] Wrote public/sitemap.xml — ${staticEntries.length} static + ${dropEntries.length} drops + ${singleEntries.length} singles = ${all.length} URLs`
   );
+}
+
+main().catch((err) => {
 }
 
 main().catch((err) => {
