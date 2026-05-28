@@ -40,7 +40,6 @@ const FORMAT_QUERIES: Record<string, { rising: string; falling: string; label: s
 };
 
 const TrendingCards = () => {
-const TrendingCards = () => {
   const [formatData, setFormatData] = useState<Record<string, FormatData>>({});
   const [activeFormat, setActiveFormat] = useState("standard");
   const [loading, setLoading] = useState(true);
