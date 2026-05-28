@@ -12,6 +12,7 @@ import ImageZoom from "@/components/ImageZoom";
 import ProductMedia from "@/components/ProductMedia";
 import AddToCartButton from "@/components/AddToCartButton";
 import { toast } from "sonner";
+import useSEO from "@/hooks/use-seo";
 
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
@@ -111,6 +112,26 @@ const DropDetail = () => {
   const hasPixHighlight = pixFinal < cardPrice;
   const config = descriptionConfig[drop.description];
   const Icon = config?.icon ?? Circle;
+
+  const canonical = `https://www.spencerscardtopia.com.br/drop/${drop.id}`;
+  const availability = drop.quantity <= 0 ? "OutOfStock" : drop.status === "pre_sale" ? "PreOrder" : "InStock";
+  useSEO({
+    title: drop.name,
+    description: (drop as any).drop_description || `${drop.name} — ${drop.description} ${drop.language ?? ""}. Drop exclusivo na Spencer's Cardtopia.`,
+    canonical,
+    image: drop.image_url,
+    type: "product",
+    product: {
+      name: drop.name,
+      price: pixFinal,
+      currency: "BRL",
+      availability,
+      image: drop.image_url,
+      description: (drop as any).drop_description || `${drop.name} — ${drop.description}`,
+      sku: drop.id,
+      category: drop.category,
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background font-body">
