@@ -49,7 +49,7 @@ const TrendingCards = () => {
   const [sortOrder, setSortOrder] = useState<"pct_desc" | "pct_asc">("pct_desc");
 
   useSEO({
-    title: "Tendências de Mercado Magic — Cartas em alta e em baixa",
+    title: "Tendências Magic — Cartas em alta e em baixa",
     description: "Top 50 cartas de Magic: The Gathering com maiores variações de preço em Standard, Modern, Commander, Legacy e Pauper. Dados atualizados via Scryfall.",
     canonical: "https://www.spencerscardtopia.com.br/tendencias",
   });
