@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import useSEO from "@/hooks/use-seo";
 import logo from "@/assets/logo.png";
 
 interface ScryfallCard {
@@ -47,6 +48,11 @@ const TrendingCards = () => {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"pct_desc" | "pct_asc">("pct_desc");
 
+  useSEO({
+    title: "Tendências de Mercado Magic — Cartas em alta e em baixa",
+    description: "Top 50 cartas de Magic: The Gathering com maiores variações de preço em Standard, Modern, Commander, Legacy e Pauper. Dados atualizados via Scryfall.",
+    canonical: "https://www.spencerscardtopia.com.br/tendencias",
+  });
   const fetchExchangeRate = async () => {
     try { const res = await fetch(EXCHANGE_API); const data = await res.json(); if (data?.USDBRL?.bid) setExchangeRate(parseFloat(data.USDBRL.bid)); } catch { setExchangeRate(null); }
   };
@@ -184,7 +190,7 @@ const TrendingCards = () => {
     return (
       <div className="glass-card p-4 sm:p-6 mb-6 border border-border/50">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-display font-semibold text-foreground flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /><span className="text-gradient">Distribuição de Preços</span></h3>
+          <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" /><span className="text-gradient">Distribuição de Preços</span></h2>
           <span className="text-[10px] text-muted-foreground">{cards.length} cartas</span>
         </div>
         <div className="premium-divider mb-4" />
@@ -280,7 +286,7 @@ const TrendingCards = () => {
       <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <Link to="/catalogo"><Button variant="ghost" size="icon" className="h-8 w-8 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><ArrowLeft className="h-4 w-4" /></Button></Link>
+            <Link to="/catalogo" aria-label="Voltar para o catálogo"><Button variant="ghost" size="icon" className="h-8 w-8 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200" aria-label="Voltar para o catálogo"><ArrowLeft className="h-4 w-4" aria-hidden="true" /></Button></Link>
             <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-8 hover:scale-105 transition-transform" /></Link>
           </div>
           <div className="flex items-center gap-2">
