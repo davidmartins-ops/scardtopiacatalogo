@@ -2,12 +2,22 @@ import { useParams } from "react-router-dom";
 import { usePublicCollection } from "@/hooks/use-collections";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, BookOpen, Globe } from "lucide-react";
+import useSEO from "@/hooks/use-seo";
 import logo from "@/assets/logo.png";
 
 const PublicCollection = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const { data, isLoading } = usePublicCollection(collectionId);
 
+  const collectionName = data?.collection?.name;
+  const cardsCount = data?.cards?.length ?? 0;
+  useSEO({
+    title: collectionName ? `Coleção: ${collectionName}` : "Coleção pública",
+    description: collectionName
+      ? `Explore a coleção pública "${collectionName}" com ${cardsCount} carta(s) de Magic: The Gathering compartilhada na Spencer's Cardtopia.`
+      : "Coleção pública de cartas de Magic: The Gathering compartilhada na Spencer's Cardtopia.",
+    canonical: `https://www.spencerscardtopia.com.br/colecao/${collectionId ?? ""}`,
+  });
   if (isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }

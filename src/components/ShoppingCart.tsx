@@ -414,9 +414,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                         <p className="text-xs text-muted-foreground">{ci.item.description}{ci.item.language ? ` · ${ci.item.language}` : ""}{ci.item.condition ? ` · ${ci.item.condition}` : ""}</p>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-1">
-                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onUpdateQty(ci.item.id, ci.qty - 1)} disabled={ci.qty <= 1}><Minus className="h-3 w-3" /></Button>
-                            <span className="text-sm font-medium w-6 text-center">{ci.qty}</span>
-                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onUpdateQty(ci.item.id, ci.qty + 1)} disabled={ci.qty >= ci.item.quantity}><Plus className="h-3 w-3" /></Button>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onUpdateQty(ci.item.id, ci.qty - 1)} disabled={ci.qty <= 1} aria-label={`Diminuir quantidade de ${ci.item.name}`}><Minus className="h-3 w-3" aria-hidden="true" /></Button>
+                            <span className="text-sm font-medium w-6 text-center" aria-label={`Quantidade: ${ci.qty}`}>{ci.qty}</span>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onUpdateQty(ci.item.id, ci.qty + 1)} disabled={ci.qty >= ci.item.quantity} aria-label={`Aumentar quantidade de ${ci.item.name}`}><Plus className="h-3 w-3" aria-hidden="true" /></Button>
                           </div>
                           <div className="text-right">
                             {showPix && (
@@ -428,7 +428,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                           </div>
                         </div>
                       </div>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onRemove(ci.item.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onRemove(ci.item.id)} aria-label={`Remover ${ci.item.name} do carrinho`}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></Button>
                     </div>
                   );
                 })}
