@@ -430,7 +430,7 @@ const CatalogBanner = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/40 to-background pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-10 pointer-events-none">
         <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-1">{activeBanner?.label}</span>
-        <h2 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{activeBanner?.title}</h2>
+        <h1 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{activeBanner?.title}</h1>
         <p className="text-xs text-muted-foreground mt-0.5">{activeBanner?.subtitle}</p>
         {activeHref && (
           <Link to={activeHref} className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-brand-gold hover:underline pointer-events-auto" onClick={() => trackEvent("banner_cta_click", inventory.find((i) => i.id === activeBanner?.inventory_item_id))}>
@@ -440,8 +440,8 @@ const CatalogBanner = () => {
       </div>
       {banners.length > 1 && (
         <>
-          <button onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)} className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"><ChevronLeft className="h-4 w-4" /></button>
-          <button onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"><ChevronRight className="h-4 w-4" /></button>
+          <button aria-label="Banner anterior" onClick={() => setCurrentBanner((p) => (p - 1 + banners.length) % banners.length)} className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"><ChevronLeft className="h-4 w-4" /></button>
+          <button aria-label="Próximo banner" onClick={() => setCurrentBanner((p) => (p + 1) % banners.length)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground/80 hover:bg-background/80 transition-all opacity-0 group-hover:opacity-100 z-20"><ChevronRight className="h-4 w-4" /></button>
           <div className="absolute bottom-2 right-4 flex gap-1.5 z-20">
             {banners.map((_, idx) => (<button key={idx} onClick={() => setCurrentBanner(idx)} className={`h-1.5 rounded-full transition-all ${idx === currentBanner ? "w-5 bg-primary" : "w-1.5 bg-foreground/30"}`} />))}
           </div>
