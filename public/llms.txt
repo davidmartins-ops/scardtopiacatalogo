@@ -1,0 +1,18 @@
+# Spencer's Cardtopia
+
+> Loja brasileira especializada em Magic: The Gathering — Secret Lair Drops, singles e acessórios para colecionadores e jogadores.
+
+A Spencer's Cardtopia é um e-commerce de Magic: The Gathering com foco em Secret Lair Drops exclusivos, cartas avulsas (singles) em diferentes condições, idiomas e acabamentos (Foil, Non-Foil, Surge, Rainbow, Galaxy etc.). Vendas finalizadas via WhatsApp com opções de pagamento por cartão de crédito (até 3x sem juros em Drops) e PIX com desconto.
+
+## Pages
+
+- [Catálogo](/catalogo): Lista completa de Drops e singles disponíveis, com filtros por categoria, cor, condição e preço.
+- [Tendências](/tendencias): Top 50 cartas com maior variação de preço recente baseado no Scryfall.
+- [Sobre](/sobre): Quem somos, política de envio e atendimento.
+- [FAQ](/faq): Perguntas frequentes sobre compras, pagamento, frete e trocas.
+- [Termos de Uso](/termos): Termos e condições de uso da plataforma.
+- [Política de Privacidade](/privacidade): Como tratamos dados pessoais (LGPD).
+
+## Optional
+
+- [Login do Cliente](/conta/login): Acesso à conta de cliente para favoritos, pedidos, decks e coleções.

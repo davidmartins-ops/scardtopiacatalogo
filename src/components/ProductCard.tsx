@@ -232,12 +232,16 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
       {/* Favorite button */}
       <button
+        type="button"
+        aria-label={isFavorite ? `Remover ${item.name} dos favoritos` : `Adicionar ${item.name} aos favoritos`}
+        aria-pressed={isFavorite}
+        title={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         className={`absolute top-2 right-2 z-30 h-8 w-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:scale-110 ${
           isFavorite ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive hover:bg-background/90 border border-border/50"
         }`}
         onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(); }}
       >
-        <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
+        <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} aria-hidden="true" />
       </button>
 
       {/* Image - fixed height for consistent alignment */}
