@@ -14,5 +14,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
 
-Sitemap: https://scardtopiacatalogo.lovable.app/sitemap.xml
+Sitemap: https://www.spencerscardtopia.com.br/sitemap.xml

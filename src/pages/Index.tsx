@@ -99,7 +99,8 @@ const Index = () => {
             <Link to="/catalogo">
               <img src={logo} alt="Spencer's Cardtopia" className="h-20 sm:h-28 md:h-36 lg:h-44 drop-shadow-2xl hover:scale-105 transition-transform cursor-pointer" />
             </Link>
-            <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium">Painel de Gerenciamento</p>
+            <h1 className="sr-only">Painel de Gerenciamento — Spencer's Cardtopia</h1>
+            <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground tracking-[0.25em] uppercase font-medium" aria-hidden="true">Painel de Gerenciamento</p>
           </div>
           <div className="flex items-center gap-2 animate-fade-in flex-wrap justify-end" style={{ animationDelay: '0.2s' }}>
             <ScryfallSearchDialog />
