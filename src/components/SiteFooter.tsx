@@ -47,7 +47,12 @@ const SiteFooter = () => {
       const orgScripts: HTMLScriptElement[] = [];
       all.forEach((el) => {
         const txt = el.textContent || "";
-        if (txt.includes('"@type":"Organization"') || txt.includes('"@type": "Organization"')) {
+        if (
+          txt.includes('"@type":"Organization"') ||
+          txt.includes('"@type": "Organization"') ||
+          txt.includes('"@type":"Store"') ||
+          txt.includes('"@type": "Store"')
+        ) {
           orgScripts.push(el as HTMLScriptElement);
         }
       });
@@ -56,7 +61,7 @@ const SiteFooter = () => {
 
       const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "Organization",
+        "@type": "Store",
         name: "Spencer's Cardtopia",
         url:
           typeof window !== "undefined" ? window.location.origin : "https://spencerscardtopia.com.br",
