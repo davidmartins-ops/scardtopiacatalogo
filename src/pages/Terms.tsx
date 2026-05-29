@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 
 const Terms = () => {
   useSEO({
-    title: "Termos de Uso | Spencer's Cardtopia",
+    title: "Termos de Uso",
     description: "Regras de uso do site Spencer's Cardtopia: compras, pagamentos, envios, devoluções e responsabilidades.",
     canonical: `${window.location.origin}/termos`,
   });
