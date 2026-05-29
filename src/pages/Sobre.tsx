@@ -5,10 +5,30 @@ import { ArrowLeft, Sparkles, HandshakeIcon, Smile } from "lucide-react";
 
 const Sobre = () => {
   useSEO({
-    title: "Sobre | Spencer's Cardtopia",
+    title: "Sobre",
     description:
       "Conheça a Spencer's Cardtopia: paixão por Magic: The Gathering e TCGs, com transparência, acessibilidade e diversão.",
     canonical: `${window.location.origin}/sobre`,
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Spencer's Cardtopia",
+      url: "https://www.spencerscardtopia.com.br",
+      logo: "https://www.spencerscardtopia.com.br/logo.png",
+      description:
+        "Loja brasileira de Magic: The Gathering especializada em Secret Lair Drops, singles e acessórios para colecionadores.",
+      email: "spencerscardtopia@gmail.com",
+      sameAs: [
+        "https://instagram.com/spencerscardtopia",
+        "https://wa.me/5511947154555",
+      ],
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        email: "spencerscardtopia@gmail.com",
+        availableLanguage: ["Portuguese"],
+      },
+    },
   });
 
   return (

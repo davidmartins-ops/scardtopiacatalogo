@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 
 const Privacy = () => {
   useSEO({
-    title: "Política de Privacidade | Spencer's Cardtopia",
+    title: "Política de Privacidade",
     description:
       "Como Spencer's Cardtopia coleta, usa e protege seus dados pessoais conforme a LGPD (Lei 13.709/2018).",
     canonical: `${window.location.origin}/privacidade`,

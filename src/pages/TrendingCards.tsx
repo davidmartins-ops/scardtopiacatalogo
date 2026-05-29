@@ -49,7 +49,7 @@ const TrendingCards = () => {
   const [sortOrder, setSortOrder] = useState<"pct_desc" | "pct_asc">("pct_desc");
 
   useSEO({
-    title: "Tendências Magic — Cartas em alta e em baixa",
+    title: "Tendências Magic — Altas e Baixas",
     description: "Top 50 cartas de Magic: The Gathering com maiores variações de preço em Standard, Modern, Commander, Legacy e Pauper. Dados atualizados via Scryfall.",
     canonical: "https://www.spencerscardtopia.com.br/tendencias",
   });
@@ -291,8 +291,8 @@ const TrendingCards = () => {
           </div>
           <div className="flex items-center gap-2">
             <Link to="/catalogo"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold text-xs transition-colors duration-200">Catálogo</Button></Link>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold text-xs transition-colors duration-200" onClick={() => fetchFormatCards(activeFormat)} disabled={loading}>
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /><span className="hidden sm:inline">Atualizar</span>
+            <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold text-xs transition-colors duration-200" onClick={() => fetchFormatCards(activeFormat)} disabled={loading} aria-label="Atualizar tendências">
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" /><span className="hidden sm:inline">Atualizar</span>
             </Button>
           </div>
         </div>

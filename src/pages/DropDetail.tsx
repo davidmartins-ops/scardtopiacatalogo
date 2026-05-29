@@ -144,8 +144,8 @@ const DropDetail = () => {
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200">
-                  <Share2 className="h-4 w-4" /> <span className="hidden sm:inline">Compartilhar</span>
+                <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200" aria-label="Compartilhar drop">
+                  <Share2 className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">Compartilhar</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
