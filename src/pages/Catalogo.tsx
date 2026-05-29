@@ -690,35 +690,6 @@ const Catalogo = () => {
   const drops = useMemo(() => inventoryData.filter((i) => (i.product_type ?? "drop") === "drop"), [inventoryData]);
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background font-body">
-        <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-            <img src={logo} alt="Spencer's Cardtopia" className="h-9" />
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (<ProductCardSkeleton key={i} />))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="max-w-md text-center space-y-3">
-          <p className="text-destructive font-body font-semibold">Erro ao carregar catálogo.</p>
-          <p className="text-xs text-muted-foreground font-mono break-all">{(error as any)?.message ?? String(error)}</p>
-          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Tentar novamente</Button>
-        </div>
-      </div>
-    );
-  }
-
   const canonical = "https://www.spencerscardtopia.com.br/catalogo";
   const featured = inventoryData.slice(0, 20);
   const collectionJsonLd = {
@@ -753,6 +724,36 @@ const Catalogo = () => {
     type: "website",
     jsonLd: collectionJsonLd,
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background font-body">
+        <div className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-xl">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-9" />
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (<ProductCardSkeleton key={i} />))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-3">
+          <p className="text-destructive font-body font-semibold">Erro ao carregar catálogo.</p>
+          <p className="text-xs text-muted-foreground font-mono break-all">{(error as any)?.message ?? String(error)}</p>
+          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Tentar novamente</Button>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-background font-body">
