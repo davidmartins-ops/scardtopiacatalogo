@@ -253,13 +253,6 @@ const sections: Section[] = [
 ];
 
 const FAQ = () => {
-  useSEO({
-    title: "FAQ | Spencer's Cardtopia",
-    description:
-      "Dúvidas frequentes sobre pagamento, envio, produtos, trocas e atendimento na Spencer's Cardtopia.",
-    canonical: `${window.location.origin}/faq`,
-  });
-
   // JSON-LD FAQPage for SEO
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -275,6 +268,14 @@ const FAQ = () => {
       })),
     ),
   };
+
+  useSEO({
+    title: "FAQ",
+    description:
+      "Dúvidas frequentes sobre pagamento, envio, produtos, trocas e atendimento na Spencer's Cardtopia.",
+    canonical: `${window.location.origin}/faq`,
+    jsonLd: faqJsonLd,
+  });
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
