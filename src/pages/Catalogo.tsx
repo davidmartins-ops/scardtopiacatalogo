@@ -488,8 +488,10 @@ const PromoHighlights = ({
               <button
                 className={`absolute top-2 right-2 z-30 h-7 w-7 rounded-full flex items-center justify-center backdrop-blur-sm transition-all ${isFavorite(item.id) ? "bg-destructive/90 text-destructive-foreground" : "bg-background/70 text-muted-foreground hover:text-destructive border border-border/50"}`}
                 onClick={() => { if (!isLoggedIn) { toast.error("Faça login para favoritar."); return; } onToggleFavorite(item.id); }}
+                aria-label={isFavorite(item.id) ? `Remover ${item.name} dos favoritos` : `Adicionar ${item.name} aos favoritos`}
+                aria-pressed={isFavorite(item.id)}
               >
-                <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} />
+                <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} aria-hidden="true" />
               </button>
               {/* Image - FIXED height for ALL cards (singles or drops, with or without image) */}
               <div className="relative z-10 px-2 pt-2">

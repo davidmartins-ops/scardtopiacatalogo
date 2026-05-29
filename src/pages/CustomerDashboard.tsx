@@ -190,10 +190,10 @@ const CustomerDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Link to={`/conta/decks/${deck.id}`}>
-                        <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="ghost" aria-label={`Ver deck ${deck.name}`}><Eye className="h-3.5 w-3.5" aria-hidden="true" /></Button>
                       </Link>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm("Excluir deck?")) deleteDeck.mutate(deck.id); }}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button size="sm" variant="ghost" className="text-destructive" aria-label={`Excluir deck ${deck.name}`} onClick={() => { if (confirm("Excluir deck?")) deleteDeck.mutate(deck.id); }}>
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
@@ -244,10 +244,10 @@ const CustomerDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Link to={`/conta/colecoes/${col.id}`}>
-                        <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="ghost" aria-label={`Ver coleção ${col.name}`}><Eye className="h-3.5 w-3.5" aria-hidden="true" /></Button>
                       </Link>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm("Excluir coleção?")) deleteCollection.mutate(col.id); }}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button size="sm" variant="ghost" className="text-destructive" aria-label={`Excluir coleção ${col.name}`} onClick={() => { if (confirm("Excluir coleção?")) deleteCollection.mutate(col.id); }}>
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
