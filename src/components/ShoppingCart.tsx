@@ -485,7 +485,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   <span className="font-display font-semibold text-foreground">Total</span>
                   <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("whatsapp")}><Send className="h-4 w-4" />Comprar via WhatsApp</Button>
+                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão (InfinitePay)</Button>
+                <Button variant="secondary" className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("whatsapp")}><Send className="h-4 w-4" />Comprar via WhatsApp</Button>
                 <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("pix")}><QrCode className="h-4 w-4" />Pagar com PIX</Button>
                 <Button variant="outline" className="w-full gap-2 font-body text-xs" size="sm" onClick={onClear}><Trash2 className="h-3.5 w-3.5" />Limpar carrinho</Button>
               </div>
