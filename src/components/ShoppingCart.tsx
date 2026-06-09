@@ -315,7 +315,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             items: orderItems as any,
             total: cardTotal,
             status: "pending_payment" as any,
-            payment_method: "credit_card" as any,
+            payment_method: "credit" as any,
             customer_info: buildCustomerInfo() as any,
           })
           .select("id")
