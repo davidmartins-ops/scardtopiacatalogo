@@ -290,6 +290,52 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         handlePixSelect();
         return;
       }
+
+      // Card via InfinitePay: create order in DB, then call create-checkout edge function
+      if (pendingChannel === "card") {
+        if (!user) {
+          setOrderError("Faça login para pagar com cartão.");
+          return;
+        }
+        const orderItems = items.map((ci) => ({
+          id: ci.item.id,
+          name: ci.item.name,
+          description: ci.item.description,
+          language: ci.item.language ?? null,
+          condition: ci.item.condition ?? null,
+          quantity: ci.qty,
+          unit_price: ci.item.price, // cartão usa preço cheio
+          total_price: ci.item.price * ci.qty,
+        }));
+        const cardTotal = amountForChannel("card");
+        const { data: orderRow, error: orderErr } = await supabase
+          .from("orders")
+          .insert({
+            user_id: user.id,
+            items: orderItems as any,
+            total: cardTotal,
+            status: "pending_payment" as any,
+            payment_method: "credit_card" as any,
+            customer_info: buildCustomerInfo() as any,
+          })
+          .select("id")
+          .single();
+        if (orderErr || !orderRow) {
+          setOrderError(orderErr?.message ?? "Falha ao criar pedido.");
+          return;
+        }
+        const { data: checkoutData, error: fnErr } = await supabase.functions.invoke("create-checkout", {
+          body: { order_id: orderRow.id },
+        });
+        if (fnErr || !checkoutData?.checkout_url) {
+          setOrderError(fnErr?.message ?? "Falha ao gerar link de pagamento.");
+          return;
+        }
+        setConfirmOrderOpen(false);
+        window.location.href = checkoutData.checkout_url as string;
+        return;
+      }
+
       if (onOrderPlaced) {
         const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
