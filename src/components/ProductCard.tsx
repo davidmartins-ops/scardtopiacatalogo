@@ -169,9 +169,12 @@ interface ProductCardProps {
   onToggleFavorite: () => void;
   isLoggedIn: boolean;
   userId?: string;
+  versionsCount?: number;
+  versionsHref?: string;
 }
 
-const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId }: ProductCardProps) => {
+const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId, versionsCount, versionsHref }: ProductCardProps) => {
+  const hasMultipleVersions = (versionsCount ?? 0) > 1 && !!versionsHref;
   const config = descriptionConfig[item.description];
   const Icon = config?.icon ?? Circle;
   const discount = item.discount ?? 0;
