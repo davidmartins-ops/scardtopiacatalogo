@@ -397,8 +397,8 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             </div>
           )}
 
-          {/* Line 2: Secondary details (full width). Hidden for grouped singles. */}
-          {!isOutOfStock && !hasMultipleVersions && (
+          {/* Line 2: Secondary details (full width) — always leads to specific card/drop detail. */}
+          {!isOutOfStock && (
             isSingle ? (
               <Link
                 to={`/catalogo/single/${encodeURIComponent(item.id)}`}
@@ -425,6 +425,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
               </Link>
             )
           )}
+
         </div>
 
 
