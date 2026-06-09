@@ -277,18 +277,14 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           </h3>
         </div>
 
-        {/* Foil badge + versions badge */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        {/* Foil badge */}
+        <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
           <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
             <Icon className="h-2.5 w-2.5" />
             {config?.label ?? item.description}
           </Badge>
-          {hasMultipleVersions && (
-            <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30 font-semibold">
-              +{(versionsCount ?? 1) - 1} versões
-            </Badge>
-          )}
         </div>
+
 
         {/* Info block - standardized height */}
         <div className="min-h-[110px] flex flex-col justify-start pt-1">
