@@ -16,6 +16,7 @@ const CONDITIONS = ["NM", "SP", "HP", "D"];
 const LANGUAGES = ["PT", "EN", "JP", "ES", "FR", "DE", "IT", "KO", "ZHS", "ZHT", "RU"];
 
 const CollectionManager = () => {
+  useSEO({ title: "Gerenciar coleção", noindex: true });
   const { collectionId } = useParams<{ collectionId: string }>();
   const { user, loading: authLoading } = useCustomerAuth();
   const { collections, updateCollection } = useCollections();

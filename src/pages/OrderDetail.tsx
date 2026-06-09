@@ -25,6 +25,7 @@ const DISPUTE_REASONS = [
 const TIMELINE_ORDER: OrderStatus[] = ["payment_confirmed", "preparing", "shipped", "delivered"];
 
 const OrderDetailPage = () => {
+  useSEO({ title: "Detalhes do pedido", noindex: true });
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { data, isLoading } = useOrderDetail(orderId);

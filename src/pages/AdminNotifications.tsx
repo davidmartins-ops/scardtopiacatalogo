@@ -29,6 +29,7 @@ const formatTime = (iso: string) => {
 };
 
 const AdminNotifications = () => {
+  useSEO({ title: "Notificações administrativas", canonical: "https://www.spencerscardtopia.com.br/admin/notificacoes", noindex: true });
   const navigate = useNavigate();
   const { data, isLoading, unreadCount, markRead, markAllRead } = useAdminNotifications();
   const [filter, setFilter] = useState<"all" | "unread">("all");

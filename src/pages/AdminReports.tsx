@@ -52,6 +52,7 @@ const STATUS_LABEL = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s.la
 const PAYMENT_LABEL = Object.fromEntries(PAYMENT_OPTIONS.map((p) => [p.value, p.label])) as Record<string, string>;
 
 const AdminReports = () => {
+  useSEO({ title: "Relatórios administrativos", canonical: "https://www.spencerscardtopia.com.br/admin/relatorios", noindex: true });
   const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { orders, isLoading } = useAdminOrders();

@@ -11,6 +11,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const CustomerLogin = () => {
+  useSEO({ title: "Login do cliente", canonical: "https://www.spencerscardtopia.com.br/conta/login", noindex: true });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawRedirect = searchParams.get("redirect");

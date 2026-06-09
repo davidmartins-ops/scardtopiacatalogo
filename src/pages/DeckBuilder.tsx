@@ -18,6 +18,7 @@ import DeckStats from "@/components/DeckStats";
 const BASIC_LANDS = ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Snow-Covered Plains", "Snow-Covered Island", "Snow-Covered Swamp", "Snow-Covered Mountain", "Snow-Covered Forest"];
 
 const DeckBuilder = () => {
+  useSEO({ title: "Construtor de Deck", noindex: true });
   const { deckId } = useParams<{ deckId: string }>();
   const { user, loading: authLoading } = useCustomerAuth();
   const { decks, updateDeck } = useDecks();

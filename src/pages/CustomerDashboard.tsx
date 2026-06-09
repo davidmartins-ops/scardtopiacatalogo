@@ -23,6 +23,7 @@ import logo from "@/assets/logo.png";
 const accountTabs = ["favorites", "decks", "collections", "orders"] as const;
 
 const CustomerDashboard = () => {
+  useSEO({ title: "Minha conta", canonical: "https://www.spencerscardtopia.com.br/conta", noindex: true });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading, signOut } = useCustomerAuth();

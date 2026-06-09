@@ -27,6 +27,7 @@ import SlaRulesPanel from "@/components/SlaRulesPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
+  useSEO({ title: "Painel administrativo", canonical: "https://www.spencerscardtopia.com.br/admin", noindex: true });
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { data: inventoryData = [], isLoading, error } = useInventory();
