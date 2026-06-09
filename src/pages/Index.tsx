@@ -149,7 +149,7 @@ const Index = () => {
           <h2 id="dashboard-stats-heading" className="sr-only">Estatísticas gerais</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
-            <StatCard title="Produtos Únicos" value={String(stats.uniqueProducts)} icon={Package} />
+            <StatCard title="Produtos Únicos" value={String(stats.uniqueProducts)} subtitle="itens" icon={Package} />
           </div>
           <div className="animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0 }}>
             <StatCard title="Total em Estoque" value={String(stats.totalItems)} subtitle="unidades" icon={Layers} />
@@ -158,8 +158,10 @@ const Index = () => {
             <StatCard
               title="Valor Total"
               value={`R$ ${stats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+              subtitle="em estoque"
               icon={DollarSign}
             />
+
           </div>
           <div className="animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0 }}>
             <StatCard title="Itens Foil" value={String(stats.foilCount)} subtitle="unidades" icon={Sparkles} />
