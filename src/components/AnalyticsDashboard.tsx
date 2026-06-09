@@ -119,7 +119,7 @@ const AnalyticsDashboard = () => {
           { label: "Visualizacoes", value: stats.views, icon: Eye, color: "text-primary" },
           { label: "Adicionados ao Carrinho", value: stats.cartAdds, icon: ShoppingCart, color: "text-accent" },
           { label: "Compartilhamentos", value: stats.shares, icon: MousePointer, color: "text-foil" },
-          { label: "Pedidos", value: stats.orders, icon: Package, color: "text-rainbow" },
+          { label: "Pedidos totais", value: stats.orders, icon: Package, color: "text-rainbow" },
         ].map((s) => (
           <div key={s.label} className="glass-card p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -130,6 +130,24 @@ const AnalyticsDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Order Breakdown */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Pedidos em aberto", value: stats.ordersOpen, color: "text-accent" },
+          { label: "Pedidos efetivados", value: stats.ordersDelivered, color: "text-primary" },
+          { label: "Pedidos cancelados", value: stats.ordersCancelled, color: "text-destructive" },
+        ].map((s) => (
+          <div key={s.label} className="glass-card p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Package className={`h-4 w-4 ${s.color}`} />
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{s.label}</span>
+            </div>
+            <p className={`text-xl sm:text-2xl font-bold font-display ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
