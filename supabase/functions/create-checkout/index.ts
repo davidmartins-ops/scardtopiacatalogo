@@ -22,13 +22,10 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // InfinitePay public checkout link endpoint does NOT require an API key —
+  // the `handle` identifies the merchant. We still keep the secret optional in
+  // case InfinitePay starts requiring it on this account.
   const INFINITEPAY_API_KEY = Deno.env.get("INFINITEPAY_API_KEY");
-  if (!INFINITEPAY_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "InfinitePay API key not configured." }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
-  }
 
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
