@@ -240,7 +240,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return msg;
   };
 
-  const openDeliveryDialog = (action: "whatsapp" | "pix") => {
+  const openDeliveryDialog = (action: "whatsapp" | "pix" | "card") => {
     if (!user) {
       setPendingAction(action);
       setLoginPromptOpen(true);
