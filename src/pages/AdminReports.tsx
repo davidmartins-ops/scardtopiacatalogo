@@ -185,7 +185,7 @@ const AdminReports = () => {
       <header className="border-b border-border/40 bg-card/40 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link to="/" aria-label="Voltar ao painel">
+            <Link to="/admin" aria-label="Voltar ao painel">
               <img src={logo} alt="Spencer's Cardtopia" className="h-10" />
             </Link>
             <div>
@@ -196,7 +196,7 @@ const AdminReports = () => {
             </div>
           </div>
           <Button asChild variant="ghost" size="sm" className="gap-1.5">
-            <Link to="/"><ArrowLeft className="h-3.5 w-3.5" /> Painel</Link>
+            <Link to="/admin"><ArrowLeft className="h-3.5 w-3.5" /> Painel</Link>
           </Button>
         </div>
       </header>
