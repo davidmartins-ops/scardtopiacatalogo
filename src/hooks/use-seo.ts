@@ -25,7 +25,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const useSEO = ({ title, description, canonical, image, type = "website", product, jsonLd }: SEOProps) => {
+const useSEO = ({ title, description, canonical, image, type = "website", product, jsonLd, noindex }: SEOProps) => {
   useEffect(() => {
     const siteName = "Spencer's Cardtopia";
     const fullTitle = title ? `${title} | ${siteName}` : siteName;
