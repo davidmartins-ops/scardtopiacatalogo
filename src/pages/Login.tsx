@@ -86,7 +86,8 @@ const Login = () => {
     title: "Entre na sua conta",
     description:
       "Acompanhe pedidos, favoritos e novidades da Spencer's Cardtopia — sua loja de Secret Lair, drops e singles de Magic.",
-    canonical: `${window.location.origin}/login`,
+    canonical: `https://www.spencerscardtopia.com.br/login`,
+    noindex: true,
   });
 
   // Customer auto-redirect
