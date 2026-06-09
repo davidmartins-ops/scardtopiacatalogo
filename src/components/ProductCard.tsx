@@ -340,6 +340,16 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         <div className="space-y-1.5 pt-1 mt-auto">
           {isOutOfStock ? (
             <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
+          ) : hasMultipleVersions ? (
+            <Link to={versionsHref!} className="block" onClick={() => trackEvent("versions_click", item)}>
+              <Button
+                size="sm"
+                variant="default"
+                className="w-full h-10 text-[14px] sm:text-[15px] gap-1.5 font-semibold transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+              >
+                <Plus className="h-4 w-4" /> Escolher versão ({versionsCount})
+              </Button>
+            </Link>
           ) : (
             <Button
               size="sm"
@@ -353,13 +363,19 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
           <div className="flex w-full min-w-0 items-center gap-1.5 box-border">
             {isSingle ? (
-              <Link to={`/catalogo/single/${encodeURIComponent(item.id)}`} className="flex-1 min-w-0" onClick={() => trackEvent("more_info_click", item)}>
+              <Link
+                to={hasMultipleVersions ? versionsHref! : `/catalogo/single/${encodeURIComponent(item.id)}`}
+                className="flex-1 min-w-0"
+                onClick={() => trackEvent("more_info_click", item)}
+              >
                 <Button
                   size="sm"
                   variant="outline"
                   className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1 truncate"
                 >
-                  <span className="truncate">🧐 Mais Informações</span>
+                  <span className="truncate">
+                    {hasMultipleVersions ? `📚 Ver ${versionsCount} versões` : "🧐 Mais Informações"}
+                  </span>
                 </Button>
               </Link>
             ) : (
