@@ -298,16 +298,19 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             </div>
           ) : (
             <>
+              {hasMultipleVersions && (
+                <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
+                  A partir de
+                </p>
+              )}
               {hasPixHighlight ? (
                 <div className="space-y-0.5">
-                  {/* PIX como valor primário (maior destaque) */}
                   <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-success font-display leading-none block">
                     R$ {pixFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                   <p className="text-[11px] sm:text-[12px] font-semibold text-success/90 uppercase tracking-wide">
                     💰 no PIX{discount > 0 ? ` · -${discount}%` : ""}
                   </p>
-                  {/* Preço cartão como referência secundária */}
                   <p className="text-[13px] sm:text-[14px] text-muted-foreground">
                     💳 Cartão: R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
@@ -329,9 +332,15 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                   )}
                 </div>
               )}
-              <p className="text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
-                {item.quantity === 1 ? "🔥 Última unidade!" : `📦 ${item.quantity} em estoque`}
-              </p>
+              {hasMultipleVersions ? (
+                <p className="text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
+                  📦 {versionsCount} versões disponíveis
+                </p>
+              ) : (
+                <p className="text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
+                  {item.quantity === 1 ? "🔥 Última unidade!" : `📦 ${item.quantity} em estoque`}
+                </p>
+              )}
             </>
           )}
         </div>
@@ -341,15 +350,38 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           {isOutOfStock ? (
             <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
           ) : hasMultipleVersions ? (
-            <Link to={versionsHref!} className="block" onClick={() => trackEvent("versions_click", item)}>
-              <Button
-                size="sm"
-                variant="default"
-                className="w-full h-10 text-[14px] sm:text-[15px] gap-1.5 font-semibold transition-all duration-150 active:scale-[0.98] hover:shadow-md"
-              >
-                <Plus className="h-4 w-4" /> Escolher versão ({versionsCount})
-              </Button>
-            </Link>
+            <div className="flex w-full items-center gap-1.5">
+              <Link to={versionsHref!} className="flex-1 min-w-0" onClick={() => trackEvent("versions_click", item)}>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="w-full h-10 text-[14px] sm:text-[15px] gap-1.5 font-semibold transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+                >
+                  <Plus className="h-4 w-4" /> Escolher versão ({versionsCount})
+                </Button>
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost" aria-label="Compartilhar" className="h-10 w-10 shrink-0 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-150">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[160px]">
+                  <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
+                    <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
+                    <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
+                    <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
+                    <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <Button
               size="sm"
@@ -361,23 +393,22 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             </Button>
           )}
 
+          {!hasMultipleVersions && (
           <div className="flex w-full min-w-0 items-center gap-1.5 box-border">
             {isSingle ? (
-              hasMultipleVersions ? null : (
-                <Link
-                  to={`/catalogo/single/${encodeURIComponent(item.id)}`}
-                  className="flex-1 min-w-0"
-                  onClick={() => trackEvent("more_info_click", item)}
+              <Link
+                to={`/catalogo/single/${encodeURIComponent(item.id)}`}
+                className="flex-1 min-w-0"
+                onClick={() => trackEvent("more_info_click", item)}
+              >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1 truncate"
                 >
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1 truncate"
-                  >
-                    <span className="truncate">🧐 Mais Informações</span>
-                  </Button>
-                </Link>
-              )
+                  <span className="truncate">🧐 Mais Informações</span>
+                </Button>
+              </Link>
             ) : (
               <Link to={`/catalogo/drop/${item.id}`} className="flex-1 min-w-0" onClick={() => trackEvent("drop_content_click", item)}>
                 <Button
@@ -395,6 +426,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
                   <Share2 className="h-4 w-4" />
                 </Button>
+
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[160px]">
                 <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
