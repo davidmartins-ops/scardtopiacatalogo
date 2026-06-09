@@ -382,19 +382,26 @@ const ItemGrid = ({
               <span className="text-xs text-muted-foreground font-body">{catItems.length} itens</span>
             </div>
             <div className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
-              {catItems.map((item, i) => (
-                <div key={item.id} className="animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
-                  <ProductCard
-                    item={item}
-                    isSingle={isSingles}
-                    onAddToCart={onAddToCart}
-                    isFavorite={isFavorite(item.id)}
-                    onToggleFavorite={() => onToggleFavorite(item.id)}
-                    isLoggedIn={isLoggedIn}
-                    userId={userId}
-                  />
-                </div>
-              ))}
+              {catItems.map((item, i) => {
+                const versions = isSingles ? versionsByName.get(item.name.trim().toLowerCase()) ?? [] : [];
+                const versionsCount = versions.length;
+                const versionsHref = isSingles && versionsCount > 1 ? `/catalogo/carta/${encodeURIComponent(item.name)}` : undefined;
+                return (
+                  <div key={item.id} className="animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
+                    <ProductCard
+                      item={item}
+                      isSingle={isSingles}
+                      onAddToCart={onAddToCart}
+                      isFavorite={isFavorite(item.id)}
+                      onToggleFavorite={() => onToggleFavorite(item.id)}
+                      isLoggedIn={isLoggedIn}
+                      userId={userId}
+                      versionsCount={versionsCount}
+                      versionsHref={versionsHref}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))
