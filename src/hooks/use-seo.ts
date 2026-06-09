@@ -130,8 +130,9 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
 
     return () => {
       document.querySelectorAll('script[data-seo-jsonld]').forEach((s) => s.remove());
+      document.querySelectorAll('meta[data-seo-robots]').forEach((m) => m.remove());
     };
-  }, [title, description, canonical, image, type, product, jsonLd]);
+  }, [title, description, canonical, image, type, product, jsonLd, noindex]);
 };
 
 export default useSEO;
