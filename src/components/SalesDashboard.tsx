@@ -6,6 +6,8 @@ import { TrendingUp, ShoppingBag, DollarSign, Package, Loader2, Trophy } from "l
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
 import PaymentMethodChart from "./PaymentMethodChart";
+import { ORDER_STATUS_LABELS } from "./OrderStatusBadge";
+import type { OrderStatus } from "@/hooks/use-orders";
 
 type Range = "7d" | "30d" | "90d" | "all";
 
@@ -76,7 +78,10 @@ const SalesDashboard = () => {
   const statusBreakdown = useMemo(() => {
     const map = new Map<string, number>();
     filtered.forEach((o) => map.set(o.status, (map.get(o.status) ?? 0) + 1));
-    return Array.from(map.entries()).map(([status, count]) => ({ status, count }));
+    return Array.from(map.entries()).map(([status, count]) => ({
+      status: ORDER_STATUS_LABELS[status as OrderStatus] ?? status,
+      count,
+    }));
   }, [filtered]);
 
   if (isLoading) {
