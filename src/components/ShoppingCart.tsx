@@ -190,7 +190,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const totalItems = items.reduce((s, ci) => s + ci.qty, 0);
 
   // Resolve the amount to charge for the currently selected payment channel.
-  const amountForChannel = (channel: "whatsapp" | "pix" | null) =>
+  const amountForChannel = (channel: "whatsapp" | "pix" | "card" | null) =>
     channel === "pix" ? pixTotal : total;
 
   const getFreightValue = () => {
@@ -199,7 +199,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
-  const buildMessage = (channel: "whatsapp" | "pix" | null = pendingChannel) => {
+  const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
     const isPix = channel === "pix";
     const channelTotal = amountForChannel(channel);
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
