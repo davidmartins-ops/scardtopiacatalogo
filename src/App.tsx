@@ -93,6 +93,7 @@ const App = () => (
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
           <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
+          <Route path="/catalogo/carta/:name" element={<CardVersions />} />
           <Route path="/conta/login" element={<CustomerLogin />} />
           <Route path="/conta" element={<CustomerDashboard />} />
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
