@@ -767,7 +767,13 @@ export type Database = {
           customer_info: Json
           id: string
           items: Json
+          paid_amount: number | null
+          paid_at: string | null
+          payment_capture_method: string | null
+          payment_installments: number | null
+          payment_invoice_slug: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_transaction_id: string | null
           receipt_url: string | null
           sla_breach_status: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at: string | null
@@ -782,7 +788,13 @@ export type Database = {
           customer_info?: Json
           id?: string
           items?: Json
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_capture_method?: string | null
+          payment_installments?: number | null
+          payment_invoice_slug?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_transaction_id?: string | null
           receipt_url?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at?: string | null
@@ -797,7 +809,13 @@ export type Database = {
           customer_info?: Json
           id?: string
           items?: Json
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_capture_method?: string | null
+          payment_installments?: number | null
+          payment_invoice_slug?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_transaction_id?: string | null
           receipt_url?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at?: string | null
@@ -808,6 +826,59 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      payment_events: {
+        Row: {
+          amount: number | null
+          capture_method: string | null
+          created_at: string
+          id: string
+          installments: number | null
+          invoice_slug: string | null
+          order_id: string | null
+          paid_amount: number | null
+          provider: string
+          raw_response: Json | null
+          status: string
+          transaction_nsu: string
+        }
+        Insert: {
+          amount?: number | null
+          capture_method?: string | null
+          created_at?: string
+          id?: string
+          installments?: number | null
+          invoice_slug?: string | null
+          order_id?: string | null
+          paid_amount?: number | null
+          provider?: string
+          raw_response?: Json | null
+          status: string
+          transaction_nsu: string
+        }
+        Update: {
+          amount?: number | null
+          capture_method?: string | null
+          created_at?: string
+          id?: string
+          installments?: number | null
+          invoice_slug?: string | null
+          order_id?: string | null
+          paid_amount?: number | null
+          provider?: string
+          raw_response?: Json | null
+          status?: string
+          transaction_nsu?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       price_history: {
         Row: {
