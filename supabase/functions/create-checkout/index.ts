@@ -103,12 +103,12 @@ Deno.serve(async (req) => {
       items: itemsPayload,
     };
 
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (INFINITEPAY_API_KEY) headers["Authorization"] = `Bearer ${INFINITEPAY_API_KEY}`;
+
     const response = await fetch("https://api.infinitepay.io/invoices/public/checkout/links", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${INFINITEPAY_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(checkoutPayload),
     });
 
