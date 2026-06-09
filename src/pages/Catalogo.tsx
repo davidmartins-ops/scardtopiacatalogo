@@ -226,15 +226,45 @@ const ItemGrid = ({
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [items, isSingles, allSets]);
 
+  // For singles: group by normalized name so each card name appears once.
+  // versionsByName maps name → all matching filtered items.
+  const versionsByName = useMemo(() => {
+    if (!isSingles) return new Map<string, InventoryItem[]>();
+    const map = new Map<string, InventoryItem[]>();
+    filteredItems.forEach((it) => {
+      const key = it.name.trim().toLowerCase();
+      const arr = map.get(key) ?? [];
+      arr.push(it);
+      map.set(key, arr);
+    });
+    return map;
+  }, [filteredItems, isSingles]);
+
+  // Deduplicated display items: for singles, pick representative (cheapest final price, then most stock).
+  const displayItems = useMemo(() => {
+    if (!isSingles) return filteredItems;
+    const reps: InventoryItem[] = [];
+    versionsByName.forEach((versions) => {
+      const best = [...versions].sort((a, b) => {
+        const fa = a.price * (1 - (a.discount ?? 0) / 100);
+        const fb = b.price * (1 - (b.discount ?? 0) / 100);
+        if (fa !== fb) return fa - fb;
+        return b.quantity - a.quantity;
+      })[0];
+      reps.push(best);
+    });
+    return reps;
+  }, [filteredItems, versionsByName, isSingles]);
+
   const groupedItems = useMemo(() => {
     if (sortOrder === "az" || sortOrder === "za") {
-      const sorted = [...filteredItems].sort((a, b) => sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
-      return [["Todas as cartas", sorted]] as [string, typeof filteredItems][];
+      const sorted = [...displayItems].sort((a, b) => sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+      return [["Todas as cartas", sorted]] as [string, typeof displayItems][];
     }
-    const groups: Record<string, typeof filteredItems> = {};
-    filteredItems.forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
+    const groups: Record<string, typeof displayItems> = {};
+    displayItems.forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredItems, sortOrder]);
+  }, [displayItems, sortOrder]);
 
   return (
     <div className="space-y-6 overflow-visible">
