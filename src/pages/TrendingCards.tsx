@@ -287,7 +287,7 @@ const TrendingCards = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <Link to="/catalogo" aria-label="Voltar para o catálogo"><Button variant="ghost" size="icon" className="h-8 w-8 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200" aria-label="Voltar para o catálogo"><ArrowLeft className="h-4 w-4" aria-hidden="true" /></Button></Link>
-            <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-8 hover:scale-105 transition-transform" /></Link>
+            <Link to="/"><img src={logo} alt="Spencer's Cardtopia" className="h-8 hover:scale-105 transition-transform" /></Link>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/catalogo"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold text-xs transition-colors duration-200">Catálogo</Button></Link>

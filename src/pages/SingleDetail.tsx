@@ -114,7 +114,7 @@ const SingleDetail = () => {
     <div className="min-h-screen bg-background font-body">
       <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-          <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" /></Link>
+          <Link to="/"><img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" /></Link>
           <Button
             variant="ghost"
             size="sm"

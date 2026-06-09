@@ -72,7 +72,7 @@ const Unsubscribe = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 font-body">
       <div className="glass-card p-8 max-w-md w-full text-center space-y-5">
-        <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-14 mx-auto" /></Link>
+        <Link to="/"><img src={logo} alt="Spencer's Cardtopia" className="h-14 mx-auto" /></Link>
         <h1 className="font-display text-2xl font-bold">
           <span className="text-gradient">Cancelar inscrição</span>
         </h1>

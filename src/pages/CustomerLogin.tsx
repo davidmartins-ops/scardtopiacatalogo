@@ -76,7 +76,7 @@ const CustomerLogin = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <main id="main-content" className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link to="/catalogo" aria-label="Voltar ao catálogo">
+          <Link to="/" aria-label="Voltar ao catálogo">
             <img src={logo} alt="Spencer's Cardtopia" className="h-20 mx-auto mb-4 drop-shadow-xl" />
           </Link>
           <h1 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Cinzel Decorative', 'Cinzel', serif", letterSpacing: '0.05em' }}><span className="text-gradient">Minha Conta</span></h1>

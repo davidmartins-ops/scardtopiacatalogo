@@ -234,7 +234,7 @@ const Login = () => {
 
       {/* Header */}
       <header className="relative z-50 flex items-center justify-between p-4 sm:p-6">
-        <Link to="/catalogo" aria-label="Ir ao catálogo">
+        <Link to="/" aria-label="Ir ao catálogo">
           <img
             src={logo}
             alt="Spencer's Cardtopia"
