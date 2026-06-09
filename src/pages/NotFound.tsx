@@ -9,6 +9,7 @@ const NotFound = () => {
     title: "Página não encontrada (404)",
     description: "A página que você procura não existe ou foi removida. Volte ao catálogo da Spencer's Cardtopia e explore Drops e singles de Magic: The Gathering.",
     canonical: `https://www.spencerscardtopia.com.br${location.pathname}`,
+    noindex: true,
   });
 
   useEffect(() => {
