@@ -444,7 +444,9 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          )}
         </div>
+
       </div>
     </div>
   );
