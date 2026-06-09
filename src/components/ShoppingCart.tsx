@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart as CartIcon, X, Trash2, Plus, Minus, Send, QrCode, Upload, Loader2, Check, Truck, Store, MapPin, Package, LogIn } from "lucide-react";
+import { ShoppingCart as CartIcon, X, Trash2, Plus, Minus, Send, QrCode, Upload, Loader2, Check, Truck, Store, MapPin, Package, LogIn, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -121,7 +121,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
-  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | "card" | null>(null);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
   const [customerExtra, setCustomerExtra] = useState<CustomerExtra>({ cpf: "", phone: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
@@ -132,7 +132,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | null>(null);
+  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | "card" | null>(null);
 
   // Pre-fill cpf/phone from saved profile
   useEffect(() => {
@@ -190,7 +190,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const totalItems = items.reduce((s, ci) => s + ci.qty, 0);
 
   // Resolve the amount to charge for the currently selected payment channel.
-  const amountForChannel = (channel: "whatsapp" | "pix" | null) =>
+  const amountForChannel = (channel: "whatsapp" | "pix" | "card" | null) =>
     channel === "pix" ? pixTotal : total;
 
   const getFreightValue = () => {
@@ -199,7 +199,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
-  const buildMessage = (channel: "whatsapp" | "pix" | null = pendingChannel) => {
+  const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
     const isPix = channel === "pix";
     const channelTotal = amountForChannel(channel);
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
@@ -240,7 +240,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return msg;
   };
 
-  const openDeliveryDialog = (action: "whatsapp" | "pix") => {
+  const openDeliveryDialog = (action: "whatsapp" | "pix" | "card") => {
     if (!user) {
       setPendingAction(action);
       setLoginPromptOpen(true);
@@ -290,6 +290,52 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         handlePixSelect();
         return;
       }
+
+      // Card via InfinitePay: create order in DB, then call create-checkout edge function
+      if (pendingChannel === "card") {
+        if (!user) {
+          setOrderError("Faça login para pagar com cartão.");
+          return;
+        }
+        const orderItems = items.map((ci) => ({
+          id: ci.item.id,
+          name: ci.item.name,
+          description: ci.item.description,
+          language: ci.item.language ?? null,
+          condition: ci.item.condition ?? null,
+          quantity: ci.qty,
+          unit_price: ci.item.price, // cartão usa preço cheio
+          total_price: ci.item.price * ci.qty,
+        }));
+        const cardTotal = amountForChannel("card");
+        const { data: orderRow, error: orderErr } = await supabase
+          .from("orders")
+          .insert({
+            user_id: user.id,
+            items: orderItems as any,
+            total: cardTotal,
+            status: "pending_payment" as any,
+            payment_method: "credit" as any,
+            customer_info: buildCustomerInfo() as any,
+          })
+          .select("id")
+          .single();
+        if (orderErr || !orderRow) {
+          setOrderError(orderErr?.message ?? "Falha ao criar pedido.");
+          return;
+        }
+        const { data: checkoutData, error: fnErr } = await supabase.functions.invoke("create-checkout", {
+          body: { order_id: orderRow.id },
+        });
+        if (fnErr || !checkoutData?.checkout_url) {
+          setOrderError(fnErr?.message ?? "Falha ao gerar link de pagamento.");
+          return;
+        }
+        setConfirmOrderOpen(false);
+        window.location.href = checkoutData.checkout_url as string;
+        return;
+      }
+
       if (onOrderPlaced) {
         const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
@@ -439,7 +485,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   <span className="font-display font-semibold text-foreground">Total</span>
                   <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("whatsapp")}><Send className="h-4 w-4" />Comprar via WhatsApp</Button>
+                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão (InfinitePay)</Button>
+                <Button variant="secondary" className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("whatsapp")}><Send className="h-4 w-4" />Comprar via WhatsApp</Button>
                 <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("pix")}><QrCode className="h-4 w-4" />Pagar com PIX</Button>
                 <Button variant="outline" className="w-full gap-2 font-body text-xs" size="sm" onClick={onClear}><Trash2 className="h-3.5 w-3.5" />Limpar carrinho</Button>
               </div>
@@ -493,7 +540,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : "WhatsApp"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : pendingChannel === "card" ? "Cartão (InfinitePay)" : "WhatsApp"}</span></div>
               <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-bold text-primary">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             </div>
             <p className="text-xs text-muted-foreground">
