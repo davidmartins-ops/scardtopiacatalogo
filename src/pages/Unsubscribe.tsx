@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 const Unsubscribe = () => {
+  useSEO({ title: "Cancelar inscrição de e-mails", canonical: "https://www.spencerscardtopia.com.br/unsubscribe", noindex: true });
   const [params] = useSearchParams();
   const token = params.get("token");
   const [status, setStatus] = useState<Status>("validating");

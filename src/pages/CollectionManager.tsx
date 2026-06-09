@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
@@ -16,6 +17,7 @@ const CONDITIONS = ["NM", "SP", "HP", "D"];
 const LANGUAGES = ["PT", "EN", "JP", "ES", "FR", "DE", "IT", "KO", "ZHS", "ZHT", "RU"];
 
 const CollectionManager = () => {
+  useSEO({ title: "Gerenciar coleção", noindex: true });
   const { collectionId } = useParams<{ collectionId: string }>();
   const { user, loading: authLoading } = useCustomerAuth();
   const { collections, updateCollection } = useCollections();

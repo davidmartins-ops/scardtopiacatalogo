@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useState, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
@@ -23,6 +24,7 @@ import logo from "@/assets/logo.png";
 const accountTabs = ["favorites", "decks", "collections", "orders"] as const;
 
 const CustomerDashboard = () => {
+  useSEO({ title: "Minha conta", canonical: "https://www.spencerscardtopia.com.br/conta", noindex: true });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading, signOut } = useCustomerAuth();

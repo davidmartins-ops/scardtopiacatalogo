@@ -12,7 +12,8 @@ const AdminLogin = () => {
   useSEO({
     title: "Acesso administrativo",
     description: "Área restrita de administração da Spencer's Cardtopia.",
-    canonical: `${window.location.origin}/admin/login`,
+    canonical: `https://www.spencerscardtopia.com.br/admin/login`,
+    noindex: true,
   });
 
   const handleGoogleLogin = async () => {

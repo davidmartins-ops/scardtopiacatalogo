@@ -21,9 +21,11 @@ interface SEOProps {
   product?: SEOProduct;
   /** Optional custom JSON-LD; if provided, overrides default WebSite/Product schema. */
   jsonLd?: Record<string, any> | Record<string, any>[];
+  /** When true, injects <meta name="robots" content="noindex,nofollow"> to keep page out of search index. */
+  noindex?: boolean;
 }
 
-const useSEO = ({ title, description, canonical, image, type = "website", product, jsonLd }: SEOProps) => {
+const useSEO = ({ title, description, canonical, image, type = "website", product, jsonLd, noindex }: SEOProps) => {
   useEffect(() => {
     const siteName = "Spencer's Cardtopia";
     const fullTitle = title ? `${title} | ${siteName}` : siteName;
@@ -59,6 +61,17 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
     setMeta("twitter:title", fullTitle, "name");
     setMeta("twitter:description", metaDesc, "name");
     if (image) setMeta("twitter:image", image, "name");
+
+    // Robots noindex (per-page)
+    const existingRobots = document.querySelector('meta[name="robots"][data-seo-robots]');
+    if (existingRobots) existingRobots.remove();
+    if (noindex) {
+      const m = document.createElement("meta");
+      m.setAttribute("name", "robots");
+      m.setAttribute("content", "noindex,nofollow");
+      m.setAttribute("data-seo-robots", "true");
+      document.head.appendChild(m);
+    }
 
     // JSON-LD
     document.querySelectorAll('script[data-seo-jsonld]').forEach((s) => s.remove());
@@ -117,8 +130,9 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
 
     return () => {
       document.querySelectorAll('script[data-seo-jsonld]').forEach((s) => s.remove());
+      document.querySelectorAll('meta[data-seo-robots]').forEach((m) => m.remove());
     };
-  }, [title, description, canonical, image, type, product, jsonLd]);
+  }, [title, description, canonical, image, type, product, jsonLd, noindex]);
 };
 
 export default useSEO;

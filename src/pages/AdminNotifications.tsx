@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Bell, Check, CheckCheck, Loader2, ShoppingBag, AlertTriangle, Package, MessageSquare, Info } from "lucide-react";
@@ -29,6 +30,7 @@ const formatTime = (iso: string) => {
 };
 
 const AdminNotifications = () => {
+  useSEO({ title: "Notificações administrativas", canonical: "https://www.spencerscardtopia.com.br/admin/notificacoes", noindex: true });
   const navigate = useNavigate();
   const { data, isLoading, unreadCount, markRead, markAllRead } = useAdminNotifications();
   const [filter, setFilter] = useState<"all" | "unread">("all");

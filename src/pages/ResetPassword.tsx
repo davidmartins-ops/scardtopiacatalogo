@@ -36,7 +36,8 @@ const ResetPassword = () => {
   useSEO({
     title: "Redefinir senha",
     description: "Defina uma nova senha para sua conta Spencer's Cardtopia.",
-    canonical: `${window.location.origin}/reset-password`,
+    canonical: `https://www.spencerscardtopia.com.br/reset-password`,
+    noindex: true,
   });
 
   useEffect(() => {

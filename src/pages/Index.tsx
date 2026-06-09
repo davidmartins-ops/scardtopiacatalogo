@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell } from "lucide-react";
@@ -27,6 +28,7 @@ import SlaRulesPanel from "@/components/SlaRulesPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
+  useSEO({ title: "Painel administrativo", canonical: "https://www.spencerscardtopia.com.br/admin", noindex: true });
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { data: inventoryData = [], isLoading, error } = useInventory();
