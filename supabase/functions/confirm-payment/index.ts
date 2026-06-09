@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 
     // SERVER-SIDE VERIFICATION: ask InfinitePay if this transaction is really paid
     const checkRes = await fetch(
-      "https://api.infinitepay.io/invoices/public/checkout/payment_check",
+      "https://api.checkout.infinitepay.io/payment_check",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
