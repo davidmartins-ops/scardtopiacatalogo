@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";

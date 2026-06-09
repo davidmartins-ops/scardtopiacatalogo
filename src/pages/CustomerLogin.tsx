@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";

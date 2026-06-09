@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useOrderDetail, useOrderDisputes, type OrderStatus } from "@/hooks/use-orders";

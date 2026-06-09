@@ -1,3 +1,4 @@
+import useSEO from "@/hooks/use-seo";
 import { useState, useMemo, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
