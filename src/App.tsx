@@ -12,6 +12,7 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
 import DropDetail from "./pages/DropDetail.tsx";
 import SingleDetail from "./pages/SingleDetail.tsx";
+import CardVersions from "./pages/CardVersions.tsx";
 import CustomerLogin from "./pages/CustomerLogin.tsx";
 import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
