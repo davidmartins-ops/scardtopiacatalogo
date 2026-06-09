@@ -50,7 +50,7 @@ const AdminNotifications = () => {
       <header className="border-b bg-card/60 backdrop-blur sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild aria-label="Voltar">
-            <Link to="/"><ArrowLeft className="h-4 w-4" /></Link>
+            <Link to="/admin"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-lg sm:text-xl flex items-center gap-2">
