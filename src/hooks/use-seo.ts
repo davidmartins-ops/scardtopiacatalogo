@@ -62,6 +62,17 @@ const useSEO = ({ title, description, canonical, image, type = "website", produc
     setMeta("twitter:description", metaDesc, "name");
     if (image) setMeta("twitter:image", image, "name");
 
+    // Robots noindex (per-page)
+    const existingRobots = document.querySelector('meta[name="robots"][data-seo-robots]');
+    if (existingRobots) existingRobots.remove();
+    if (noindex) {
+      const m = document.createElement("meta");
+      m.setAttribute("name", "robots");
+      m.setAttribute("content", "noindex,nofollow");
+      m.setAttribute("data-seo-robots", "true");
+      document.head.appendChild(m);
+    }
+
     // JSON-LD
     document.querySelectorAll('script[data-seo-jsonld]').forEach((s) => s.remove());
 
