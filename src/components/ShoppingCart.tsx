@@ -540,7 +540,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : pendingChannel === "card" ? "Cartão (InfinitePay)" : "WhatsApp"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
               <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-bold text-primary">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             </div>
             <p className="text-xs text-muted-foreground">
