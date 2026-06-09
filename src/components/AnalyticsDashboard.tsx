@@ -21,13 +21,49 @@ const AnalyticsDashboard = () => {
     refetchInterval: 30000,
   });
 
-  const stats = useMemo(() => {
-    const views = events.filter((e) => e.event_type === "view").length;
-    const cartAdds = events.filter((e) => e.event_type === "add_to_cart").length;
-    const shares = events.filter((e) => e.event_type === "share").length;
-    const orders = events.filter((e) => e.event_type === "order").length;
-    return { views, cartAdds, shares, orders };
-  }, [events]);
+  const { data: eventCounts } = useQuery({
+    queryKey: ["analytics-event-counts"],
+    queryFn: async () => {
+      const types = ["view", "add_to_cart", "share"] as const;
+      const results = await Promise.all(
+        types.map(async (t) => {
+          const { count } = await supabase
+            .from("analytics_events")
+            .select("*", { count: "exact", head: true })
+            .eq("event_type", t);
+          return [t, count ?? 0] as const;
+        })
+      );
+      return Object.fromEntries(results) as Record<(typeof types)[number], number>;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: orderStats } = useQuery({
+    queryKey: ["analytics-order-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("orders").select("status");
+      if (error) throw error;
+      const rows = data ?? [];
+      const total = rows.length;
+      const cancelled = rows.filter((o: any) => o.status === "cancelled").length;
+      const delivered = rows.filter((o: any) => o.status === "delivered").length;
+      const open = total - cancelled - delivered;
+      return { total, open, delivered, cancelled };
+    },
+    refetchInterval: 30000,
+  });
+
+  const stats = useMemo(() => ({
+    views: eventCounts?.view ?? 0,
+    cartAdds: eventCounts?.add_to_cart ?? 0,
+    shares: eventCounts?.share ?? 0,
+    orders: orderStats?.total ?? 0,
+    ordersOpen: orderStats?.open ?? 0,
+    ordersDelivered: orderStats?.delivered ?? 0,
+    ordersCancelled: orderStats?.cancelled ?? 0,
+  }), [eventCounts, orderStats]);
+
 
   const topProducts = useMemo(() => {
     const counts: Record<string, { name: string; views: number; carts: number }> = {};
