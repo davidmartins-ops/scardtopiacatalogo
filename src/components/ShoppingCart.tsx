@@ -121,7 +121,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
-  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | "card" | null>(null);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
   const [customerExtra, setCustomerExtra] = useState<CustomerExtra>({ cpf: "", phone: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
@@ -132,7 +132,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | null>(null);
+  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | "card" | null>(null);
 
   // Pre-fill cpf/phone from saved profile
   useEffect(() => {
