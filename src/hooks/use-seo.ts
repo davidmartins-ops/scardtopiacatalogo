@@ -21,6 +21,8 @@ interface SEOProps {
   product?: SEOProduct;
   /** Optional custom JSON-LD; if provided, overrides default WebSite/Product schema. */
   jsonLd?: Record<string, any> | Record<string, any>[];
+  /** When true, injects <meta name="robots" content="noindex,nofollow"> to keep page out of search index. */
+  noindex?: boolean;
 }
 
 const useSEO = ({ title, description, canonical, image, type = "website", product, jsonLd }: SEOProps) => {
