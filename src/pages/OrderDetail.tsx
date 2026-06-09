@@ -117,7 +117,7 @@ const OrderDetailPage = () => {
           <Link to="/conta?tab=orders" className="flex items-center gap-2 text-sm text-brand-header-foreground hover:text-brand-gold transition-colors">
             <ArrowLeft className="h-4 w-4" /> Meus pedidos
           </Link>
-          <Link to="/catalogo"><img src={logo} alt="Spencer's Cardtopia" className="h-10" /></Link>
+          <Link to="/"><img src={logo} alt="Spencer's Cardtopia" className="h-10" /></Link>
           <div className="w-20" />
         </div>
       </div>

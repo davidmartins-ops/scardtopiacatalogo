@@ -760,7 +760,7 @@ const Catalogo = () => {
       {/* Sticky Header Bar - dark blue brand identity */}
       <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-          <Link to="/catalogo">
+          <Link to="/">
             <img src={logo} alt="Spencer's Cardtopia" className="h-9 hover:scale-105 transition-transform" />
           </Link>
           <div className="flex items-center gap-2">
