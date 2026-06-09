@@ -341,24 +341,41 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           )}
         </div>
 
-        {/* Actions - anchored to bottom */}
+        {/* Actions - anchored to bottom. Unified structure for all cards. */}
         <div className="space-y-1.5 pt-1 mt-auto">
+          {/* Line 1: Primary action + Share */}
           {isOutOfStock ? (
             <NotifyMeDialog item={item} isLoggedIn={isLoggedIn} userId={userId} />
-          ) : hasMultipleVersions ? (
-            <div className="flex w-full items-center gap-1.5">
-              <Link to={versionsHref!} className="flex-1 min-w-0" onClick={() => trackEvent("versions_click", item)}>
+          ) : (
+            <div className="flex w-full items-stretch gap-1.5">
+              {hasMultipleVersions ? (
+                <Link to={versionsHref!} className="flex-1 min-w-0" onClick={() => trackEvent("versions_click", item)}>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="w-full h-10 px-2 text-[13px] sm:text-[14px] gap-1 font-semibold whitespace-normal leading-tight transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+                  >
+                    <Plus className="h-4 w-4 shrink-0" /> Ver versões ({versionsCount})
+                  </Button>
+                </Link>
+              ) : (
                 <Button
                   size="sm"
                   variant="default"
-                  className="w-full h-10 text-[14px] sm:text-[15px] gap-1.5 font-semibold transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+                  className="flex-1 min-w-0 h-10 px-2 text-[13px] sm:text-[14px] gap-1 font-semibold whitespace-normal leading-tight transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+                  onClick={() => onAddToCart(item)}
                 >
-                  <Plus className="h-4 w-4" /> Escolher versão ({versionsCount})
+                  <Plus className="h-4 w-4 shrink-0" /> Adicionar
                 </Button>
-              </Link>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" aria-label="Compartilhar" className="h-10 w-10 shrink-0 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-150">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Compartilhar"
+                    className="h-10 w-10 shrink-0 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
+                  >
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -378,70 +395,38 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          ) : (
-            <Button
-              size="sm"
-              variant="default"
-              className="w-full h-10 text-[14px] sm:text-[15px] gap-1.5 font-semibold transition-all duration-150 active:scale-[0.98] hover:shadow-md"
-              onClick={() => onAddToCart(item)}
-            >
-              <Plus className="h-4 w-4" /> Adicionar
-            </Button>
           )}
 
-          {!hasMultipleVersions && (
-          <div className="flex w-full min-w-0 items-center gap-1.5 box-border">
-            {isSingle ? (
+          {/* Line 2: Secondary details (full width). Hidden for grouped singles. */}
+          {!isOutOfStock && !hasMultipleVersions && (
+            isSingle ? (
               <Link
                 to={`/catalogo/single/${encodeURIComponent(item.id)}`}
-                className="flex-1 min-w-0"
+                className="block w-full"
                 onClick={() => trackEvent("more_info_click", item)}
               >
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 gap-1 truncate"
+                  className="w-full h-9 px-2 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 whitespace-normal leading-tight"
                 >
-                  <span className="truncate">🧐 Mais Informações</span>
+                  🧐 Mais Informações
                 </Button>
               </Link>
             ) : (
-              <Link to={`/catalogo/drop/${item.id}`} className="flex-1 min-w-0" onClick={() => trackEvent("drop_content_click", item)}>
+              <Link to={`/catalogo/drop/${item.id}`} className="block w-full" onClick={() => trackEvent("drop_content_click", item)}>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full h-8 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 truncate"
+                  className="w-full h-9 px-2 text-[12px] sm:text-[13px] text-primary hover:text-primary/80 font-medium border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-150 whitespace-normal leading-tight"
                 >
-                  <span className="truncate">🔍 Conteúdo do Drop</span>
+                  🔍 Conteúdo do Drop
                 </Button>
               </Link>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" aria-label="Compartilhar" className="h-9 w-9 shrink-0 basis-9 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-150">
-
-                  <Share2 className="h-4 w-4" />
-                </Button>
-
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-[160px]">
-                <DropdownMenuItem onClick={() => shareItem(item, "whatsapp")} className="gap-2 cursor-pointer">
-                  <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareItem(item, "twitter")} className="gap-2 cursor-pointer">
-                  <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareItem(item, "instagram")} className="gap-2 cursor-pointer">
-                  <Instagram className="h-4 w-4 text-pink-500" /> Instagram Stories
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareItem(item, "copy")} className="gap-2 cursor-pointer">
-                  <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+            )
           )}
         </div>
+
 
       </div>
     </div>
