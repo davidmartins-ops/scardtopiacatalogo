@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import Index from "./pages/Index.tsx";
+import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
@@ -81,7 +82,7 @@ const App = () => (
           Pular para o conteúdo principal
         </a>
         <Routes>
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/" element={<Home />} />
           <Route path="/admin" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
