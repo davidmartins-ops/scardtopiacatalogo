@@ -16,5 +16,17 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin/
+Disallow: /admin/login
+Disallow: /admin/relatorios
+Disallow: /admin/notificacoes
+Disallow: /login
+Disallow: /reset-password
+Disallow: /conta
+Disallow: /conta/
+Disallow: /conta/login
+Disallow: /conta/decks/
+Disallow: /conta/colecoes/
+Disallow: /conta/pedidos/
+Disallow: /unsubscribe
 
 Sitemap: https://www.spencerscardtopia.com.br/sitemap.xml
