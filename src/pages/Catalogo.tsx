@@ -366,7 +366,7 @@ const ItemGrid = ({
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground" aria-live="polite">Mostrando {filteredItems.length} de {(items ?? []).length} {(items ?? []).length === 1 ? "item" : "itens"}</p>
+      <p className="text-sm text-muted-foreground" aria-live="polite">Mostrando {displayItems.length} {isSingles ? "cartas" : "itens"} {isSingles && filteredItems.length !== displayItems.length ? `(${filteredItems.length} versões agrupadas)` : ""}</p>
 
       {groupedItems.length === 0 ? (
         <div className="text-center py-16">
