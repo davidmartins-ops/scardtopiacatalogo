@@ -12,6 +12,7 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
 import DropDetail from "./pages/DropDetail.tsx";
 import SingleDetail from "./pages/SingleDetail.tsx";
+import CardVersions from "./pages/CardVersions.tsx";
 import CustomerLogin from "./pages/CustomerLogin.tsx";
 import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
@@ -92,6 +93,7 @@ const App = () => (
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
           <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
+          <Route path="/catalogo/carta/:name" element={<CardVersions />} />
           <Route path="/conta/login" element={<CustomerLogin />} />
           <Route path="/conta" element={<CustomerDashboard />} />
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />

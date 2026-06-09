@@ -226,15 +226,45 @@ const ItemGrid = ({
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [items, isSingles, allSets]);
 
+  // For singles: group by normalized name so each card name appears once.
+  // versionsByName maps name → all matching filtered items.
+  const versionsByName = useMemo(() => {
+    if (!isSingles) return new Map<string, InventoryItem[]>();
+    const map = new Map<string, InventoryItem[]>();
+    filteredItems.forEach((it) => {
+      const key = it.name.trim().toLowerCase();
+      const arr = map.get(key) ?? [];
+      arr.push(it);
+      map.set(key, arr);
+    });
+    return map;
+  }, [filteredItems, isSingles]);
+
+  // Deduplicated display items: for singles, pick representative (cheapest final price, then most stock).
+  const displayItems = useMemo(() => {
+    if (!isSingles) return filteredItems;
+    const reps: InventoryItem[] = [];
+    versionsByName.forEach((versions) => {
+      const best = [...versions].sort((a, b) => {
+        const fa = a.price * (1 - (a.discount ?? 0) / 100);
+        const fb = b.price * (1 - (b.discount ?? 0) / 100);
+        if (fa !== fb) return fa - fb;
+        return b.quantity - a.quantity;
+      })[0];
+      reps.push(best);
+    });
+    return reps;
+  }, [filteredItems, versionsByName, isSingles]);
+
   const groupedItems = useMemo(() => {
     if (sortOrder === "az" || sortOrder === "za") {
-      const sorted = [...filteredItems].sort((a, b) => sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
-      return [["Todas as cartas", sorted]] as [string, typeof filteredItems][];
+      const sorted = [...displayItems].sort((a, b) => sortOrder === "az" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+      return [["Todas as cartas", sorted]] as [string, typeof displayItems][];
     }
-    const groups: Record<string, typeof filteredItems> = {};
-    filteredItems.forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
+    const groups: Record<string, typeof displayItems> = {};
+    displayItems.forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredItems, sortOrder]);
+  }, [displayItems, sortOrder]);
 
   return (
     <div className="space-y-6 overflow-visible">
@@ -336,7 +366,7 @@ const ItemGrid = ({
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground" aria-live="polite">Mostrando {filteredItems.length} de {(items ?? []).length} {(items ?? []).length === 1 ? "item" : "itens"}</p>
+      <p className="text-sm text-muted-foreground" aria-live="polite">Mostrando {displayItems.length} {isSingles ? "cartas" : "itens"} {isSingles && filteredItems.length !== displayItems.length ? `(${filteredItems.length} versões agrupadas)` : ""}</p>
 
       {groupedItems.length === 0 ? (
         <div className="text-center py-16">
@@ -352,19 +382,26 @@ const ItemGrid = ({
               <span className="text-xs text-muted-foreground font-body">{catItems.length} itens</span>
             </div>
             <div className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
-              {catItems.map((item, i) => (
-                <div key={item.id} className="animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
-                  <ProductCard
-                    item={item}
-                    isSingle={isSingles}
-                    onAddToCart={onAddToCart}
-                    isFavorite={isFavorite(item.id)}
-                    onToggleFavorite={() => onToggleFavorite(item.id)}
-                    isLoggedIn={isLoggedIn}
-                    userId={userId}
-                  />
-                </div>
-              ))}
+              {catItems.map((item, i) => {
+                const versions = isSingles ? versionsByName.get(item.name.trim().toLowerCase()) ?? [] : [];
+                const versionsCount = versions.length;
+                const versionsHref = isSingles && versionsCount > 1 ? `/catalogo/carta/${encodeURIComponent(item.name)}` : undefined;
+                return (
+                  <div key={item.id} className="animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
+                    <ProductCard
+                      item={item}
+                      isSingle={isSingles}
+                      onAddToCart={onAddToCart}
+                      isFavorite={isFavorite(item.id)}
+                      onToggleFavorite={() => onToggleFavorite(item.id)}
+                      isLoggedIn={isLoggedIn}
+                      userId={userId}
+                      versionsCount={versionsCount}
+                      versionsHref={versionsHref}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))
