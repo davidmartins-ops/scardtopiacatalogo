@@ -17,5 +17,9 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = true
   [functions.create-checkout]
     verify_jwt = true
+  [functions.create-checkout]
+    verify_jwt = true
+  [functions.confirm-payment]
+    verify_jwt = false
   [functions.check-order-sla]
     verify_jwt = false

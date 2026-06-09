@@ -22,6 +22,8 @@ import Terms from "./pages/Terms.tsx";
 import Sobre from "./pages/Sobre.tsx";
 import FAQ from "./pages/FAQ.tsx";
 import OrderDetail from "./pages/OrderDetail.tsx";
+import PedidoSucesso from "./pages/PedidoSucesso.tsx";
+import PedidoFalha from "./pages/PedidoFalha.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminReports from "./pages/AdminReports.tsx";
@@ -94,6 +96,8 @@ const App = () => (
           <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
           <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
           <Route path="/conta/pedidos/:orderId" element={<OrderDetail />} />
+          <Route path="/pedido/sucesso" element={<PedidoSucesso />} />
+          <Route path="/pedido/falha" element={<PedidoFalha />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/colecao/:collectionId" element={<PublicCollection />} />
           <Route path="/tendencias" element={<TrendingCards />} />

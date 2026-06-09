@@ -9,6 +9,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// Default site (override via env if needed)
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://www.spencerscardtopia.com.br";
+const INFINITEPAY_HANDLE = Deno.env.get("INFINITEPAY_HANDLE") ?? "spencers-cardtopia";
+
 const BodySchema = z.object({
   order_id: z.string().uuid(),
 });
@@ -26,7 +30,6 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Require authenticated caller
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -56,7 +59,6 @@ Deno.serve(async (req) => {
     }
     const { order_id } = parsed.data;
 
-    // Fetch the order server-side; verify ownership (or admin)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: order, error: orderErr } = await supabase
       .from("orders")
@@ -82,28 +84,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Re-derive amount from the DB record (already server-validated by the orders trigger).
-    const amount = Math.round(Number(order.total) * 100);
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const items = Array.isArray(order.items) ? order.items : [];
+    const itemsPayload = items.map((i: any) => ({
+      description: String(i.name ?? "Item"),
+      quantity: Number(i.quantity) || 1,
+      price: Math.round((Number(i.unit_price) || 0) * 100),
+    }));
+
+    // Recompute total from items (cents) to match what InfinitePay expects
+    const total = itemsPayload.reduce((s, it) => s + it.price * it.quantity, 0);
+    if (!Number.isFinite(total) || total <= 0) {
       return new Response(JSON.stringify({ error: "Invalid order total" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const items = Array.isArray(order.items) ? order.items : [];
 
     const checkoutPayload = {
-      amount,
-      metadata: { order_id },
-      is_visible: true,
-      payment_methods: ["credit", "debit"],
-      items: items.map((i: any) => ({
-        description: String(i.name ?? "Item"),
-        quantity: Number(i.quantity) || 1,
-        amount: Math.round((Number(i.unit_price) || 0) * 100),
-      })),
+      handle: INFINITEPAY_HANDLE,
+      order_nsu: order_id,
+      redirect_url: `${SITE_URL}/pedido/sucesso`,
+      items: itemsPayload,
     };
 
-    const response = await fetch("https://api.infinitepay.io/v2/checkout", {
+    const response = await fetch("https://api.infinitepay.io/invoices/public/checkout/links", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${INFINITEPAY_API_KEY}`,
@@ -121,14 +124,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (data.transaction_nsu) {
-      await supabase.from("orders").update({
-        status: "payment_pending",
-      }).eq("id", order_id);
-    }
+    const checkout_url = data.url ?? data.checkout_url ?? data.link;
+
+    await supabase.from("orders").update({
+      status: "pending_payment",
+    }).eq("id", order_id);
 
     return new Response(
-      JSON.stringify({ checkout_url: data.checkout_url, transaction_nsu: data.transaction_nsu }),
+      JSON.stringify({ checkout_url, raw: data }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: unknown) {
