@@ -2,15 +2,18 @@ import useSEO from "@/hooks/use-seo";
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useOrderDetail, useOrderDisputes, type OrderStatus } from "@/hooks/use-orders";
+import { useOrderRefunds, type RefundMethod, type RefundStatus } from "@/hooks/use-refunds";
 import { useInventory } from "@/hooks/use-inventory";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { OrderStatusBadge, ORDER_STATUS_LABELS, ORDER_STATUS_ICONS } from "@/components/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ShoppingCart as CartIcon, Truck, ExternalLink, FileText, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, ShoppingCart as CartIcon, Truck, ExternalLink, FileText, AlertTriangle, Loader2, RefreshCw, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -33,10 +36,17 @@ const OrderDetailPage = () => {
   const { data: inventory = [] } = useInventory();
   const { syncCart } = useSavedCart();
   const { disputes, createDispute } = useOrderDisputes(orderId);
+  const { refunds, requestRefund } = useOrderRefunds(orderId);
 
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("defective");
   const [description, setDescription] = useState("");
+
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+  const [refundMethod, setRefundMethod] = useState<RefundMethod>("pix");
+  const [refundPix, setRefundPix] = useState("");
 
   const order = data?.order;
   const history = data?.history ?? [];
@@ -86,6 +96,34 @@ const OrderDetailPage = () => {
       setDescription("");
     } catch {
       toast.error("Erro ao enviar solicitação.");
+    }
+  };
+
+  const submitRefund = async () => {
+    if (!order || !refundReason.trim()) return;
+    const amt = Number(refundAmount);
+    if (!amt || amt <= 0 || amt > Number(order.total) + 0.01) {
+      toast.error("Valor inválido.");
+      return;
+    }
+    if (refundMethod === "pix" && !refundPix.trim()) {
+      toast.error("Informe a chave PIX para receber o estorno.");
+      return;
+    }
+    try {
+      await requestRefund.mutateAsync({
+        order_id: order.id,
+        amount: amt,
+        reason: refundReason.trim(),
+        method: refundMethod,
+        pix_key: refundMethod === "pix" ? refundPix.trim() : undefined,
+      });
+      toast.success("Solicitação de reembolso enviada!");
+      setRefundOpen(false);
+      setRefundReason("");
+      setRefundPix("");
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao enviar.");
     }
   };
 
@@ -241,7 +279,55 @@ const OrderDetailPage = () => {
               <AlertTriangle className="h-4 w-4" /> Solicitar devolução
             </Button>
           )}
+          {!isCancelled && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                setRefundAmount(Number(order.total).toFixed(2));
+                setRefundOpen(true);
+              }}
+            >
+              <DollarSign className="h-4 w-4" /> Solicitar reembolso
+            </Button>
+          )}
         </section>
+
+        {refunds.length > 0 && (
+          <section className="glass-card p-5" aria-labelledby="refunds-heading">
+            <h2 id="refunds-heading" className="font-display text-base font-semibold mb-3 flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-primary" /> Seus reembolsos
+            </h2>
+            <ul className="space-y-3">
+              {refunds.map((r) => (
+                <li key={r.id} className="border border-border rounded-md p-3 bg-muted/10">
+                  <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                    <Badge variant={
+                      r.status === "processed" ? "default"
+                        : r.status === "rejected" ? "destructive"
+                        : r.status === "approved" ? "outline"
+                        : "secondary"
+                    }>
+                      {r.status === "pending" ? "Pendente"
+                        : r.status === "approved" ? "Aprovado"
+                        : r.status === "processed" ? "Pago"
+                        : "Rejeitado"}
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>
+                  </div>
+                  <p className="text-sm font-semibold">R$ {Number(r.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} via {r.method.toUpperCase()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{r.reason}</p>
+                  {r.proof_url && (
+                    <a href={r.proof_url} target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2">
+                      <ExternalLink className="h-3 w-3" /> Comprovante de estorno
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {disputes.length > 0 && (
           <section className="glass-card p-5" aria-labelledby="disputes-heading">
@@ -297,6 +383,58 @@ const OrderDetailPage = () => {
             <Button variant="outline" onClick={() => setDisputeOpen(false)}>Cancelar</Button>
             <Button onClick={submitDispute} disabled={!description.trim() || createDispute.isPending}>
               {createDispute.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Enviar solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={refundOpen} onOpenChange={setRefundOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display">Solicitar reembolso</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="refund-amount">Valor a reembolsar (R$)</Label>
+              <Input
+                id="refund-amount"
+                type="number"
+                step="0.01"
+                max={order?.total ?? undefined}
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Total pago: R$ {Number(order?.total ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div>
+              <Label>Método</Label>
+              <Select value={refundMethod} onValueChange={(v) => setRefundMethod(v as RefundMethod)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="reverse_credit">Estorno no cartão</SelectItem>
+                  <SelectItem value="store_credit">Crédito na loja</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {refundMethod === "pix" && (
+              <div>
+                <Label htmlFor="refund-pix">Chave PIX para receber</Label>
+                <Input id="refund-pix" value={refundPix} onChange={(e) => setRefundPix(e.target.value)} placeholder="CPF, e-mail, celular ou chave aleatória" />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="refund-reason">Motivo</Label>
+              <Textarea id="refund-reason" rows={4} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} placeholder="Explique o motivo do reembolso." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundOpen(false)}>Cancelar</Button>
+            <Button onClick={submitRefund} disabled={requestRefund.isPending || !refundReason.trim()}>
+              {requestRefund.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Enviar solicitação
             </Button>
           </DialogFooter>
