@@ -251,7 +251,55 @@ const OrderDetailPage = () => {
               <AlertTriangle className="h-4 w-4" /> Solicitar devolução
             </Button>
           )}
+          {!isCancelled && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                setRefundAmount(Number(order.total).toFixed(2));
+                setRefundOpen(true);
+              }}
+            >
+              <DollarSign className="h-4 w-4" /> Solicitar reembolso
+            </Button>
+          )}
         </section>
+
+        {refunds.length > 0 && (
+          <section className="glass-card p-5" aria-labelledby="refunds-heading">
+            <h2 id="refunds-heading" className="font-display text-base font-semibold mb-3 flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-primary" /> Seus reembolsos
+            </h2>
+            <ul className="space-y-3">
+              {refunds.map((r) => (
+                <li key={r.id} className="border border-border rounded-md p-3 bg-muted/10">
+                  <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                    <Badge variant={
+                      r.status === "processed" ? "default"
+                        : r.status === "rejected" ? "destructive"
+                        : r.status === "approved" ? "outline"
+                        : "secondary"
+                    }>
+                      {r.status === "pending" ? "Pendente"
+                        : r.status === "approved" ? "Aprovado"
+                        : r.status === "processed" ? "Pago"
+                        : "Rejeitado"}
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>
+                  </div>
+                  <p className="text-sm font-semibold">R$ {Number(r.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} via {r.method.toUpperCase()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{r.reason}</p>
+                  {r.proof_url && (
+                    <a href={r.proof_url} target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2">
+                      <ExternalLink className="h-3 w-3" /> Comprovante de estorno
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {disputes.length > 0 && (
           <section className="glass-card p-5" aria-labelledby="disputes-heading">
