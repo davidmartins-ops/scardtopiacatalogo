@@ -11,6 +11,7 @@ interface Props {
   category?: string | null;
   className?: string;
   imageClassName?: string;
+  containerClassName?: string;
 }
 
 /**
