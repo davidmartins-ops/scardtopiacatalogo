@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Loader2, Package, ImageOff } from "lucide-react";
+import { Package, ImageOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import placeholderImg from "/placeholder.svg";
 import ImageZoom from "@/components/ImageZoom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -70,9 +72,7 @@ const ProductMedia = ({
             onError={handleError}
           />
           {!loaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
           )}
         </>
       )}
@@ -83,9 +83,18 @@ const ProductMedia = ({
         </div>
       )}
       {!hasSrc && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
-          <Package className="h-12 w-12" />
-          <p className="text-xs">Sem imagem cadastrada</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted/20">
+          <img
+            src={placeholderImg}
+            alt={alt || "Imagem indisponível"}
+            className="h-2/3 w-2/3 object-contain opacity-60"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Package className="h-4 w-4" />
+            <p className="text-xs">Sem imagem cadastrada</p>
+          </div>
         </div>
       )}
     </div>
