@@ -2,15 +2,18 @@ import useSEO from "@/hooks/use-seo";
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useOrderDetail, useOrderDisputes, type OrderStatus } from "@/hooks/use-orders";
+import { useOrderRefunds, type RefundMethod, type RefundStatus } from "@/hooks/use-refunds";
 import { useInventory } from "@/hooks/use-inventory";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { OrderStatusBadge, ORDER_STATUS_LABELS, ORDER_STATUS_ICONS } from "@/components/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ShoppingCart as CartIcon, Truck, ExternalLink, FileText, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, ShoppingCart as CartIcon, Truck, ExternalLink, FileText, AlertTriangle, Loader2, RefreshCw, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -33,10 +36,17 @@ const OrderDetailPage = () => {
   const { data: inventory = [] } = useInventory();
   const { syncCart } = useSavedCart();
   const { disputes, createDispute } = useOrderDisputes(orderId);
+  const { refunds, requestRefund } = useOrderRefunds(orderId);
 
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("defective");
   const [description, setDescription] = useState("");
+
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+  const [refundMethod, setRefundMethod] = useState<RefundMethod>("pix");
+  const [refundPix, setRefundPix] = useState("");
 
   const order = data?.order;
   const history = data?.history ?? [];
