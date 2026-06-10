@@ -3,7 +3,7 @@ import type { InventoryItem } from "@/data/inventory";
 const SITE_URL = "https://www.spencerscardtopia.com.br";
 // Edge function that returns OG-rich HTML so WhatsApp/Discord/Telegram/Facebook
 // render the product image + name in the link preview (SPA can't, no SSR).
-const SHARE_BASE = "https://uonzprmsnctldppgrcxo.supabase.co/functions/v1/share-product";
+const SHARE_BASE = "https://share.spencerscardtopia.com.br";
 
 const formatBRL = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
