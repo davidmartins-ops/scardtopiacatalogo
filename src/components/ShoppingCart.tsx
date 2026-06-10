@@ -44,7 +44,7 @@ interface ShoppingCartProps {
 }
 
 const WHATSAPP_NUMBER = "5511947154555";
-const PIX_KEY = "david-donizeti-martins@jim.com";
+const PIX_KEY = "66.981.664/0001-97";
 
 interface ShippingInfo {
   street: string;
@@ -716,7 +716,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chave PIX (E-mail)</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chave PIX (CNPJ)</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-sm font-mono text-foreground bg-muted/50 px-3 py-2 rounded break-all">{PIX_KEY}</code>
                 <Button size="sm" variant="outline" onClick={copyPixKey} className="shrink-0 gap-1"><Check className="h-3 w-3" /> Copiar</Button>
