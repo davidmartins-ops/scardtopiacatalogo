@@ -34,15 +34,19 @@ const SiteFooter = () => {
 
   // Hide floating social buttons when footer is mounted
   useEffect(() => {
+    if (typeof document === "undefined" || !document.body) return;
     document.body.dataset.footerVisible = "true";
     return () => {
-      delete document.body.dataset.footerVisible;
+      if (document.body) {
+        delete document.body.dataset.footerVisible;
+      }
     };
   }, []);
 
   // JSON-LD Organization for SEO — single instance, validated on mount and route changes
   useEffect(() => {
     const ensureSingleOrgJsonLd = () => {
+      if (typeof document === "undefined" || !document.head) return;
       const all = document.querySelectorAll(`script[type="application/ld+json"]`);
       const orgScripts: HTMLScriptElement[] = [];
       all.forEach((el) => {
