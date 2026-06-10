@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Loader2, Package, ImageOff } from "lucide-react";
+import { Package, ImageOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import placeholderImg from "/placeholder.svg";
 import ImageZoom from "@/components/ImageZoom";
 import { supabase } from "@/integrations/supabase/client";
 
