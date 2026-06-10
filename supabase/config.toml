@@ -23,3 +23,5 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = false
   [functions.check-order-sla]
     verify_jwt = false
+  [functions.share-product]
+    verify_jwt = false
