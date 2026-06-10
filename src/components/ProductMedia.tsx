@@ -26,7 +26,8 @@ const ProductMedia = ({
   itemName,
   category,
   className = "",
-  imageClassName = "absolute inset-0 w-full h-full object-contain",
+  imageClassName = "w-full h-full object-contain",
+  containerClassName = "w-full h-full",
 }: Props) => {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
