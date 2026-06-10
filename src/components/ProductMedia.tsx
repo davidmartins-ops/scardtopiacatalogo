@@ -65,7 +65,7 @@ const ProductMedia = ({
             src={src!}
             alt={alt}
             className={imageClassName}
-            containerClassName="absolute inset-0"
+            containerClassName={containerClassName}
             onLoad={() => setLoaded(true)}
             onError={handleError}
           />
