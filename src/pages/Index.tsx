@@ -213,6 +213,9 @@ const Index = () => {
                 <TabsTrigger value="reconciliation" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
                   <Link to="/admin/reconciliacao"><DollarSign className="h-3.5 w-3.5" /> Reconciliação</Link>
                 </TabsTrigger>
+                <TabsTrigger value="refunds" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                  <Link to="/admin/reembolsos"><DollarSign className="h-3.5 w-3.5" /> Reembolsos</Link>
+                </TabsTrigger>
                 <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <Shield className="h-3.5 w-3.5" /> Admins
                 </TabsTrigger>

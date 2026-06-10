@@ -90,6 +90,7 @@ const App = () => (
           <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
           <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
+          <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
