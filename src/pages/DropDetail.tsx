@@ -27,43 +27,10 @@ const descriptionConfig: Record<string, { label: string; icon: React.ElementType
   "Silver Scroll": { label: "Silver Scroll", icon: Sparkles, className: "bg-muted/40 text-foreground border-border" },
 };
 
-const formatBRL = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+import { shareToChannel, type ShareMethod } from "@/lib/share";
 
-const sharePage = async (
-  name: string,
-  method: "whatsapp" | "twitter" | "instagram" | "copy",
-  prices?: { priceCard?: number; pricePix?: number },
-) => {
-  const url = window.location.href;
-  const priceCard = prices?.priceCard && prices.priceCard > 0 ? prices.priceCard : 0;
-  const pricePix = prices?.pricePix && prices.pricePix > 0 && prices.pricePix !== priceCard ? prices.pricePix : 0;
-
-  const priceLines: string[] = [];
-  if (priceCard > 0) priceLines.push(`Valor Cartão: ${formatBRL(priceCard)}`);
-  if (pricePix > 0) priceLines.push(`Valor PIX: ${formatBRL(pricePix)}`);
-
-  const text = priceLines.length
-    ? `${name}\n${priceLines.join("\n")}\n\nConfira no catálogo da Spencer's Cardtopia!`
-    : `${name} — Confira no catálogo da Spencer's Cardtopia!`;
-  const shareText = `${text}\n${url}`;
-
-  if (method === "copy") {
-    if (navigator.share) {
-      try { await navigator.share({ title: name, text, url }); return; } catch {}
-    }
-    navigator.clipboard.writeText(shareText);
-    toast.success("Link copiado!");
-  } else if (method === "whatsapp") {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-  } else if (method === "twitter") {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
-  } else if (method === "instagram") {
-    navigator.clipboard.writeText(shareText);
-    toast.success("Texto copiado! Cole no seu Instagram Stories");
-    window.open("https://www.instagram.com/", "_blank");
-  }
-};
+const sharePage = (item: any, method: ShareMethod) =>
+  shareToChannel(item, method, {}, (msg) => toast.success(msg));
 
 const DropDetail = () => {
   const { dropId } = useParams<{ dropId: string }>();
@@ -149,27 +116,18 @@ const DropDetail = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
-                {(() => {
-                  const priceCard = cardPrice;
-                  const pricePix = pixFinal;
-                  const prices = { priceCard, pricePix };
-                  return (
-                    <>
-                      <DropdownMenuItem onClick={() => sharePage(drop.name, "whatsapp", prices)} className="gap-2 cursor-pointer">
-                        <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => sharePage(drop.name, "twitter", prices)} className="gap-2 cursor-pointer">
-                        <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => sharePage(drop.name, "instagram", prices)} className="gap-2 cursor-pointer">
-                        <Instagram className="h-4 w-4 text-pink-500" /> Instagram
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => sharePage(drop.name, "copy", prices)} className="gap-2 cursor-pointer">
-                        <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
-                      </DropdownMenuItem>
-                    </>
-                  );
-                })()}
+                <DropdownMenuItem onClick={() => sharePage(drop, "whatsapp")} className="gap-2 cursor-pointer">
+                  <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePage(drop, "twitter")} className="gap-2 cursor-pointer">
+                  <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePage(drop, "instagram")} className="gap-2 cursor-pointer">
+                  <Instagram className="h-4 w-4 text-pink-500" /> Instagram
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePage(drop, "copy")} className="gap-2 cursor-pointer">
+                  <Copy className="h-4 w-4 text-muted-foreground" /> Copiar link
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button

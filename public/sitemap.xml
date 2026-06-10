@@ -351,6 +351,16 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD-25-EN-F-NM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD-28-EN-NF-NM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/single/KTK-209-PT-NF-NM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>

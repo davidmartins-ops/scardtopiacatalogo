@@ -54,37 +54,10 @@ const trackEvent = async (eventType: string, item: InventoryItem) => {
 const formatBRL = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-const shareItem = async (item: InventoryItem, method: "whatsapp" | "twitter" | "instagram" | "copy") => {
-  const discount = item.discount ?? 0;
-  // Desconto aplica SOMENTE ao PIX. Preço cartão é sempre item.price cheio.
-  const priceCard = item.price;
-  const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
-  const pricePix = Math.max(0, pixBase * (1 - discount / 100));
-  const priceCardStr = formatBRL(priceCard);
-  const pricePixStr = formatBRL(pricePix);
+import { shareToChannel, type ShareMethod } from "@/lib/share";
 
-  const priceLines = pricePix < priceCard
-    ? `Valor PIX: ${pricePixStr}\nValor Cartão: ${priceCardStr}`
-    : `Valor: ${priceCardStr}`;
-
-  const text = `${item.name}\n${priceLines}\n${item.description}${item.language ? ` | ${item.language}` : ""}${item.condition ? ` | ${item.condition}` : ""}\n\nConfira no catalogo da Spencer's Cardtopia!`;
-  const url = window.location.href;
-
-  if (method === "copy") {
-    if (navigator.share) {
-      try { await navigator.share({ title: item.name, text, url }); return; } catch {}
-    }
-    navigator.clipboard.writeText(`${text}\n${url}`);
-    toast.success("Link copiado!");
-    return;
-  }
-
-  const shareText = `${text}\n${url}`;
-  if (method === "whatsapp") window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-  else if (method === "twitter") window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
-  else if (method === "instagram") { navigator.clipboard.writeText(shareText); toast.success("Texto copiado! Cole no seu Instagram Stories"); window.open("https://www.instagram.com/", "_blank"); }
-  else { navigator.clipboard.writeText(shareText); toast.success("Link copiado!"); }
-};
+const shareItem = (item: InventoryItem, method: ShareMethod) =>
+  shareToChannel(item, method, {}, (msg) => toast.success(msg));
 
 /* NotifyMe Dialog */
 const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isLoggedIn: boolean; userId?: string }) => {
