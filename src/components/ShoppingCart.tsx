@@ -44,7 +44,7 @@ interface ShoppingCartProps {
 }
 
 const WHATSAPP_NUMBER = "5511947154555";
-const PIX_KEY = "david-donizeti-martins@jim.com";
+const PIX_KEY = "66.981.664/0001-97";
 
 interface ShippingInfo {
   street: string;
