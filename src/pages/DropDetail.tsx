@@ -53,6 +53,34 @@ const DropDetail = () => {
     enabled: !!dropId,
   });
 
+  const discount = drop?.discount ?? 0;
+  const cardPrice = drop?.price ?? 0;
+  const pixBase = drop ? ((drop.price_pix ?? 0) > 0 ? (drop.price_pix as number) : drop.price) : 0;
+  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
+  const hasPixHighlight = pixFinal < cardPrice;
+  const config = drop ? descriptionConfig[drop.description] : undefined;
+  const Icon = config?.icon ?? Circle;
+
+  const canonical = `https://www.spencerscardtopia.com.br/drop/${dropId ?? ""}`;
+  const availability = !drop ? "OutOfStock" : drop.quantity <= 0 ? "OutOfStock" : drop.status === "pre_sale" ? "PreOrder" : "InStock";
+  useSEO({
+    title: drop?.name ?? "Drop",
+    description: drop ? ((drop as any).drop_description || `${drop.name} — ${drop.description} ${drop.language ?? ""}. Drop exclusivo na Spencer's Cardtopia.`) : "Drop exclusivo na Spencer's Cardtopia.",
+    canonical,
+    image: drop?.image_url,
+    type: "product",
+    product: drop ? {
+      name: drop.name,
+      price: pixFinal,
+      currency: "BRL",
+      availability,
+      image: drop.image_url,
+      description: (drop as any).drop_description || `${drop.name} — ${drop.description}`,
+      sku: drop.id,
+      category: drop.category,
+    } : undefined,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -70,35 +98,6 @@ const DropDetail = () => {
       </div>
     );
   }
-
-  const discount = drop.discount ?? 0;
-  // Desconto aplica SOMENTE ao PIX. Cartão permanece cheio.
-  const cardPrice = drop.price;
-  const pixBase = (drop.price_pix ?? 0) > 0 ? (drop.price_pix as number) : drop.price;
-  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
-  const hasPixHighlight = pixFinal < cardPrice;
-  const config = descriptionConfig[drop.description];
-  const Icon = config?.icon ?? Circle;
-
-  const canonical = `https://www.spencerscardtopia.com.br/drop/${drop.id}`;
-  const availability = drop.quantity <= 0 ? "OutOfStock" : drop.status === "pre_sale" ? "PreOrder" : "InStock";
-  useSEO({
-    title: drop.name,
-    description: (drop as any).drop_description || `${drop.name} — ${drop.description} ${drop.language ?? ""}. Drop exclusivo na Spencer's Cardtopia.`,
-    canonical,
-    image: drop.image_url,
-    type: "product",
-    product: {
-      name: drop.name,
-      price: pixFinal,
-      currency: "BRL",
-      availability,
-      image: drop.image_url,
-      description: (drop as any).drop_description || `${drop.name} — ${drop.description}`,
-      sku: drop.id,
-      category: drop.category,
-    },
-  });
 
   return (
     <div className="min-h-screen bg-background font-body">
