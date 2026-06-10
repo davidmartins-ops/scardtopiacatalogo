@@ -99,6 +99,34 @@ const OrderDetailPage = () => {
     }
   };
 
+  const submitRefund = async () => {
+    if (!order || !refundReason.trim()) return;
+    const amt = Number(refundAmount);
+    if (!amt || amt <= 0 || amt > Number(order.total) + 0.01) {
+      toast.error("Valor inválido.");
+      return;
+    }
+    if (refundMethod === "pix" && !refundPix.trim()) {
+      toast.error("Informe a chave PIX para receber o estorno.");
+      return;
+    }
+    try {
+      await requestRefund.mutateAsync({
+        order_id: order.id,
+        amount: amt,
+        reason: refundReason.trim(),
+        method: refundMethod,
+        pix_key: refundMethod === "pix" ? refundPix.trim() : undefined,
+      });
+      toast.success("Solicitação de reembolso enviada!");
+      setRefundOpen(false);
+      setRefundReason("");
+      setRefundPix("");
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao enviar.");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -355,6 +383,58 @@ const OrderDetailPage = () => {
             <Button variant="outline" onClick={() => setDisputeOpen(false)}>Cancelar</Button>
             <Button onClick={submitDispute} disabled={!description.trim() || createDispute.isPending}>
               {createDispute.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Enviar solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={refundOpen} onOpenChange={setRefundOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display">Solicitar reembolso</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="refund-amount">Valor a reembolsar (R$)</Label>
+              <Input
+                id="refund-amount"
+                type="number"
+                step="0.01"
+                max={order?.total ?? undefined}
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Total pago: R$ {Number(order?.total ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div>
+              <Label>Método</Label>
+              <Select value={refundMethod} onValueChange={(v) => setRefundMethod(v as RefundMethod)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="reverse_credit">Estorno no cartão</SelectItem>
+                  <SelectItem value="store_credit">Crédito na loja</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {refundMethod === "pix" && (
+              <div>
+                <Label htmlFor="refund-pix">Chave PIX para receber</Label>
+                <Input id="refund-pix" value={refundPix} onChange={(e) => setRefundPix(e.target.value)} placeholder="CPF, e-mail, celular ou chave aleatória" />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="refund-reason">Motivo</Label>
+              <Textarea id="refund-reason" rows={4} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} placeholder="Explique o motivo do reembolso." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundOpen(false)}>Cancelar</Button>
+            <Button onClick={submitRefund} disabled={requestRefund.isPending || !refundReason.trim()}>
+              {requestRefund.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Enviar solicitação
             </Button>
           </DialogFooter>
