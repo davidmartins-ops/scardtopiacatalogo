@@ -738,6 +738,81 @@ export type Database = {
           },
         ]
       }
+      order_refunds: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          dispute_id: string | null
+          id: string
+          method: string
+          notes: string | null
+          order_id: string
+          pix_key: string | null
+          processed_at: string | null
+          proof_url: string | null
+          reason: string
+          requested_by: string | null
+          restocked: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          dispute_id?: string | null
+          id?: string
+          method?: string
+          notes?: string | null
+          order_id: string
+          pix_key?: string | null
+          processed_at?: string | null
+          proof_url?: string | null
+          reason: string
+          requested_by?: string | null
+          restocked?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          dispute_id?: string | null
+          id?: string
+          method?: string
+          notes?: string | null
+          order_id?: string
+          pix_key?: string | null
+          processed_at?: string | null
+          proof_url?: string | null
+          reason?: string
+          requested_by?: string | null
+          restocked?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_refunds_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "order_disputes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_sla_rules: {
         Row: {
           created_at: string
@@ -1151,6 +1226,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      restock_refunded_items: {
+        Args: { _refund_id: string }
+        Returns: undefined
       }
     }
     Enums: {
