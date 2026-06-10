@@ -30,6 +30,7 @@ import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminReports from "./pages/AdminReports.tsx";
 import AdminNotifications from "./pages/AdminNotifications.tsx";
+import AdminReconciliation from "./pages/AdminReconciliation.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
@@ -87,6 +88,7 @@ const App = () => (
           <Route path="/admin" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
+          <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
