@@ -198,6 +198,48 @@ export type Database = {
           },
         ]
       }
+      cash_closures: {
+        Row: {
+          closed_at: string
+          closed_by: string | null
+          closure_date: string
+          created_at: string
+          divergence: number
+          id: string
+          notes: string | null
+          total_expected: number
+          total_orders: number
+          total_received: number
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string
+          closed_by?: string | null
+          closure_date: string
+          created_at?: string
+          divergence?: number
+          id?: string
+          notes?: string | null
+          total_expected?: number
+          total_orders?: number
+          total_received?: number
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string
+          closed_by?: string | null
+          closure_date?: string
+          created_at?: string
+          divergence?: number
+          id?: string
+          notes?: string | null
+          total_expected?: number
+          total_orders?: number
+          total_received?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_cards: {
         Row: {
           card_name: string
@@ -873,6 +915,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_reconciliation: {
+        Row: {
+          bank_reference: string | null
+          created_at: string
+          expected_amount: number
+          id: string
+          method: string
+          notes: string | null
+          order_id: string
+          received_amount: number
+          received_at: string | null
+          reconciled_at: string | null
+          reconciled_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bank_reference?: string | null
+          created_at?: string
+          expected_amount?: number
+          id?: string
+          method?: string
+          notes?: string | null
+          order_id: string
+          received_amount?: number
+          received_at?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bank_reference?: string | null
+          created_at?: string
+          expected_amount?: number
+          id?: string
+          method?: string
+          notes?: string | null
+          order_id?: string
+          received_amount?: number
+          received_at?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reconciliation_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
