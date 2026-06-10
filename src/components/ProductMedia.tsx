@@ -11,6 +11,7 @@ interface Props {
   category?: string | null;
   className?: string;
   imageClassName?: string;
+  containerClassName?: string;
 }
 
 /**
@@ -25,7 +26,8 @@ const ProductMedia = ({
   itemName,
   category,
   className = "",
-  imageClassName = "absolute inset-0 w-full h-full object-contain",
+  imageClassName = "w-full h-full object-contain",
+  containerClassName = "w-full h-full",
 }: Props) => {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -63,7 +65,7 @@ const ProductMedia = ({
             src={src!}
             alt={alt}
             className={imageClassName}
-            containerClassName="absolute inset-0"
+            containerClassName={containerClassName}
             onLoad={() => setLoaded(true)}
             onError={handleError}
           />
