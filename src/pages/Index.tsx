@@ -210,6 +210,9 @@ const Index = () => {
                 <TabsTrigger value="reports" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
                   <Link to="/admin/relatorios"><ClipboardList className="h-3.5 w-3.5" /> Relatórios</Link>
                 </TabsTrigger>
+                <TabsTrigger value="reconciliation" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                  <Link to="/admin/reconciliacao"><DollarSign className="h-3.5 w-3.5" /> Reconciliação</Link>
+                </TabsTrigger>
                 <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <Shield className="h-3.5 w-3.5" /> Admins
                 </TabsTrigger>
