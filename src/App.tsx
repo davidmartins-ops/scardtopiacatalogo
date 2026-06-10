@@ -31,6 +31,7 @@ import NotFound from "./pages/NotFound.tsx";
 import AdminReports from "./pages/AdminReports.tsx";
 import AdminNotifications from "./pages/AdminNotifications.tsx";
 import AdminReconciliation from "./pages/AdminReconciliation.tsx";
+import AdminRefunds from "./pages/AdminRefunds.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
