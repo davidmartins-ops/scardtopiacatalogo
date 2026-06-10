@@ -46,7 +46,11 @@ const CookieBanner = () => {
   }, []);
 
   const persist = async (prefs: CookiePrefs) => {
-    await saveConsent(prefs, showSettings ? "settings" : "banner");
+    try {
+      await saveConsent(prefs, showSettings ? "settings" : "banner");
+    } catch (error) {
+      console.warn("[cookie-banner] failed to save consent", error);
+    }
     setOpen(false);
   };
 
