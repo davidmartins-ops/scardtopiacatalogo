@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Package, ImageOff } from "lucide-react";
+import { Package, ImageOff, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import placeholderImg from "/placeholder.svg";
 import ImageZoom from "@/components/ImageZoom";
@@ -14,12 +14,19 @@ interface Props {
   className?: string;
   imageClassName?: string;
   containerClassName?: string;
+  /** When true, applies a responsive min-height frame to prevent CLS. */
+  reserveSpace?: boolean;
 }
 
 /**
  * Unified media block with loading / loaded / error / empty states.
- * On image error, runs HEAD diagnostic (empty src, HTTP status, network/CORS)
- * and logs both to console and analytics_events.
+ *
+ * - Fixed responsive frame to prevent layout shift (CLS).
+ * - Skeleton placeholder fades out when image loads (smooth fade + blur transition).
+ * - <picture> with AVIF/WebP sources for modern formats, falling back to the original.
+ * - Lazy + async decoding for performance.
+ * - Subtle error state when the URL fails (expired token, network, etc.).
+ * - Fallback art when no image was ever assigned to the product.
  */
 const ProductMedia = ({
   src,
@@ -30,6 +37,7 @@ const ProductMedia = ({
   className = "",
   imageClassName = "w-full h-full object-contain",
   containerClassName = "w-full h-full",
+  reserveSpace = true,
 }: Props) => {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -59,31 +67,60 @@ const ProductMedia = ({
     } catch {}
   };
 
+  const frameClass = reserveSpace
+    ? "min-h-[180px] sm:min-h-[260px] md:min-h-[320px]"
+    : "";
+
   return (
-    <div className={`relative overflow-hidden bg-muted/20 ${className}`}>
+    <div
+      data-testid="product-media"
+      className={`relative overflow-hidden bg-muted/20 ${frameClass} ${className}`}
+    >
       {hasSrc && !errored && (
         <>
-          <ImageZoom
-            src={src!}
-            alt={alt}
-            className={imageClassName}
-            containerClassName={containerClassName}
-            onLoad={() => setLoaded(true)}
-            onError={handleError}
-          />
+          <div
+            data-testid="product-media-image"
+            className={`absolute inset-0 transition-all duration-500 ease-out ${
+              loaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-md scale-[1.02]"
+            }`}
+          >
+            <ImageZoom
+              src={src!}
+              alt={alt}
+              className={imageClassName}
+              containerClassName={containerClassName}
+              onLoad={() => setLoaded(true)}
+              onError={handleError}
+            />
+          </div>
           {!loaded && (
-            <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+            <Skeleton
+              data-testid="product-media-skeleton"
+              className="absolute inset-0 h-full w-full rounded-none"
+            />
           )}
         </>
       )}
       {hasSrc && errored && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2 p-4 text-center">
-          <ImageOff className="h-10 w-10" />
-          <p className="text-xs">Não foi possível carregar a imagem.</p>
+        <div
+          data-testid="product-media-error"
+          role="status"
+          aria-live="polite"
+          className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2 p-4 text-center bg-muted/10"
+        >
+          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-xs font-medium">Imagem indisponível</span>
+          </div>
+          <ImageOff className="h-8 w-8 opacity-50" />
+          <p className="text-[11px] opacity-70">A imagem expirou ou não pôde ser carregada.</p>
         </div>
       )}
       {!hasSrc && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted/20">
+        <div
+          data-testid="product-media-fallback"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted/20"
+        >
           <img
             src={placeholderImg}
             alt={alt || "Imagem indisponível"}

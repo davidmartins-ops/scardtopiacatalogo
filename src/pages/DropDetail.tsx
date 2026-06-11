@@ -151,7 +151,6 @@ const DropDetail = () => {
             itemName={drop.name}
             category={drop.category}
             className="rounded-2xl border border-border/40 aspect-square w-full"
-            imageClassName="absolute inset-0 w-full h-full object-contain"
           />
 
 

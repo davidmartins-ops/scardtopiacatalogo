@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, X } from "lucide-react";
+import { buildImageVariants } from "@/lib/image-sources";
 
 interface ImageZoomProps {
   src: string;
@@ -13,10 +14,24 @@ interface ImageZoomProps {
 
 const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, onError }: ImageZoomProps) => {
   const [open, setOpen] = useState(false);
+  const variants = buildImageVariants(src);
 
   return (
     <div className={`relative group/zoom ${containerClassName}`}>
-      <img src={src} alt={alt} className={className} loading="lazy" decoding="async" onLoad={onLoad} onError={onError} />
+      <picture>
+        {variants.map((v) => (
+          <source key={v.type} type={v.type} srcSet={v.src} />
+        ))}
+        <img
+          src={src}
+          alt={alt}
+          className={className}
+          loading="lazy"
+          decoding="async"
+          onLoad={onLoad}
+          onError={onError}
+        />
+      </picture>
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
@@ -36,12 +51,17 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, 
           >
             <X className="h-5 w-5" />
           </button>
-          <img
-            src={src}
-            alt={alt}
-            className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain rounded-xl border border-border shadow-2xl animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <picture>
+            {variants.map((v) => (
+              <source key={v.type} type={v.type} srcSet={v.src} />
+            ))}
+            <img
+              src={src}
+              alt={alt}
+              className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain rounded-xl border border-border shadow-2xl animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </picture>
         </div>,
         document.body
       )}
