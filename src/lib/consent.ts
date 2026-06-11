@@ -39,6 +39,11 @@ export async function saveConsent(prefs: CookiePrefs, source: "banner" | "settin
   const payload = { ...prefs, policy_version: POLICY_VERSION, saved_at: new Date().toISOString() };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 
+  // Notifica o Google Consent Mode (gtag) sobre a mudança
+  try {
+    window.dispatchEvent(new CustomEvent("scardtopia:consent-updated", { detail: prefs }));
+  } catch {}
+
   // Persistir no banco para auditoria LGPD
   try {
     const { data: userData } = await supabase.auth.getUser();

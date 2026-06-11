@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Security headers (meta fallback; production hosting should also set real HTTP headers) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.lovable.app https://*.lovable.dev https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.scryfall.com https://cards.scryfall.io https://economia.awesomeapi.com.br https://connector-gateway.lovable.dev https://*.lovable.app https://*.lovable.dev; frame-src 'self' https://www.youtube.com https://www.google.com https://*.lovable.app https://*.lovable.dev; object-src 'none'; base-uri 'self'; form-action 'self' https://wa.me https://api.whatsapp.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.lovable.app https://*.lovable.dev https://cdn.gpteng.co https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: https://www.googletagmanager.com https://www.google-analytics.com; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.scryfall.com https://cards.scryfall.io https://economia.awesomeapi.com.br https://connector-gateway.lovable.dev https://*.lovable.app https://*.lovable.dev https://www.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; frame-src 'self' https://www.youtube.com https://www.google.com https://*.lovable.app https://*.lovable.dev; object-src 'none'; base-uri 'self'; form-action 'self' https://wa.me https://api.whatsapp.com;" />
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -36,6 +36,54 @@
 
   <body>
     <div id="root"></div>
+
+    <!-- Google tag (gtag.js) com Consent Mode v2 — LGPD -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QLQTVPRSVH"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+
+      // Consent Mode v2: nega tudo até o usuário aceitar no banner LGPD
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
+        wait_for_update: 500,
+      });
+
+      gtag('js', new Date());
+      gtag('config', 'G-QLQTVPRSVH', { anonymize_ip: true });
+
+      // Aplica consentimento já armazenado (visitas recorrentes)
+      try {
+        var raw = localStorage.getItem('scardtopia.cookie_consent.v1');
+        if (raw) {
+          var p = JSON.parse(raw);
+          gtag('consent', 'update', {
+            analytics_storage: p.analytics ? 'granted' : 'denied',
+            ad_storage: p.marketing ? 'granted' : 'denied',
+            ad_user_data: p.marketing ? 'granted' : 'denied',
+            ad_personalization: p.marketing ? 'granted' : 'denied',
+          });
+        }
+      } catch (e) {}
+
+      // Atualiza quando o usuário salva preferências no banner
+      window.addEventListener('scardtopia:consent-updated', function (e) {
+        var p = (e && e.detail) || {};
+        gtag('consent', 'update', {
+          analytics_storage: p.analytics ? 'granted' : 'denied',
+          ad_storage: p.marketing ? 'granted' : 'denied',
+          ad_user_data: p.marketing ? 'granted' : 'denied',
+          ad_personalization: p.marketing ? 'granted' : 'denied',
+        });
+      });
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
