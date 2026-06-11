@@ -197,6 +197,58 @@ const sections: Section[] = [
         aText:
           "Sim, conforme o Código de Defesa do Consumidor (até 7 dias após o recebimento).",
       },
+      {
+        q: "Qual a política de estorno em caso de cancelamento na pré-venda?",
+        a: (
+          <div className="space-y-3">
+            <p>
+              Em compras realizadas na modalidade <strong>pré-venda</strong>, caso o pedido seja
+              cancelado por <strong>ausência/indisponibilidade do produto</strong> e o cliente{" "}
+              <strong>não aceite</strong> substituição por outros produtos de valor equivalente,
+              a solicitação de <strong>estorno integral</strong> poderá ser realizada.
+            </p>
+            <p>
+              Seguindo as diretrizes do Código de Defesa do Consumidor (Lei nº 8.078/90) e as
+              regras das operadoras de pagamento, o estorno será processado nos seguintes prazos:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <strong>PIX:</strong> devolução em até <strong>5 dias úteis</strong> na conta de
+                origem.
+              </li>
+              <li>
+                <strong>Cartão de crédito:</strong> solicitação enviada à operadora em até{" "}
+                <strong>5 dias úteis</strong>; o valor aparece na fatura conforme o ciclo do
+                cartão (pode levar de 1 a 2 faturas).
+              </li>
+              <li>
+                <strong>Boleto:</strong> devolução por transferência bancária em até{" "}
+                <strong>10 dias úteis</strong> após a confirmação dos dados.
+              </li>
+            </ul>
+            <div
+              role="note"
+              className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground"
+            >
+              <AlertTriangle
+                className="h-4 w-4 mt-0.5 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
+              <p>
+                <strong>Prazo mínimo:</strong> em situações que exijam análise documental ou
+                conciliação com a operadora, o prazo total para conclusão do estorno é de, no
+                mínimo, <strong>30 dias</strong> a partir da formalização da solicitação.
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Para abrir a solicitação, entre em contato pelo WhatsApp com o número do pedido e
+              os dados para devolução.
+            </p>
+          </div>
+        ),
+        aText:
+          "Em compras na modalidade pré-venda, caso o pedido seja cancelado por ausência do produto e o cliente não aceite substituição por outros produtos de valor equivalente, o estorno integral poderá ser solicitado. Prazos: PIX em até 5 dias úteis, cartão de crédito em até 5 dias úteis para envio à operadora (aparece na fatura conforme ciclo do cartão), boleto em até 10 dias úteis por transferência bancária. Prazo mínimo total de 30 dias a partir da formalização da solicitação, conforme diretrizes do Código de Defesa do Consumidor e regras das operadoras de pagamento.",
+      },
     ],
   },
   {
