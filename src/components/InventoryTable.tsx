@@ -201,7 +201,7 @@ const InventoryTable = ({ data }: Props) => {
         (filterStock === "all" ||
           (filterStock === "out_of_stock" && item.quantity === 0) ||
           (filterStock === "in_stock" && item.quantity > 0) ||
-          (filterStock === "low_stock" && item.quantity > 0 && item.quantity <= 3)) &&
+          (filterStock === "low_stock" && item.quantity > 0 && item.quantity <= 2)) &&
         (minP === null || item.price >= minP) &&
         (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
