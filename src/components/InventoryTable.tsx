@@ -201,7 +201,7 @@ const InventoryTable = ({ data }: Props) => {
         (filterStock === "all" ||
           (filterStock === "out_of_stock" && item.quantity === 0) ||
           (filterStock === "in_stock" && item.quantity > 0) ||
-          (filterStock === "low_stock" && item.quantity > 0 && item.quantity <= 3)) &&
+          (filterStock === "low_stock" && item.quantity > 0 && item.quantity <= 2)) &&
         (minP === null || item.price >= minP) &&
         (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -521,7 +521,7 @@ const InventoryTable = ({ data }: Props) => {
             {([
               { v: "all", label: "Todos" },
               { v: "in_stock", label: "Com estoque" },
-              { v: "low_stock", label: "Estoque baixo (≤3)" },
+              { v: "low_stock", label: "Estoque baixo (≤2)" },
               { v: "out_of_stock", label: "Sem estoque" },
             ] as const).map((opt) => {
               const active = filterStock === opt.v;
@@ -531,7 +531,7 @@ const InventoryTable = ({ data }: Props) => {
                   : opt.v === "in_stock"
                   ? data.filter((i) => i.quantity > 0).length
                   : opt.v === "low_stock"
-                  ? data.filter((i) => i.quantity > 0 && i.quantity <= 3).length
+                  ? data.filter((i) => i.quantity > 0 && i.quantity <= 2).length
                   : data.filter((i) => i.quantity === 0).length;
               return (
                 <button
