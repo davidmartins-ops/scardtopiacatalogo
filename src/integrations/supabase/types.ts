@@ -366,6 +366,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           display_name: string | null
+          email_preferences: Json
           id: string
           phone: string | null
         }
@@ -375,6 +376,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           display_name?: string | null
+          email_preferences?: Json
           id: string
           phone?: string | null
         }
@@ -384,6 +386,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           display_name?: string | null
+          email_preferences?: Json
           id?: string
           phone?: string | null
         }

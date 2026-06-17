@@ -713,6 +713,19 @@ const Catalogo = () => {
         trackEvent("purchase", ci.item);
       }
 
+      // Fire transactional emails (best-effort; non-blocking)
+      const newOrderId = (orderRow as any)?.id as string | undefined;
+      if (user && newOrderId) {
+        supabase.functions
+          .invoke("notify-customer-order-event", { body: { orderId: newOrderId, event: "order_received" } })
+          .catch((e) => console.warn("notify order_received failed", e));
+        if (isPix && meta?.receiptUrl) {
+          supabase.functions
+            .invoke("notify-customer-order-event", { body: { orderId: newOrderId, event: "pix_receipt_received" } })
+            .catch((e) => console.warn("notify pix_receipt_received failed", e));
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       if (user) queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
       clearCart();
