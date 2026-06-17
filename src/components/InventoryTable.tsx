@@ -521,7 +521,7 @@ const InventoryTable = ({ data }: Props) => {
             {([
               { v: "all", label: "Todos" },
               { v: "in_stock", label: "Com estoque" },
-              { v: "low_stock", label: "Estoque baixo (≤3)" },
+              { v: "low_stock", label: "Estoque baixo (≤2)" },
               { v: "out_of_stock", label: "Sem estoque" },
             ] as const).map((opt) => {
               const active = filterStock === opt.v;
