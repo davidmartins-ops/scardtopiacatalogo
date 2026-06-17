@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await admin
       .from('orders')
-      .select('id, user_id, status')
+      .select('id, user_id, status, items, total')
       .eq('id', orderId)
       .maybeSingle()
 
@@ -71,6 +71,19 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Email preferences: skip if the customer opted out of order updates
+    const { data: profile } = await admin
+      .from('customer_profiles')
+      .select('email_preferences, display_name')
+      .eq('id', order.user_id)
+      .maybeSingle()
+    const prefs = (profile?.email_preferences ?? {}) as Record<string, boolean>
+    if (prefs.order_updates === false) {
+      return new Response(JSON.stringify({ skipped: 'opted_out' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(order.user_id)
     if (userErr || !userRes?.user?.email) {
       return new Response(JSON.stringify({ skipped: 'no_email' }), {
@@ -80,7 +93,9 @@ Deno.serve(async (req) => {
 
     const email = userRes.user.email
     const meta = userRes.user.user_metadata ?? {}
-    const customerName = meta.full_name ?? meta.name ?? email.split('@')[0]
+    const customerName =
+      profile?.display_name ?? meta.full_name ?? meta.name ?? email.split('@')[0]
+    const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items
 
     // Invoke send-transactional-email with service role
     const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
@@ -93,7 +108,7 @@ Deno.serve(async (req) => {
         templateName: 'order-status-update',
         recipientEmail: email,
         idempotencyKey: `order-status-${orderId}-${status}`,
-        templateData: { customerName, orderId, status, trackingCode, note },
+        templateData: { customerName, orderId, status, trackingCode, note, total: order.total, items },
       }),
     })
 
