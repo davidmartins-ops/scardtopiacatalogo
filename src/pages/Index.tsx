@@ -1,7 +1,7 @@
 import useSEO from "@/hooks/use-seo";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
