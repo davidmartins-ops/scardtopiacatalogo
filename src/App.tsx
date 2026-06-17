@@ -32,6 +32,7 @@ import AdminReports from "./pages/AdminReports.tsx";
 import AdminNotifications from "./pages/AdminNotifications.tsx";
 import AdminReconciliation from "./pages/AdminReconciliation.tsx";
 import AdminRefunds from "./pages/AdminRefunds.tsx";
+import AdminEmails from "./pages/AdminEmails.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
@@ -91,6 +92,7 @@ const App = () => (
           <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
           <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
           <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
+          <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
