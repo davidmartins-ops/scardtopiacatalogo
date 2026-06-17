@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign, CheckSquare, Square, FileText, Plus } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Pencil, Trash2, Check, X, Percent, ImagePlus, Image as ImageIcon, Tag, DollarSign, CheckSquare, Square, FileText, Plus, Layers } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -79,6 +79,7 @@ const InventoryTable = ({ data }: Props) => {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterSet, setFilterSet] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "launch" | "pre_sale" | "none">("all");
+  const [filterStock, setFilterStock] = useState<"all" | "in_stock" | "out_of_stock" | "low_stock">("all");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const { sets: allSets } = useMtgSets();
   const [priceMin, setPriceMin] = useState("");
@@ -197,6 +198,10 @@ const InventoryTable = ({ data }: Props) => {
         (filterCategory === "all" || item.category === filterCategory) &&
         (filterSet === "all" || extractSetCode(item.id) === filterSet) &&
         (filterStatus === "all" || (item.status ?? "none") === filterStatus) &&
+        (filterStock === "all" ||
+          (filterStock === "out_of_stock" && item.quantity === 0) ||
+          (filterStock === "in_stock" && item.quantity > 0) ||
+          (filterStock === "low_stock" && item.quantity > 0 && item.quantity <= 3)) &&
         (minP === null || item.price >= minP) &&
         (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -209,7 +214,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, filterStatus, priceMin, priceMax]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, filterStatus, filterStock, priceMin, priceMax]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
@@ -502,6 +507,62 @@ const InventoryTable = ({ data }: Props) => {
               Mostrando {filtered.length} de {data.length}
             </span>
           </div>
+
+          {/* Estoque */}
+          <div
+            className="flex items-center gap-1.5 sm:gap-2 flex-wrap"
+            role="group"
+            aria-label="Filtrar por estoque"
+          >
+            <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-medium shrink-0">
+              Estoque:
+            </span>
+            {([
+              { v: "all", label: "Todos" },
+              { v: "in_stock", label: "Com estoque" },
+              { v: "low_stock", label: "Estoque baixo (≤3)" },
+              { v: "out_of_stock", label: "Sem estoque" },
+            ] as const).map((opt) => {
+              const active = filterStock === opt.v;
+              const count =
+                opt.v === "all"
+                  ? data.length
+                  : opt.v === "in_stock"
+                  ? data.filter((i) => i.quantity > 0).length
+                  : opt.v === "low_stock"
+                  ? data.filter((i) => i.quantity > 0 && i.quantity <= 3).length
+                  : data.filter((i) => i.quantity === 0).length;
+              return (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setFilterStock(opt.v)}
+                  aria-pressed={active}
+                  className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-body font-medium transition-all border ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-transparent hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                  <span className={`ml-1 ${active ? "opacity-90" : "opacity-60"}`}>
+                    ({count})
+                  </span>
+                </button>
+              );
+            })}
+            {filterStock !== "all" && (
+              <button
+                type="button"
+                className="text-[10px] sm:text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
+                onClick={() => setFilterStock("all")}
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+
 
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
