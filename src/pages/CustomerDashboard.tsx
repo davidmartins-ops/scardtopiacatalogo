@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag, Download, ChevronRight, Truck, Mail } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import EmailPreferencesPanel from "@/components/EmailPreferencesPanel";
+import EmailVerificationCard from "@/components/EmailVerificationCard";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -350,6 +351,7 @@ const CustomerDashboard = () => {
 
           {/* PREFERENCES */}
           <TabsContent value="preferences">
+            <EmailVerificationCard user={user} />
             <EmailPreferencesPanel />
           </TabsContent>
         </Tabs>
