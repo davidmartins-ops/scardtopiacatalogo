@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
 
   const { error: tokenInsertError } = await supabase
     .from('email_unsubscribe_tokens')
-    .insert({ token_hash: unsubscribeTokenHash, email: normalizedEmail })
+    .upsert({ token_hash: unsubscribeTokenHash, email: normalizedEmail }, { onConflict: 'email' })
 
   if (tokenInsertError) {
     console.error('Failed to create unsubscribe token', {
