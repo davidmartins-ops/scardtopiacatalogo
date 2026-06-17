@@ -1,11 +1,20 @@
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
+  Body, Button, Container, Head, Heading, Hr, Html, Preview, Row, Column, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "Spencer's Cardtopia"
 const SITE_URL = 'https://www.spencerscardtopia.com.br'
+
+interface OrderItem {
+  name?: string
+  quantity?: number
+  unit_price?: number
+  total_price?: number
+  language?: string
+  condition?: string
+}
 
 interface OrderStatusUpdateProps {
   customerName?: string
@@ -13,6 +22,8 @@ interface OrderStatusUpdateProps {
   status?: string
   trackingCode?: string
   note?: string
+  total?: number
+  items?: OrderItem[]
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -33,12 +44,17 @@ const STATUS_MESSAGE: Record<string, string> = {
   cancelled: 'Seu pedido foi cancelado. Em caso de dúvidas, entre em contato conosco.',
 }
 
+const fmt = (v?: number) =>
+  `R$ ${(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
 const OrderStatusUpdateEmail = ({
   customerName,
   orderId = '',
   status = 'payment_confirmed',
   trackingCode,
   note,
+  total,
+  items = [],
 }: OrderStatusUpdateProps) => {
   const statusLabel = STATUS_LABELS[status] ?? status
   const statusMessage = STATUS_MESSAGE[status] ?? 'Houve uma atualização no seu pedido.'
@@ -72,6 +88,39 @@ const OrderStatusUpdateEmail = ({
               >
                 Rastrear nos Correios
               </Button>
+            </Section>
+          )}
+
+          {items.length > 0 && (
+            <Section style={itemsBox}>
+              <Text style={itemsTitle}>Resumo do pedido</Text>
+              {items.map((it, idx) => (
+                <Row key={idx} style={itemRow}>
+                  <Column>
+                    <Text style={itemName}>{it.name ?? 'Item'}</Text>
+                    {(it.language || it.condition) && (
+                      <Text style={itemMeta}>
+                        {[it.language, it.condition].filter(Boolean).join(' · ')}
+                      </Text>
+                    )}
+                    <Text style={itemMeta}>
+                      {it.quantity ?? 1} × {fmt(it.unit_price)}
+                    </Text>
+                  </Column>
+                  <Column align="right" style={{ verticalAlign: 'top' }}>
+                    <Text style={itemTotal}>{fmt(it.total_price)}</Text>
+                  </Column>
+                </Row>
+              ))}
+              {typeof total === 'number' && (
+                <>
+                  <Hr style={hrLight} />
+                  <Row>
+                    <Column><Text style={totalLabel}>Total</Text></Column>
+                    <Column align="right"><Text style={totalValue}>{fmt(total)}</Text></Column>
+                  </Row>
+                </>
+              )}
             </Section>
           )}
 
@@ -111,6 +160,11 @@ export const template = {
     orderId: '12345678-abcd-efgh-ijkl-000000000000',
     status: 'shipped',
     trackingCode: 'BR123456789BR',
+    total: 249.9,
+    items: [
+      { name: 'Secret Lair Drop X', quantity: 1, unit_price: 199.9, total_price: 199.9 },
+      { name: 'Sol Ring', language: 'EN', condition: 'NM', quantity: 2, unit_price: 25, total_price: 50 },
+    ],
   },
 } satisfies TemplateEntry
 
@@ -125,6 +179,15 @@ const statusDesc = { fontSize: '14px', color: '#55504a', lineHeight: '1.5', marg
 const trackingBox = { backgroundColor: '#fdfaf3', border: '1px dashed #d6c39a', borderRadius: '10px', padding: '18px 20px', margin: '0 0 22px', textAlign: 'center' as const }
 const trackingLabel = { fontSize: '12px', color: '#7a6f5d', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '0 0 6px' }
 const trackingValue = { fontSize: '18px', fontWeight: 'bold', color: '#1f1d1a', fontFamily: 'monospace', margin: '0 0 14px' }
+const itemsBox = { backgroundColor: '#fdfaf3', border: '1px solid #e8dcc4', borderRadius: '10px', padding: '16px 18px', margin: '0 0 22px' }
+const itemsTitle = { fontSize: '13px', color: '#7a6f5d', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '0 0 12px', fontWeight: 'bold' }
+const itemRow = { borderBottom: '1px solid #efe6d2' }
+const itemName = { fontSize: '14px', color: '#1f1d1a', fontWeight: 'bold', margin: '8px 0 2px' }
+const itemMeta = { fontSize: '12px', color: '#7a6f5d', margin: '0 0 2px' }
+const itemTotal = { fontSize: '14px', color: '#1f1d1a', fontWeight: 'bold', margin: '8px 0' }
+const totalLabel = { fontSize: '14px', color: '#3a3631', fontWeight: 'bold', margin: '8px 0 0' }
+const totalValue = { fontSize: '16px', color: '#a78448', fontWeight: 'bold', margin: '8px 0 0' }
+const hrLight = { borderColor: '#e8dcc4', margin: '8px 0' }
 const noteBox = { backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '14px 16px', margin: '0 0 22px' }
 const noteLabel = { fontSize: '12px', color: '#7a6f5d', fontWeight: 'bold', margin: '0 0 4px' }
 const noteText = { fontSize: '14px', color: '#3a3631', lineHeight: '1.5', margin: 0 }
