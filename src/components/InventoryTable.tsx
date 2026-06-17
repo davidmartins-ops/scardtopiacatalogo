@@ -531,7 +531,7 @@ const InventoryTable = ({ data }: Props) => {
                   : opt.v === "in_stock"
                   ? data.filter((i) => i.quantity > 0).length
                   : opt.v === "low_stock"
-                  ? data.filter((i) => i.quantity > 0 && i.quantity <= 3).length
+                  ? data.filter((i) => i.quantity > 0 && i.quantity <= 2).length
                   : data.filter((i) => i.quantity === 0).length;
               return (
                 <button
