@@ -198,6 +198,10 @@ const InventoryTable = ({ data }: Props) => {
         (filterCategory === "all" || item.category === filterCategory) &&
         (filterSet === "all" || extractSetCode(item.id) === filterSet) &&
         (filterStatus === "all" || (item.status ?? "none") === filterStatus) &&
+        (filterStock === "all" ||
+          (filterStock === "out_of_stock" && item.quantity === 0) ||
+          (filterStock === "in_stock" && item.quantity > 0) ||
+          (filterStock === "low_stock" && item.quantity > 0 && item.quantity <= 3)) &&
         (minP === null || item.price >= minP) &&
         (maxP === null || item.price <= maxP) &&
         (item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -210,7 +214,7 @@ const InventoryTable = ({ data }: Props) => {
       return sortAsc ? cmp : -cmp;
     });
     return items;
-  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, filterStatus, priceMin, priceMax]);
+  }, [data, search, sortKey, sortAsc, filterType, filterCategory, filterSet, filterStatus, filterStock, priceMin, priceMax]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc);
