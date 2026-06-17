@@ -216,6 +216,9 @@ const Index = () => {
                 <TabsTrigger value="refunds" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
                   <Link to="/admin/reembolsos"><DollarSign className="h-3.5 w-3.5" /> Reembolsos</Link>
                 </TabsTrigger>
+                <TabsTrigger value="emails" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                  <Link to="/admin/emails"><Mail className="h-3.5 w-3.5" /> E-mails</Link>
+                </TabsTrigger>
                 <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <Shield className="h-3.5 w-3.5" /> Admins
                 </TabsTrigger>
