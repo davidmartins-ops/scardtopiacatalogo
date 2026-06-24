@@ -157,8 +157,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   useEffect(() => {
     const cleanCep = shippingInfo.cep.replace(/\D/g, "");
     if (cleanCep.length === 8 && deliveryMethod === "shipping") {
+      const itemCount = items.reduce((s, ci) => s + ci.qty, 0) || 1;
       setFreight({ loading: true });
-      fetchFreight(cleanCep).then((result) => setFreight({ ...result, loading: false }));
+      fetchFreight(cleanCep, itemCount).then((result) => setFreight({ ...result, loading: false }));
     } else {
       setFreight({ loading: false });
     }
