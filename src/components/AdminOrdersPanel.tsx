@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, UserCircle2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar } from "lucide-react";
+import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -311,6 +311,11 @@ const AdminOrdersPanel = () => {
                         <Truck className="h-3 w-3" /> {order.tracking_code}
                       </Badge>
                     )}
+                    {(order as any).shipping_label_url && (
+                      <a href={(order as any).shipping_label_url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
+                        <Printer className="h-3 w-3" /> etiqueta
+                      </a>
+                    )}
                     {order.receipt_url && (
                       <a href={order.receipt_url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline">
                         comprovante PIX
@@ -336,6 +341,25 @@ const AdminOrdersPanel = () => {
                 <div className="flex items-center gap-2 pt-1 border-t border-border/40 flex-wrap">
                   <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => openEdit(order.id, order.status, order.tracking_code)}>
                     <Pencil className="h-3 w-3" /> Atualizar status
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 gap-1 text-xs"
+                    onClick={async () => {
+                      toast.loading("Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
+                      const { data, error } = await supabase.functions.invoke("superfrete-create-label", {
+                        body: { orderId: order.id, checkout: true },
+                      });
+                      if (error || (data as any)?.error) {
+                        toast.error("Falha ao gerar etiqueta", { id: `lbl-${order.id}`, description: error?.message ?? (data as any)?.error });
+                        return;
+                      }
+                      toast.success("Etiqueta gerada!", { id: `lbl-${order.id}`, description: (data as any)?.trackingCode ? `Rastreio: ${(data as any).trackingCode}` : undefined });
+                      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+                    }}
+                  >
+                    <Printer className="h-3 w-3" /> Gerar etiqueta
                   </Button>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)} aria-label="Remover pedido">
                     <Trash2 className="h-3.5 w-3.5" />

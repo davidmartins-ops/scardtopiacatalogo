@@ -67,34 +67,43 @@ interface FreightEstimate {
   error?: string;
 }
 
-const fetchFreight = async (cep: string): Promise<Omit<FreightEstimate, "loading">> => {
+const fetchFreight = async (
+  cep: string,
+  itemCount: number,
+): Promise<Omit<FreightEstimate, "loading">> => {
   const cleanCep = cep.replace(/\D/g, "");
   if (cleanCep.length !== 8) return { error: "CEP inválido" };
 
   try {
-    // Use ViaCEP to validate, then estimate via weight-based formula
-    const viaRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-    const viaData = await viaRes.json();
-    if (viaData.erro) return { error: "CEP não encontrado" };
-
-    // Simple estimate based on region
-    const uf = (viaData.uf ?? "").toUpperCase();
-    const spRegion = ["SP"].includes(uf);
-    const seRegion = ["RJ", "MG", "ES"].includes(uf);
-
-    const pacBase = spRegion ? 18.9 : seRegion ? 24.5 : 32.9;
-    const sedexBase = spRegion ? 28.5 : seRegion ? 38.9 : 52.9;
-    const pacDays = spRegion ? "5-8" : seRegion ? "8-12" : "10-15";
-    const sedexDays = spRegion ? "2-4" : seRegion ? "3-5" : "5-8";
-
-    return {
-      pac: { price: pacBase.toFixed(2), deadline: `${pacDays} dias úteis` },
-      sedex: { price: sedexBase.toFixed(2), deadline: `${sedexDays} dias úteis` },
-    };
+    const { data, error } = await supabase.functions.invoke("superfrete-calculate", {
+      body: { cep: cleanCep, itemCount },
+    });
+    if (error) return { error: "Erro ao consultar frete" };
+    const options: Array<{ id: number; name: string; price: number; deliveryDays: string }> =
+      data?.options ?? [];
+    // Map SuperFrete services: 1=PAC, 2=SEDEX, 17=Mini Envios
+    const pacOpt = options.find((o) => o.id === 1) ?? options.find((o) => o.id === 17);
+    const sedexOpt = options.find((o) => o.id === 2);
+    const result: Omit<FreightEstimate, "loading"> = {};
+    if (pacOpt) {
+      result.pac = {
+        price: pacOpt.price.toFixed(2),
+        deadline: `${pacOpt.deliveryDays} dias úteis`,
+      };
+    }
+    if (sedexOpt) {
+      result.sedex = {
+        price: sedexOpt.price.toFixed(2),
+        deadline: `${sedexOpt.deliveryDays} dias úteis`,
+      };
+    }
+    if (!result.pac && !result.sedex) return { error: "Sem opções de frete disponíveis" };
+    return result;
   } catch {
     return { error: "Erro ao consultar frete" };
   }
 };
+
 
 const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fabsVisible = true }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
@@ -148,12 +157,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   useEffect(() => {
     const cleanCep = shippingInfo.cep.replace(/\D/g, "");
     if (cleanCep.length === 8 && deliveryMethod === "shipping") {
+      const itemCount = items.reduce((s, ci) => s + ci.qty, 0) || 1;
       setFreight({ loading: true });
-      fetchFreight(cleanCep).then((result) => setFreight({ ...result, loading: false }));
+      fetchFreight(cleanCep, itemCount).then((result) => setFreight({ ...result, loading: false }));
     } else {
       setFreight({ loading: false });
     }
-  }, [shippingInfo.cep, deliveryMethod]);
+  }, [shippingInfo.cep, deliveryMethod, items]);
 
   // Auto-fill address from ViaCEP
   useEffect(() => {
@@ -688,7 +698,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                     </div>
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 mt-1">
                       <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        ⚠️ Os valores de frete são <strong>estimativas</strong>. O valor final será confirmado no ato do envio.
+                        ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. Pequenos ajustes podem ocorrer no ato da postagem.
                       </p>
                     </div>
                   </div>

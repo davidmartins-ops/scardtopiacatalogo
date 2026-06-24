@@ -895,10 +895,14 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_transaction_id: string | null
           receipt_url: string | null
+          shipping_cost: number | null
+          shipping_label_url: string | null
+          shipping_service: string | null
           sla_breach_status: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           status_updated_at: string
+          superfrete_order_id: string | null
           total: number
           tracking_code: string | null
           user_id: string | null
@@ -916,10 +920,14 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_transaction_id?: string | null
           receipt_url?: string | null
+          shipping_cost?: number | null
+          shipping_label_url?: string | null
+          shipping_service?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           status_updated_at?: string
+          superfrete_order_id?: string | null
           total?: number
           tracking_code?: string | null
           user_id?: string | null
@@ -937,10 +945,14 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_transaction_id?: string | null
           receipt_url?: string | null
+          shipping_cost?: number | null
+          shipping_label_url?: string | null
+          shipping_service?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           status_updated_at?: string
+          superfrete_order_id?: string | null
           total?: number
           tracking_code?: string | null
           user_id?: string | null
