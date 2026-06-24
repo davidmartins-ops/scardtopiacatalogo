@@ -35,6 +35,21 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Authenticate caller (best-effort). For orders that belong to a logged-in
+    // customer, the caller MUST be that customer. Guest orders (user_id IS NULL)
+    // are allowed unauthenticated so the success-redirect flow still works.
+    let callerUserId: string | null = null;
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (authHeader.startsWith("Bearer ")) {
+      const token = authHeader.slice("Bearer ".length);
+      const { data: claims } = await supabase.auth.getClaims(token);
+      callerUserId = claims?.claims?.sub ?? null;
+    }
+    const callerIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("cf-connecting-ip") ??
+      null;
+
     // Idempotency: if we already processed this transaction, return success
     const { data: existingEvent } = await supabase
       .from("payment_events")
