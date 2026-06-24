@@ -29,3 +29,7 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = false
   [functions.admin-email-tools]
     verify_jwt = true
+  [functions.superfrete-calculate]
+    verify_jwt = false
+  [functions.superfrete-create-label]
+    verify_jwt = true
