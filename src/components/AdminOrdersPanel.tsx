@@ -311,6 +311,11 @@ const AdminOrdersPanel = () => {
                         <Truck className="h-3 w-3" /> {order.tracking_code}
                       </Badge>
                     )}
+                    {(order as any).shipping_label_url && (
+                      <a href={(order as any).shipping_label_url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
+                        <Printer className="h-3 w-3" /> etiqueta
+                      </a>
+                    )}
                     {order.receipt_url && (
                       <a href={order.receipt_url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline">
                         comprovante PIX
