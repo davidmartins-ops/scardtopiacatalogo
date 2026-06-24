@@ -698,7 +698,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                     </div>
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 mt-1">
                       <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        ⚠️ Os valores de frete são <strong>estimativas</strong>. O valor final será confirmado no ato do envio.
+                        ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. Pequenos ajustes podem ocorrer no ato da postagem.
                       </p>
                     </div>
                   </div>
