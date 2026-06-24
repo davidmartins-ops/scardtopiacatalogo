@@ -163,7 +163,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     } else {
       setFreight({ loading: false });
     }
-  }, [shippingInfo.cep, deliveryMethod]);
+  }, [shippingInfo.cep, deliveryMethod, items]);
 
   // Auto-fill address from ViaCEP
   useEffect(() => {
