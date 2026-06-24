@@ -342,6 +342,25 @@ const AdminOrdersPanel = () => {
                   <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => openEdit(order.id, order.status, order.tracking_code)}>
                     <Pencil className="h-3 w-3" /> Atualizar status
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 gap-1 text-xs"
+                    onClick={async () => {
+                      toast.loading("Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
+                      const { data, error } = await supabase.functions.invoke("superfrete-create-label", {
+                        body: { orderId: order.id, checkout: true },
+                      });
+                      if (error || (data as any)?.error) {
+                        toast.error("Falha ao gerar etiqueta", { id: `lbl-${order.id}`, description: error?.message ?? (data as any)?.error });
+                        return;
+                      }
+                      toast.success("Etiqueta gerada!", { id: `lbl-${order.id}`, description: (data as any)?.trackingCode ? `Rastreio: ${(data as any).trackingCode}` : undefined });
+                      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+                    }}
+                  >
+                    <Printer className="h-3 w-3" /> Gerar etiqueta
+                  </Button>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)} aria-label="Remover pedido">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
