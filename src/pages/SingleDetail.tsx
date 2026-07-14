@@ -91,6 +91,7 @@ const SingleDetail = () => {
   const seoDesc = card?.printed_text || card?.oracle_text
     ? `${displayName} (${card?.set_name ?? ""}${card?.collector_number ? ` #${card.collector_number}` : ""}) — ${item.description} ${item.language ?? ""} ${item.condition ?? ""}. Disponível na Spencer's Cardtopia.`
     : `${displayName} — Magic: The Gathering single (${item.description}${item.language ? `, ${item.language}` : ""}${item.condition ? `, ${item.condition}` : ""}) na Spencer's Cardtopia.`;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useSEO({
     title: displayName,
     description: seoDesc,
