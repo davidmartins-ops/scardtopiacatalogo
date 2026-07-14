@@ -414,7 +414,27 @@ const AdminOrdersPanel = () => {
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display">Remover pedido?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação é permanente e não pode ser desfeita.</AlertDialogDescription>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Esta ação é permanente e não pode ser desfeita.</p>
+                {(() => {
+                  const o = orders.find((x) => x.id === deleteId);
+                  if (!o) return null;
+                  const willRestock = o.status === "payment_confirmed" || o.status === "preparing" || o.status === "shipped" || o.status === "delivered";
+                  return (
+                    <div className="rounded border bg-muted/40 p-2 text-xs space-y-1">
+                      <p><strong>Status:</strong> {statusConfig(o.status).label}</p>
+                      <p><strong>Itens:</strong> {(o.items as any[]).reduce((s, it) => s + Number(it.quantity || 0), 0)}</p>
+                      {willRestock ? (
+                        <p className="text-emerald-700">✓ Estoque será reposto automaticamente e registrado na auditoria.</p>
+                      ) : (
+                        <p className="text-muted-foreground">Pedido sem débito de estoque — nada a repor.</p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
