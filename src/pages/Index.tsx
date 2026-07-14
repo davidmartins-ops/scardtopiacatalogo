@@ -252,6 +252,7 @@ const Index = () => {
                 <div className="space-y-4">
                   <SlaRulesPanel />
                   <OrderAuditPanel />
+                  <DeletedOrdersPanel />
                 </div>
               </TabsContent>
               <TabsContent value="admins">
