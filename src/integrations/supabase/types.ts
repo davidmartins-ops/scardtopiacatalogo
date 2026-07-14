@@ -1205,6 +1205,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_orphan_stock_debits: { Args: never; Returns: number }
       decrement_inventory_stock: {
         Args: { _item_id: string; _qty: number }
         Returns: undefined
