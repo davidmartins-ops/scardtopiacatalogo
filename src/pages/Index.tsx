@@ -20,6 +20,7 @@ import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import BannerManager from "@/components/BannerManager";
 import AdminRolesManager from "@/components/AdminRolesManager";
 import AdminOrdersPanel from "@/components/AdminOrdersPanel";
+import DeletedOrdersPanel from "@/components/DeletedOrdersPanel";
 import AdminDisputesPanel from "@/components/AdminDisputesPanel";
 import InventoryAuditPanel from "@/components/InventoryAuditPanel";
 import SalesDashboard from "@/components/SalesDashboard";
