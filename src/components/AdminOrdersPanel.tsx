@@ -1,20 +1,29 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAdminOrders, type OrderStatus } from "@/hooks/use-orders";
+import {
+  useShippingLabelEvents,
+  useSyncShippingStatus,
+  useGenerateShippingLabel,
+  SHIPPING_LABEL_STATUS_META,
+  type ShippingLabelStatus,
+} from "@/hooks/use-shipping-label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, UserCircle2, MapPin, Copy, ChevronDown } from "lucide-react";
+import { User, UserCircle2, MapPin, Copy, ChevronDown, RefreshCw, History, Send } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string; icon: typeof Package; className: string }[] = [
   { value: "pending_payment", label: "Aguardando pagamento", icon: Clock, className: "bg-muted text-muted-foreground border-border" },
@@ -37,6 +46,8 @@ const csvEscape = (val: unknown): string => {
 const AdminOrdersPanel = () => {
   const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
   const qc = useQueryClient();
+  const syncShipping = useSyncShippingStatus();
+  const generateLabel = useGenerateShippingLabel();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customerFilter, setCustomerFilter] = useState<string>("all");
@@ -47,6 +58,28 @@ const AdminOrdersPanel = () => {
   const [editStatus, setEditStatus] = useState<OrderStatus>("payment_confirmed");
   const [editTracking, setEditTracking] = useState("");
   const [editNote, setEditNote] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [historyOrderId, setHistoryOrderId] = useState<string | null>(null);
+
+  // Auto-sync SuperFrete label status once per mount for non-terminal labels
+  useEffect(() => {
+    const stale = orders
+      .filter((o) => (o as any).superfrete_order_id)
+      .filter((o) => {
+        const s = ((o as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+        return s !== "delivered" && s !== "canceled";
+      })
+      .map((o) => o.id);
+    if (stale.length === 0) return;
+    let cancelled = false;
+    // Fire and forget; ignore errors silently on background sync
+    syncShipping.mutateAsync(stale).catch(() => undefined).finally(() => {
+      if (cancelled) return;
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders.length]);
+
 
   // Realtime: notify on new orders
   useEffect(() => {
@@ -126,38 +159,140 @@ const AdminOrdersPanel = () => {
     setDeleteId(null);
   };
 
-  const exportCSV = () => {
-    if (filtered.length === 0) {
-      toast.error("Nenhum pedido para exportar com os filtros atuais.");
-      return;
+  const buildCSV = (list: typeof orders, kind: "full" | "shipping") => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    let header: string[];
+    let rows: string[][];
+    if (kind === "shipping") {
+      header = [
+        "ID", "Data", "Cliente", "CPF", "E-mail", "Telefone",
+        "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "UF",
+        "Status pedido", "Status etiqueta", "Rastreio", "Etiqueta URL",
+        "Serviço SF", "SF Order ID", "Frete (R$)", "Emitida em", "Emitida por",
+      ];
+      rows = list.map((o) => {
+        const ci = ((o as any).customer_info ?? {}) as Record<string, any>;
+        const addr = (ci.address ?? ci.shipping ?? ci) as Record<string, any>;
+        const cep = String(addr.cep ?? addr.postal_code ?? "").replace(/\D/g, "");
+        const status = ((o as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+        const issuedAt = (o as any).shipping_label_issued_at as string | null;
+        return [
+          o.id,
+          new Date(o.created_at).toLocaleString("pt-BR"),
+          ci.name ?? ci.full_name ?? "",
+          ci.cpf ?? ci.document ?? "",
+          ci.email ?? "",
+          ci.phone ?? "",
+          cep.length === 8 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep,
+          addr.street ?? addr.address ?? "",
+          String(addr.number ?? ""),
+          addr.complement ?? addr.complemento ?? "",
+          addr.neighborhood ?? addr.district ?? addr.bairro ?? "",
+          addr.city ?? "",
+          addr.state ?? addr.uf ?? "",
+          statusConfig(o.status).label,
+          SHIPPING_LABEL_STATUS_META[status]?.label ?? status,
+          o.tracking_code ?? "",
+          (o as any).shipping_label_url ?? "",
+          (o as any).shipping_service ?? "",
+          (o as any).superfrete_order_id ?? "",
+          Number((o as any).shipping_cost ?? 0).toFixed(2).replace(".", ","),
+          issuedAt ? new Date(issuedAt).toLocaleString("pt-BR") : "",
+          (o as any).shipping_label_issued_by ?? "",
+        ];
+      });
+    } else {
+      header = [
+        "ID", "Data", "Cliente (user_id)", "Status", "Total (R$)", "Código rastreio",
+        "Itens (qtd × nome)", "Comprovante",
+      ];
+      rows = list.map((o) => [
+        o.id,
+        new Date(o.created_at).toLocaleString("pt-BR"),
+        o.user_id ?? "visitante",
+        statusConfig(o.status).label,
+        Number(o.total).toFixed(2).replace(".", ","),
+        o.tracking_code ?? "",
+        (o.items as any[]).map((it) => `${it.quantity}× ${it.name}`).join(" | "),
+        o.receipt_url ?? "",
+      ]);
     }
-    const header = [
-      "ID", "Data", "Cliente (user_id)", "Status", "Total (R$)", "Código rastreio",
-      "Itens (qtd × nome)", "Comprovante",
-    ];
-    const rows = filtered.map((o) => [
-      o.id,
-      new Date(o.created_at).toLocaleString("pt-BR"),
-      o.user_id ?? "visitante",
-      statusConfig(o.status).label,
-      Number(o.total).toFixed(2).replace(".", ","),
-      o.tracking_code ?? "",
-      (o.items as any[]).map((it) => `${it.quantity}× ${it.name}`).join(" | "),
-      o.receipt_url ?? "",
-    ]);
     const csv = [header, ...rows].map((r) => r.map(csvEscape).join(";")).join("\n");
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    const stamp = new Date().toISOString().slice(0, 10);
-    link.download = `pedidos-${stamp}.csv`;
+    link.download = kind === "shipping" ? `envios-${stamp}.csv` : `pedidos-${stamp}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success(`${filtered.length} pedido(s) exportado(s).`);
+    toast.success(`${list.length} pedido(s) exportado(s).`);
   };
+
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum pedido para exportar com os filtros atuais.");
+      return;
+    }
+    buildCSV(filtered, "full");
+  };
+
+  const exportShippingCSV = () => {
+    const list = selectedIds.size > 0
+      ? orders.filter((o) => selectedIds.has(o.id))
+      : filtered;
+    if (list.length === 0) {
+      toast.error("Nenhum pedido selecionado para exportar envio.");
+      return;
+    }
+    buildCSV(list, "shipping");
+  };
+
+  const exportShippingPDF = () => {
+    const list = selectedIds.size > 0
+      ? orders.filter((o) => selectedIds.has(o.id))
+      : filtered;
+    if (list.length === 0) {
+      toast.error("Nenhum pedido selecionado para imprimir.");
+      return;
+    }
+    const rows = list.map((o) => {
+      const ci = ((o as any).customer_info ?? {}) as Record<string, any>;
+      const addr = (ci.address ?? ci.shipping ?? ci) as Record<string, any>;
+      const cep = String(addr.cep ?? addr.postal_code ?? "").replace(/\D/g, "");
+      const status = ((o as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+      return `
+        <div class="card">
+          <div class="hd">
+            <strong>#${o.id.slice(0, 8)}</strong>
+            <span>${new Date(o.created_at).toLocaleString("pt-BR")}</span>
+            <span class="badge">${SHIPPING_LABEL_STATUS_META[status]?.label ?? status}</span>
+          </div>
+          <div class="row"><b>Destinatário:</b> ${ci.name ?? ci.full_name ?? "—"} · ${ci.cpf ?? ""}</div>
+          <div class="row"><b>Contato:</b> ${ci.email ?? ""} · ${ci.phone ?? ""}</div>
+          <div class="row"><b>Endereço:</b> ${addr.street ?? ""}, ${addr.number ?? ""} ${addr.complement ? `— ${addr.complement}` : ""}</div>
+          <div class="row"><b>Bairro:</b> ${addr.neighborhood ?? addr.district ?? "—"} · <b>${addr.city ?? ""}/${addr.state ?? ""}</b> · CEP ${cep.length === 8 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep}</div>
+          <div class="row"><b>Rastreio:</b> ${o.tracking_code ?? "—"} · <b>SF:</b> ${(o as any).superfrete_order_id ?? "—"}</div>
+        </div>`;
+    }).join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Envios ${new Date().toLocaleDateString("pt-BR")}</title>
+      <style>
+        body{font-family:system-ui,Arial,sans-serif;padding:16px;color:#111}
+        h1{font-size:16px;margin:0 0 12px}
+        .card{border:1px solid #ccc;border-radius:6px;padding:10px;margin-bottom:10px;page-break-inside:avoid}
+        .hd{display:flex;justify-content:space-between;gap:8px;font-size:12px;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px}
+        .badge{background:#eef;padding:2px 6px;border-radius:4px}
+        .row{font-size:12px;margin:2px 0}
+      </style></head>
+      <body><h1>Etiquetas de envio — ${list.length} pedido(s)</h1>${rows}
+      <script>window.onload=()=>window.print()</script></body></html>`;
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Bloqueado pelo navegador"); return; }
+    w.document.write(html);
+    w.document.close();
+  };
+
 
   const clearFilters = () => {
     setSearch("");
@@ -184,17 +319,54 @@ const AdminOrdersPanel = () => {
         <h3 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" /> Gerenciar Pedidos
         </h3>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="text-xs text-muted-foreground">
-            {filtered.length} pedido(s) — <span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+            {filtered.length} pedido(s)
+            {selectedIds.size > 0 && <> · <span className="text-primary font-semibold">{selectedIds.size} selecionado(s)</span></>}
+            {" — "}<span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
           </div>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportCSV}>
-            <Download className="h-3.5 w-3.5" /> CSV
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs"
+            onClick={async () => {
+              const list = selectedIds.size > 0
+                ? Array.from(selectedIds)
+                : filtered.filter((o) => (o as any).superfrete_order_id).map((o) => o.id);
+              if (list.length === 0) { toast.info("Nenhum pedido com etiqueta para sincronizar."); return; }
+              toast.loading("Sincronizando status SuperFrete…", { id: "sf-sync" });
+              try {
+                const res = await syncShipping.mutateAsync(list);
+                const changed = res.results.filter((r) => r.changed).length;
+                toast.success(`Sincronizados: ${res.checked}${changed > 0 ? ` · ${changed} atualizados` : ""}`, { id: "sf-sync" });
+              } catch (e) {
+                toast.error("Falha ao sincronizar status", { id: "sf-sync", description: (e as Error).message });
+              }
+            }}
+            disabled={syncShipping.isPending}
+          >
+            {syncShipping.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Sincronizar SF
           </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportCSV}>
+            <Download className="h-3.5 w-3.5" /> CSV pedidos
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportShippingCSV}>
+            <Download className="h-3.5 w-3.5" /> CSV envio{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportShippingPDF}>
+            <Printer className="h-3.5 w-3.5" /> PDF envio{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+          </Button>
+          {selectedIds.size > 0 && (
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedIds(new Set())}>
+              Limpar seleção
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
+
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -258,6 +430,21 @@ const AdminOrdersPanel = () => {
         </div>
       ) : (
         <div className="space-y-2">
+          <div className="flex items-center gap-2 px-2 text-[11px] text-muted-foreground">
+            <Checkbox
+              id="select-all"
+              checked={filtered.length > 0 && filtered.every((o) => selectedIds.has(o.id))}
+              onCheckedChange={(v) => {
+                setSelectedIds((prev) => {
+                  const next = new Set(prev);
+                  if (v) filtered.forEach((o) => next.add(o.id));
+                  else filtered.forEach((o) => next.delete(o.id));
+                  return next;
+                });
+              }}
+            />
+            <label htmlFor="select-all">Selecionar todos os visíveis</label>
+          </div>
           {filtered.map((order) => {
             const cfg = statusConfig(order.status);
             const Icon = cfg.icon;
@@ -267,15 +454,45 @@ const AdminOrdersPanel = () => {
             const ciPhone = (ci.phone || "").trim();
             const isIdentified = !!(ciName || ciEmail);
             const primaryLabel = ciName || ciEmail || "Cliente";
+            const labelStatus = ((order as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+            const labelMeta = SHIPPING_LABEL_STATUS_META[labelStatus] ?? SHIPPING_LABEL_STATUS_META.pending;
+            const hasLabel = !!(order as any).superfrete_order_id;
+            const lastSynced = (order as any).shipping_label_last_synced_at as string | null;
             return (
               <div key={order.id} className="border border-border rounded-lg p-3 bg-muted/10 space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <Checkbox
+                      checked={selectedIds.has(order.id)}
+                      onCheckedChange={(v) => {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (v) next.add(order.id); else next.delete(order.id);
+                          return next;
+                        });
+                      }}
+                      aria-label="Selecionar pedido"
+                    />
                     <Badge variant="outline" className={`text-[10px] gap-1 ${cfg.className}`}>
                       <Icon className="h-3 w-3" /> {cfg.label}
                     </Badge>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className={`text-[10px] gap-1 ${labelMeta.className} cursor-help`}>
+                            <Truck className="h-3 w-3" /> {labelMeta.label}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {lastSynced
+                            ? `Última sincronização: ${new Date(lastSynced).toLocaleString("pt-BR")}`
+                            : "Ainda não sincronizado com a SuperFrete"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <span className="text-[11px] text-muted-foreground font-mono">#{order.id.slice(0, 8)}</span>
                     <span className="text-[11px] text-muted-foreground">
+
                       {new Date(order.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
                     {isIdentified ? (
@@ -455,24 +672,51 @@ const AdminOrdersPanel = () => {
                     size="sm"
                     variant="outline"
                     className="h-7 px-2 gap-1 text-xs"
+                    disabled={generateLabel.isPending}
                     onClick={async () => {
-                      toast.loading("Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
-                      const { data, error } = await supabase.functions.invoke("superfrete-create-label", {
-                        body: { orderId: order.id, checkout: true },
-                      });
-                      if (error || (data as any)?.error) {
-                        toast.error("Falha ao gerar etiqueta", { id: `lbl-${order.id}`, description: error?.message ?? (data as any)?.error });
-                        return;
+                      const isResend = hasLabel;
+                      toast.loading(isResend ? "Reenviando etiqueta SuperFrete…" : "Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
+                      try {
+                        const data = await generateLabel.mutateAsync({ orderId: order.id, checkout: true });
+                        toast.success(isResend ? "Etiqueta reenviada!" : "Etiqueta gerada!", {
+                          id: `lbl-${order.id}`,
+                          description: data?.trackingCode ? `Rastreio: ${data.trackingCode}` : undefined,
+                        });
+                      } catch (e) {
+                        toast.error("Falha ao processar etiqueta", { id: `lbl-${order.id}`, description: (e as Error).message });
                       }
-                      toast.success("Etiqueta gerada!", { id: `lbl-${order.id}`, description: (data as any)?.trackingCode ? `Rastreio: ${(data as any).trackingCode}` : undefined });
-                      qc.invalidateQueries({ queryKey: ["admin-orders"] });
                     }}
                   >
-                    <Printer className="h-3 w-3" /> Gerar etiqueta
+                    {hasLabel ? <Send className="h-3 w-3" /> : <Printer className="h-3 w-3" />}
+                    {hasLabel ? "Reenviar etiqueta" : "Gerar etiqueta"}
+                  </Button>
+                  {hasLabel && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 gap-1 text-xs"
+                      disabled={syncShipping.isPending}
+                      onClick={async () => {
+                        toast.loading("Sincronizando…", { id: `sync-${order.id}` });
+                        try {
+                          const res = await syncShipping.mutateAsync([order.id]);
+                          const r = res.results[0];
+                          toast.success(`Status: ${SHIPPING_LABEL_STATUS_META[r?.status ?? "pending"]?.label ?? "—"}`, { id: `sync-${order.id}` });
+                        } catch (e) {
+                          toast.error("Falha ao sincronizar", { id: `sync-${order.id}`, description: (e as Error).message });
+                        }
+                      }}
+                    >
+                      <RefreshCw className="h-3 w-3" /> Sincronizar
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => setHistoryOrderId(order.id)}>
+                    <History className="h-3 w-3" /> Histórico
                   </Button>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)} aria-label="Remover pedido">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
+
                 </div>
 
               </div>
@@ -552,8 +796,74 @@ const AdminOrdersPanel = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ShippingLabelHistoryDialog orderId={historyOrderId} onClose={() => setHistoryOrderId(null)} />
     </div>
   );
 };
 
+
+
+const EVENT_TYPE_LABEL: Record<string, string> = {
+  issued: "Etiqueta emitida",
+  resent: "Etiqueta reenviada",
+  synced: "Status sincronizado",
+  canceled: "Etiqueta cancelada",
+  error: "Erro no processo",
+};
+
+const ShippingLabelHistoryDialog = ({ orderId, onClose }: { orderId: string | null; onClose: () => void }) => {
+  const { data: events = [], isLoading } = useShippingLabelEvents(orderId ?? undefined);
+  return (
+    <Dialog open={!!orderId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-display flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" /> Histórico da etiqueta
+          </DialogTitle>
+        </DialogHeader>
+        {isLoading ? (
+          <div className="py-8 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+        ) : events.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">Nenhum evento registrado para este pedido.</p>
+        ) : (
+          <ol className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            {events.map((ev) => {
+              const meta = ev.status ? SHIPPING_LABEL_STATUS_META[ev.status] : null;
+              return (
+                <li key={ev.id} className="border border-border/60 rounded-lg p-3 bg-muted/20 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-foreground">{EVENT_TYPE_LABEL[ev.event_type] ?? ev.event_type}</span>
+                    {meta && <Badge variant="outline" className={`text-[10px] gap-1 ${meta.className}`}>{meta.label}</Badge>}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {new Date(ev.created_at).toLocaleString("pt-BR")}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    <span className="font-medium text-foreground">Origem:</span> {ev.source === "cron" ? "Sincronização automática" : ev.source}
+                    {ev.actor_email && <> · {ev.actor_email}</>}
+                    {!ev.actor_email && ev.actor_id && <> · <span className="font-mono">{ev.actor_id.slice(0, 8)}</span></>}
+                  </div>
+                  {ev.tracking_code && (
+                    <div className="text-[11px]"><span className="text-muted-foreground">Rastreio:</span> <span className="font-mono">{ev.tracking_code}</span></div>
+                  )}
+                  {ev.label_url && (
+                    <a href={ev.label_url} target="_blank" rel="noreferrer" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                      <Printer className="h-3 w-3" /> Abrir etiqueta
+                    </a>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fechar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default AdminOrdersPanel;
+

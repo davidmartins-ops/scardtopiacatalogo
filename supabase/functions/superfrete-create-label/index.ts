@@ -245,16 +245,44 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Determine new label status
+  const isResend = !!order.superfrete_order_id;
+  const eventType: "issued" | "resent" = isResend ? "resent" : "issued";
+  const nowIso = new Date().toISOString();
+  const newStatus = labelUrl || trackingCode ? "released" : (order.shipping_label_status ?? "pending");
+
   // Persist on the order
   await admin
     .from("orders")
     .update({
       tracking_code: trackingCode ?? order.tracking_code,
-      shipping_label_url: labelUrl,
+      shipping_label_url: labelUrl ?? order.shipping_label_url,
       shipping_cost: shippingCost || order.shipping_cost,
       superfrete_order_id: sfOrderId,
+      shipping_label_status: newStatus,
+      shipping_label_issued_at: order.shipping_label_issued_at ?? nowIso,
+      shipping_label_issued_by: order.shipping_label_issued_by ?? claimsData.claims.sub,
+      shipping_label_last_synced_at: nowIso,
     })
     .eq("id", orderId);
+
+  // Audit event
+  await admin.from("shipping_label_events").insert({
+    order_id: orderId,
+    event_type: eventType,
+    status: newStatus,
+    tracking_code: trackingCode,
+    label_url: labelUrl,
+    actor_id: claimsData.claims.sub,
+    actor_email: (claimsData.claims as any).email ?? null,
+    source: "admin_ui",
+    metadata: {
+      superfrete_order_id: sfOrderId,
+      shipping_cost: shippingCost,
+      service: chosen,
+      checkout: doCheckout,
+    },
+  });
 
   return new Response(
     JSON.stringify({
@@ -263,7 +291,10 @@ Deno.serve(async (req) => {
       trackingCode,
       labelUrl,
       shippingCost,
+      status: newStatus,
+      resent: isResend,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
+
