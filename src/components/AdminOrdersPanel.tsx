@@ -803,4 +803,67 @@ const AdminOrdersPanel = () => {
 };
 
 
+
+const EVENT_TYPE_LABEL: Record<string, string> = {
+  issued: "Etiqueta emitida",
+  resent: "Etiqueta reenviada",
+  synced: "Status sincronizado",
+  canceled: "Etiqueta cancelada",
+  error: "Erro no processo",
+};
+
+const ShippingLabelHistoryDialog = ({ orderId, onClose }: { orderId: string | null; onClose: () => void }) => {
+  const { data: events = [], isLoading } = useShippingLabelEvents(orderId ?? undefined);
+  return (
+    <Dialog open={!!orderId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-display flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" /> Histórico da etiqueta
+          </DialogTitle>
+        </DialogHeader>
+        {isLoading ? (
+          <div className="py-8 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+        ) : events.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">Nenhum evento registrado para este pedido.</p>
+        ) : (
+          <ol className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            {events.map((ev) => {
+              const meta = ev.status ? SHIPPING_LABEL_STATUS_META[ev.status] : null;
+              return (
+                <li key={ev.id} className="border border-border/60 rounded-lg p-3 bg-muted/20 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-foreground">{EVENT_TYPE_LABEL[ev.event_type] ?? ev.event_type}</span>
+                    {meta && <Badge variant="outline" className={`text-[10px] gap-1 ${meta.className}`}>{meta.label}</Badge>}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {new Date(ev.created_at).toLocaleString("pt-BR")}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    <span className="font-medium text-foreground">Origem:</span> {ev.source === "cron" ? "Sincronização automática" : ev.source}
+                    {ev.actor_email && <> · {ev.actor_email}</>}
+                    {!ev.actor_email && ev.actor_id && <> · <span className="font-mono">{ev.actor_id.slice(0, 8)}</span></>}
+                  </div>
+                  {ev.tracking_code && (
+                    <div className="text-[11px]"><span className="text-muted-foreground">Rastreio:</span> <span className="font-mono">{ev.tracking_code}</span></div>
+                  )}
+                  {ev.label_url && (
+                    <a href={ev.label_url} target="_blank" rel="noreferrer" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                      <Printer className="h-3 w-3" /> Abrir etiqueta
+                    </a>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fechar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default AdminOrdersPanel;
+
