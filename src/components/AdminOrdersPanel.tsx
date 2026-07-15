@@ -430,6 +430,21 @@ const AdminOrdersPanel = () => {
         </div>
       ) : (
         <div className="space-y-2">
+          <div className="flex items-center gap-2 px-2 text-[11px] text-muted-foreground">
+            <Checkbox
+              id="select-all"
+              checked={filtered.length > 0 && filtered.every((o) => selectedIds.has(o.id))}
+              onCheckedChange={(v) => {
+                setSelectedIds((prev) => {
+                  const next = new Set(prev);
+                  if (v) filtered.forEach((o) => next.add(o.id));
+                  else filtered.forEach((o) => next.delete(o.id));
+                  return next;
+                });
+              }}
+            />
+            <label htmlFor="select-all">Selecionar todos os visíveis</label>
+          </div>
           {filtered.map((order) => {
             const cfg = statusConfig(order.status);
             const Icon = cfg.icon;
@@ -439,15 +454,45 @@ const AdminOrdersPanel = () => {
             const ciPhone = (ci.phone || "").trim();
             const isIdentified = !!(ciName || ciEmail);
             const primaryLabel = ciName || ciEmail || "Cliente";
+            const labelStatus = ((order as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+            const labelMeta = SHIPPING_LABEL_STATUS_META[labelStatus] ?? SHIPPING_LABEL_STATUS_META.pending;
+            const hasLabel = !!(order as any).superfrete_order_id;
+            const lastSynced = (order as any).shipping_label_last_synced_at as string | null;
             return (
               <div key={order.id} className="border border-border rounded-lg p-3 bg-muted/10 space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <Checkbox
+                      checked={selectedIds.has(order.id)}
+                      onCheckedChange={(v) => {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (v) next.add(order.id); else next.delete(order.id);
+                          return next;
+                        });
+                      }}
+                      aria-label="Selecionar pedido"
+                    />
                     <Badge variant="outline" className={`text-[10px] gap-1 ${cfg.className}`}>
                       <Icon className="h-3 w-3" /> {cfg.label}
                     </Badge>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className={`text-[10px] gap-1 ${labelMeta.className} cursor-help`}>
+                            <Truck className="h-3 w-3" /> {labelMeta.label}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {lastSynced
+                            ? `Última sincronização: ${new Date(lastSynced).toLocaleString("pt-BR")}`
+                            : "Ainda não sincronizado com a SuperFrete"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <span className="text-[11px] text-muted-foreground font-mono">#{order.id.slice(0, 8)}</span>
                     <span className="text-[11px] text-muted-foreground">
+
                       {new Date(order.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
                     {isIdentified ? (
