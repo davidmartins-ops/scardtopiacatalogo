@@ -46,6 +46,8 @@ const csvEscape = (val: unknown): string => {
 const AdminOrdersPanel = () => {
   const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
   const qc = useQueryClient();
+  const syncShipping = useSyncShippingStatus();
+  const generateLabel = useGenerateShippingLabel();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customerFilter, setCustomerFilter] = useState<string>("all");
@@ -56,6 +58,28 @@ const AdminOrdersPanel = () => {
   const [editStatus, setEditStatus] = useState<OrderStatus>("payment_confirmed");
   const [editTracking, setEditTracking] = useState("");
   const [editNote, setEditNote] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [historyOrderId, setHistoryOrderId] = useState<string | null>(null);
+
+  // Auto-sync SuperFrete label status once per mount for non-terminal labels
+  useEffect(() => {
+    const stale = orders
+      .filter((o) => (o as any).superfrete_order_id)
+      .filter((o) => {
+        const s = ((o as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+        return s !== "delivered" && s !== "canceled";
+      })
+      .map((o) => o.id);
+    if (stale.length === 0) return;
+    let cancelled = false;
+    // Fire and forget; ignore errors silently on background sync
+    syncShipping.mutateAsync(stale).catch(() => undefined).finally(() => {
+      if (cancelled) return;
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders.length]);
+
 
   // Realtime: notify on new orders
   useEffect(() => {
