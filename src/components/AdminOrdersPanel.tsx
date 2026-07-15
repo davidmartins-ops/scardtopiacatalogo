@@ -1,20 +1,29 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAdminOrders, type OrderStatus } from "@/hooks/use-orders";
+import {
+  useShippingLabelEvents,
+  useSyncShippingStatus,
+  useGenerateShippingLabel,
+  SHIPPING_LABEL_STATUS_META,
+  type ShippingLabelStatus,
+} from "@/hooks/use-shipping-label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, UserCircle2, MapPin, Copy, ChevronDown } from "lucide-react";
+import { User, UserCircle2, MapPin, Copy, ChevronDown, RefreshCw, History, Send } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string; icon: typeof Package; className: string }[] = [
   { value: "pending_payment", label: "Aguardando pagamento", icon: Clock, className: "bg-muted text-muted-foreground border-border" },
