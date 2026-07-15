@@ -672,24 +672,51 @@ const AdminOrdersPanel = () => {
                     size="sm"
                     variant="outline"
                     className="h-7 px-2 gap-1 text-xs"
+                    disabled={generateLabel.isPending}
                     onClick={async () => {
-                      toast.loading("Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
-                      const { data, error } = await supabase.functions.invoke("superfrete-create-label", {
-                        body: { orderId: order.id, checkout: true },
-                      });
-                      if (error || (data as any)?.error) {
-                        toast.error("Falha ao gerar etiqueta", { id: `lbl-${order.id}`, description: error?.message ?? (data as any)?.error });
-                        return;
+                      const isResend = hasLabel;
+                      toast.loading(isResend ? "Reenviando etiqueta SuperFrete…" : "Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
+                      try {
+                        const data = await generateLabel.mutateAsync({ orderId: order.id, checkout: true });
+                        toast.success(isResend ? "Etiqueta reenviada!" : "Etiqueta gerada!", {
+                          id: `lbl-${order.id}`,
+                          description: data?.trackingCode ? `Rastreio: ${data.trackingCode}` : undefined,
+                        });
+                      } catch (e) {
+                        toast.error("Falha ao processar etiqueta", { id: `lbl-${order.id}`, description: (e as Error).message });
                       }
-                      toast.success("Etiqueta gerada!", { id: `lbl-${order.id}`, description: (data as any)?.trackingCode ? `Rastreio: ${(data as any).trackingCode}` : undefined });
-                      qc.invalidateQueries({ queryKey: ["admin-orders"] });
                     }}
                   >
-                    <Printer className="h-3 w-3" /> Gerar etiqueta
+                    {hasLabel ? <Send className="h-3 w-3" /> : <Printer className="h-3 w-3" />}
+                    {hasLabel ? "Reenviar etiqueta" : "Gerar etiqueta"}
+                  </Button>
+                  {hasLabel && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 gap-1 text-xs"
+                      disabled={syncShipping.isPending}
+                      onClick={async () => {
+                        toast.loading("Sincronizando…", { id: `sync-${order.id}` });
+                        try {
+                          const res = await syncShipping.mutateAsync([order.id]);
+                          const r = res.results[0];
+                          toast.success(`Status: ${SHIPPING_LABEL_STATUS_META[r?.status ?? "pending"]?.label ?? "—"}`, { id: `sync-${order.id}` });
+                        } catch (e) {
+                          toast.error("Falha ao sincronizar", { id: `sync-${order.id}`, description: (e as Error).message });
+                        }
+                      }}
+                    >
+                      <RefreshCw className="h-3 w-3" /> Sincronizar
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => setHistoryOrderId(order.id)}>
+                    <History className="h-3 w-3" /> Histórico
                   </Button>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(order.id)} aria-label="Remover pedido">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
+
                 </div>
 
               </div>
