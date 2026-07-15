@@ -10,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const ORIGIN_CEP = "08710430";
+const ORIGIN_CEP = Deno.env.get("SUPERFRETE_FROM_POSTAL_CODE") ?? "08710430";
 const USER_AGENT =
   "Spencers Cardtopia/1.0 (contato@spencerscardtopia.com.br)";
 
