@@ -34,6 +34,7 @@ import AdminReconciliation from "./pages/AdminReconciliation.tsx";
 import AdminRefunds from "./pages/AdminRefunds.tsx";
 import AdminEmails from "./pages/AdminEmails.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import OAuthConsent from "./pages/OAuthConsent.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
 
@@ -114,6 +115,7 @@ const App = () => (
           <Route path="/termos" element={<Terms />} />
           <Route path="/sobre" element={<Sobre />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <SiteFooter />

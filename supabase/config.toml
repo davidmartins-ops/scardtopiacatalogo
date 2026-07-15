@@ -33,3 +33,6 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = false
   [functions.superfrete-create-label]
     verify_jwt = true
+  [functions.mcp]
+    verify_jwt = false
+
