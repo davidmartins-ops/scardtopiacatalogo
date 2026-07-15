@@ -159,38 +159,140 @@ const AdminOrdersPanel = () => {
     setDeleteId(null);
   };
 
-  const exportCSV = () => {
-    if (filtered.length === 0) {
-      toast.error("Nenhum pedido para exportar com os filtros atuais.");
-      return;
+  const buildCSV = (list: typeof orders, kind: "full" | "shipping") => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    let header: string[];
+    let rows: string[][];
+    if (kind === "shipping") {
+      header = [
+        "ID", "Data", "Cliente", "CPF", "E-mail", "Telefone",
+        "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "UF",
+        "Status pedido", "Status etiqueta", "Rastreio", "Etiqueta URL",
+        "Serviço SF", "SF Order ID", "Frete (R$)", "Emitida em", "Emitida por",
+      ];
+      rows = list.map((o) => {
+        const ci = ((o as any).customer_info ?? {}) as Record<string, any>;
+        const addr = (ci.address ?? ci.shipping ?? ci) as Record<string, any>;
+        const cep = String(addr.cep ?? addr.postal_code ?? "").replace(/\D/g, "");
+        const status = ((o as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+        const issuedAt = (o as any).shipping_label_issued_at as string | null;
+        return [
+          o.id,
+          new Date(o.created_at).toLocaleString("pt-BR"),
+          ci.name ?? ci.full_name ?? "",
+          ci.cpf ?? ci.document ?? "",
+          ci.email ?? "",
+          ci.phone ?? "",
+          cep.length === 8 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep,
+          addr.street ?? addr.address ?? "",
+          String(addr.number ?? ""),
+          addr.complement ?? addr.complemento ?? "",
+          addr.neighborhood ?? addr.district ?? addr.bairro ?? "",
+          addr.city ?? "",
+          addr.state ?? addr.uf ?? "",
+          statusConfig(o.status).label,
+          SHIPPING_LABEL_STATUS_META[status]?.label ?? status,
+          o.tracking_code ?? "",
+          (o as any).shipping_label_url ?? "",
+          (o as any).shipping_service ?? "",
+          (o as any).superfrete_order_id ?? "",
+          Number((o as any).shipping_cost ?? 0).toFixed(2).replace(".", ","),
+          issuedAt ? new Date(issuedAt).toLocaleString("pt-BR") : "",
+          (o as any).shipping_label_issued_by ?? "",
+        ];
+      });
+    } else {
+      header = [
+        "ID", "Data", "Cliente (user_id)", "Status", "Total (R$)", "Código rastreio",
+        "Itens (qtd × nome)", "Comprovante",
+      ];
+      rows = list.map((o) => [
+        o.id,
+        new Date(o.created_at).toLocaleString("pt-BR"),
+        o.user_id ?? "visitante",
+        statusConfig(o.status).label,
+        Number(o.total).toFixed(2).replace(".", ","),
+        o.tracking_code ?? "",
+        (o.items as any[]).map((it) => `${it.quantity}× ${it.name}`).join(" | "),
+        o.receipt_url ?? "",
+      ]);
     }
-    const header = [
-      "ID", "Data", "Cliente (user_id)", "Status", "Total (R$)", "Código rastreio",
-      "Itens (qtd × nome)", "Comprovante",
-    ];
-    const rows = filtered.map((o) => [
-      o.id,
-      new Date(o.created_at).toLocaleString("pt-BR"),
-      o.user_id ?? "visitante",
-      statusConfig(o.status).label,
-      Number(o.total).toFixed(2).replace(".", ","),
-      o.tracking_code ?? "",
-      (o.items as any[]).map((it) => `${it.quantity}× ${it.name}`).join(" | "),
-      o.receipt_url ?? "",
-    ]);
     const csv = [header, ...rows].map((r) => r.map(csvEscape).join(";")).join("\n");
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    const stamp = new Date().toISOString().slice(0, 10);
-    link.download = `pedidos-${stamp}.csv`;
+    link.download = kind === "shipping" ? `envios-${stamp}.csv` : `pedidos-${stamp}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success(`${filtered.length} pedido(s) exportado(s).`);
+    toast.success(`${list.length} pedido(s) exportado(s).`);
   };
+
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum pedido para exportar com os filtros atuais.");
+      return;
+    }
+    buildCSV(filtered, "full");
+  };
+
+  const exportShippingCSV = () => {
+    const list = selectedIds.size > 0
+      ? orders.filter((o) => selectedIds.has(o.id))
+      : filtered;
+    if (list.length === 0) {
+      toast.error("Nenhum pedido selecionado para exportar envio.");
+      return;
+    }
+    buildCSV(list, "shipping");
+  };
+
+  const exportShippingPDF = () => {
+    const list = selectedIds.size > 0
+      ? orders.filter((o) => selectedIds.has(o.id))
+      : filtered;
+    if (list.length === 0) {
+      toast.error("Nenhum pedido selecionado para imprimir.");
+      return;
+    }
+    const rows = list.map((o) => {
+      const ci = ((o as any).customer_info ?? {}) as Record<string, any>;
+      const addr = (ci.address ?? ci.shipping ?? ci) as Record<string, any>;
+      const cep = String(addr.cep ?? addr.postal_code ?? "").replace(/\D/g, "");
+      const status = ((o as any).shipping_label_status ?? "pending") as ShippingLabelStatus;
+      return `
+        <div class="card">
+          <div class="hd">
+            <strong>#${o.id.slice(0, 8)}</strong>
+            <span>${new Date(o.created_at).toLocaleString("pt-BR")}</span>
+            <span class="badge">${SHIPPING_LABEL_STATUS_META[status]?.label ?? status}</span>
+          </div>
+          <div class="row"><b>Destinatário:</b> ${ci.name ?? ci.full_name ?? "—"} · ${ci.cpf ?? ""}</div>
+          <div class="row"><b>Contato:</b> ${ci.email ?? ""} · ${ci.phone ?? ""}</div>
+          <div class="row"><b>Endereço:</b> ${addr.street ?? ""}, ${addr.number ?? ""} ${addr.complement ? `— ${addr.complement}` : ""}</div>
+          <div class="row"><b>Bairro:</b> ${addr.neighborhood ?? addr.district ?? "—"} · <b>${addr.city ?? ""}/${addr.state ?? ""}</b> · CEP ${cep.length === 8 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep}</div>
+          <div class="row"><b>Rastreio:</b> ${o.tracking_code ?? "—"} · <b>SF:</b> ${(o as any).superfrete_order_id ?? "—"}</div>
+        </div>`;
+    }).join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Envios ${new Date().toLocaleDateString("pt-BR")}</title>
+      <style>
+        body{font-family:system-ui,Arial,sans-serif;padding:16px;color:#111}
+        h1{font-size:16px;margin:0 0 12px}
+        .card{border:1px solid #ccc;border-radius:6px;padding:10px;margin-bottom:10px;page-break-inside:avoid}
+        .hd{display:flex;justify-content:space-between;gap:8px;font-size:12px;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:6px}
+        .badge{background:#eef;padding:2px 6px;border-radius:4px}
+        .row{font-size:12px;margin:2px 0}
+      </style></head>
+      <body><h1>Etiquetas de envio — ${list.length} pedido(s)</h1>${rows}
+      <script>window.onload=()=>window.print()</script></body></html>`;
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Bloqueado pelo navegador"); return; }
+    w.document.write(html);
+    w.document.close();
+  };
+
 
   const clearFilters = () => {
     setSearch("");
