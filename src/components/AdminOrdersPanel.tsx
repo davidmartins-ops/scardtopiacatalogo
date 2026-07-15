@@ -796,8 +796,11 @@ const AdminOrdersPanel = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ShippingLabelHistoryDialog orderId={historyOrderId} onClose={() => setHistoryOrderId(null)} />
     </div>
   );
 };
+
 
 export default AdminOrdersPanel;
