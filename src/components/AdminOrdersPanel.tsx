@@ -339,6 +339,118 @@ const AdminOrdersPanel = () => {
                   ))}
                 </div>
 
+                {(() => {
+                  const full = ((order as any).customer_info ?? {}) as Record<string, any>;
+                  const addr = (full.address ?? full.shipping ?? full) as Record<string, any>;
+                  const cep = String(addr.cep ?? addr.postal_code ?? "").replace(/\D/g, "");
+                  const cepFmt = cep.length === 8 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep || "—";
+                  const street = addr.street ?? addr.address ?? "";
+                  const number = addr.number ?? "";
+                  const complement = addr.complement ?? addr.complemento ?? "";
+                  const district = addr.neighborhood ?? addr.district ?? addr.bairro ?? "";
+                  const city = addr.city ?? "";
+                  const state = addr.state ?? addr.uf ?? "";
+                  const cpf = full.cpf ?? full.document ?? "";
+                  const labelUrl = (order as any).shipping_label_url as string | null;
+                  const sfId = (order as any).superfrete_order_id as string | null;
+                  const shippingCost = Number((order as any).shipping_cost ?? 0);
+                  const hasAddress = !!(street || city || cep);
+                  const addressLine = [
+                    street && number ? `${street}, ${number}` : street,
+                    complement,
+                    district,
+                    city && state ? `${city}/${state}` : city || state,
+                    cepFmt !== "—" ? `CEP ${cepFmt}` : "",
+                  ].filter(Boolean).join(" — ");
+                  const copyAddress = async () => {
+                    const text = [
+                      ciName && `Nome: ${ciName}`,
+                      cpf && `CPF: ${cpf}`,
+                      ciPhone && `Tel: ${ciPhone}`,
+                      addressLine && `Endereço: ${addressLine}`,
+                    ].filter(Boolean).join("\n");
+                    try {
+                      await navigator.clipboard.writeText(text);
+                      toast.success("Dados de envio copiados");
+                    } catch {
+                      toast.error("Não foi possível copiar");
+                    }
+                  };
+                  return (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between gap-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/40 pt-2 group"
+                        >
+                          <span className="inline-flex items-center gap-1.5">
+                            <MapPin className="h-3 w-3" />
+                            Dados de envio
+                            {labelUrl ? (
+                              <Badge variant="outline" className="text-[10px] gap-1 bg-success/10 text-success border-success/30 ml-1">
+                                <CheckCircle2 className="h-2.5 w-2.5" /> Etiqueta emitida
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] gap-1 bg-muted/30 text-muted-foreground border-border ml-1">
+                                Etiqueta pendente
+                              </Badge>
+                            )}
+                          </span>
+                          <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-2">
+                        <div className="rounded border border-border/50 bg-muted/20 p-2.5 text-[11px] space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                            <div><span className="text-muted-foreground">Nome:</span> <span className="text-foreground">{ciName || "—"}</span></div>
+                            <div><span className="text-muted-foreground">CPF:</span> <span className="text-foreground">{cpf || "—"}</span></div>
+                            <div><span className="text-muted-foreground">E-mail:</span> <span className="text-foreground break-all">{ciEmail || "—"}</span></div>
+                            <div><span className="text-muted-foreground">Telefone:</span> <span className="text-foreground">{ciPhone || "—"}</span></div>
+                          </div>
+                          {hasAddress ? (
+                            <div className="pt-1 border-t border-border/40">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                                <div><span className="text-muted-foreground">CEP:</span> <span className="text-foreground font-mono">{cepFmt}</span></div>
+                                <div><span className="text-muted-foreground">Cidade/UF:</span> <span className="text-foreground">{city}{state ? `/${state}` : ""}</span></div>
+                                <div className="sm:col-span-2"><span className="text-muted-foreground">Endereço:</span> <span className="text-foreground">{street}{number ? `, ${number}` : ""}{complement ? ` — ${complement}` : ""}</span></div>
+                                <div className="sm:col-span-2"><span className="text-muted-foreground">Bairro:</span> <span className="text-foreground">{district || "—"}</span></div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-muted-foreground italic">Sem endereço de entrega registrado.</p>
+                          )}
+                          <div className="pt-1 border-t border-border/40 space-y-1">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="text-muted-foreground">Etiqueta SuperFrete:</span>
+                              {labelUrl ? (
+                                <a href={labelUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                                  <Printer className="h-3 w-3" /> Abrir DANFE / etiqueta
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">Não emitida</span>
+                              )}
+                            </div>
+                            {order.tracking_code && (
+                              <div><span className="text-muted-foreground">Rastreio:</span> <span className="font-mono text-foreground">{order.tracking_code}</span></div>
+                            )}
+                            {shippingCost > 0 && (
+                              <div><span className="text-muted-foreground">Frete:</span> <span className="text-foreground">R$ {shippingCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                            )}
+                            {sfId && (
+                              <div className="text-[10px] text-muted-foreground/70 font-mono break-all">SF #{sfId}</div>
+                            )}
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] gap-1" onClick={copyAddress}>
+                              <Copy className="h-3 w-3" /> Copiar dados
+                            </Button>
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })()}
+
                 <div className="flex items-center gap-2 pt-1 border-t border-border/40 flex-wrap">
                   <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => openEdit(order.id, order.status, order.tracking_code)}>
                     <Pencil className="h-3 w-3" /> Atualizar status
@@ -366,6 +478,7 @@ const AdminOrdersPanel = () => {
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
+
               </div>
             );
           })}
