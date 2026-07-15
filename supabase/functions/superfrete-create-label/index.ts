@@ -152,6 +152,13 @@ Deno.serve(async (req) => {
     service: chosen,
     from: {
       name: "Spencer's Cardtopia",
+      address: "Rua Iguatinga",
+      complement: "",
+      number: "150",
+      district: "Jardim Zaira",
+      city: "Mauá",
+      state_abbr: "SP",
+      country_id: "BR",
       postal_code: ORIGIN_CEP,
     },
     to: {
