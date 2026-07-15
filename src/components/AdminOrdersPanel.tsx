@@ -363,9 +363,10 @@ const AdminOrdersPanel = () => {
             </Button>
           )}
         </div>
-
+      </div>
 
       <div className="space-y-2">
+
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
