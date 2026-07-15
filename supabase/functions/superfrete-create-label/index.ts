@@ -10,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const ORIGIN_CEP = "08710430";
+const ORIGIN_CEP = Deno.env.get("SUPERFRETE_FROM_POSTAL_CODE") ?? "08710430";
 const USER_AGENT =
   "Spencers Cardtopia/1.0 (contato@spencerscardtopia.com.br)";
 
@@ -151,8 +151,18 @@ Deno.serve(async (req) => {
   const cartBody = {
     service: chosen,
     from: {
-      name: "Spencer's Cardtopia",
+      name: Deno.env.get("SUPERFRETE_FROM_NAME") ?? "Spencer's Cardtopia",
+      address: Deno.env.get("SUPERFRETE_FROM_ADDRESS") ?? "",
+      complement: Deno.env.get("SUPERFRETE_FROM_COMPLEMENT") ?? "",
+      number: Deno.env.get("SUPERFRETE_FROM_NUMBER") ?? "",
+      district: Deno.env.get("SUPERFRETE_FROM_DISTRICT") ?? "",
+      city: Deno.env.get("SUPERFRETE_FROM_CITY") ?? "",
+      state_abbr: Deno.env.get("SUPERFRETE_FROM_STATE") ?? "",
+      country_id: "BR",
       postal_code: ORIGIN_CEP,
+      email: Deno.env.get("SUPERFRETE_FROM_EMAIL") ?? undefined,
+      phone: Deno.env.get("SUPERFRETE_FROM_PHONE") ?? undefined,
+      document: Deno.env.get("SUPERFRETE_FROM_DOCUMENT") ?? undefined,
     },
     to: {
       name: customer.name ?? customer.full_name ?? "Cliente",
