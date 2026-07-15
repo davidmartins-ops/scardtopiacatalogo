@@ -319,15 +319,51 @@ const AdminOrdersPanel = () => {
         <h3 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" /> Gerenciar Pedidos
         </h3>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="text-xs text-muted-foreground">
-            {filtered.length} pedido(s) — <span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+            {filtered.length} pedido(s)
+            {selectedIds.size > 0 && <> · <span className="text-primary font-semibold">{selectedIds.size} selecionado(s)</span></>}
+            {" — "}<span className="text-foreground font-semibold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
           </div>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportCSV}>
-            <Download className="h-3.5 w-3.5" /> CSV
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs"
+            onClick={async () => {
+              const list = selectedIds.size > 0
+                ? Array.from(selectedIds)
+                : filtered.filter((o) => (o as any).superfrete_order_id).map((o) => o.id);
+              if (list.length === 0) { toast.info("Nenhum pedido com etiqueta para sincronizar."); return; }
+              toast.loading("Sincronizando status SuperFrete…", { id: "sf-sync" });
+              try {
+                const res = await syncShipping.mutateAsync(list);
+                const changed = res.results.filter((r) => r.changed).length;
+                toast.success(`Sincronizados: ${res.checked}${changed > 0 ? ` · ${changed} atualizados` : ""}`, { id: "sf-sync" });
+              } catch (e) {
+                toast.error("Falha ao sincronizar status", { id: "sf-sync", description: (e as Error).message });
+              }
+            }}
+            disabled={syncShipping.isPending}
+          >
+            {syncShipping.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Sincronizar SF
           </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportCSV}>
+            <Download className="h-3.5 w-3.5" /> CSV pedidos
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportShippingCSV}>
+            <Download className="h-3.5 w-3.5" /> CSV envio{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={exportShippingPDF}>
+            <Printer className="h-3.5 w-3.5" /> PDF envio{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+          </Button>
+          {selectedIds.size > 0 && (
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedIds(new Set())}>
+              Limpar seleção
+            </Button>
+          )}
         </div>
-      </div>
+
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
