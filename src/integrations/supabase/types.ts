@@ -896,6 +896,10 @@ export type Database = {
           payment_transaction_id: string | null
           receipt_url: string | null
           shipping_cost: number | null
+          shipping_label_issued_at: string | null
+          shipping_label_issued_by: string | null
+          shipping_label_last_synced_at: string | null
+          shipping_label_status: string
           shipping_label_url: string | null
           shipping_service: string | null
           sla_breach_status: Database["public"]["Enums"]["order_status"] | null
@@ -921,6 +925,10 @@ export type Database = {
           payment_transaction_id?: string | null
           receipt_url?: string | null
           shipping_cost?: number | null
+          shipping_label_issued_at?: string | null
+          shipping_label_issued_by?: string | null
+          shipping_label_last_synced_at?: string | null
+          shipping_label_status?: string
           shipping_label_url?: string | null
           shipping_service?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
@@ -946,6 +954,10 @@ export type Database = {
           payment_transaction_id?: string | null
           receipt_url?: string | null
           shipping_cost?: number | null
+          shipping_label_issued_at?: string | null
+          shipping_label_issued_by?: string | null
+          shipping_label_last_synced_at?: string | null
+          shipping_label_status?: string
           shipping_label_url?: string | null
           shipping_service?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
@@ -1130,6 +1142,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      shipping_label_events: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          label_url: string | null
+          metadata: Json
+          order_id: string
+          source: string
+          status: string | null
+          tracking_code: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          label_url?: string | null
+          metadata?: Json
+          order_id: string
+          source?: string
+          status?: string | null
+          tracking_code?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          label_url?: string | null
+          metadata?: Json
+          order_id?: string
+          source?: string
+          status?: string | null
+          tracking_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_label_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_notifications: {
         Row: {
