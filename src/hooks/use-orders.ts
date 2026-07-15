@@ -158,6 +158,23 @@ export const useAdminOrders = () => {
       } catch (e) {
         console.warn("notify-order-status failed", e);
       }
+      // Auto-emit SuperFrete label when order enters fulfillment
+      if (status === "payment_confirmed" || status === "preparing") {
+        try {
+          const { data: current } = await supabase
+            .from("orders")
+            .select("superfrete_order_id, shipping_label_url")
+            .eq("id", id)
+            .maybeSingle();
+          if (current && !current.superfrete_order_id && !current.shipping_label_url) {
+            await supabase.functions.invoke("superfrete-create-label", {
+              body: { orderId: id, checkout: true },
+            });
+          }
+        } catch (e) {
+          console.warn("auto superfrete-create-label failed", e);
+        }
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
