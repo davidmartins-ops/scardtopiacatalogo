@@ -642,6 +642,10 @@ const AdminOrdersPanel = () => {
                                 <a href={labelUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
                                   <Printer className="h-3 w-3" /> Abrir DANFE / etiqueta
                                 </a>
+                              ) : (sfId || order.tracking_code) ? (
+                                <span className="text-success inline-flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Emitida (aguardando URL — sincronize)
+                                </span>
                               ) : (
                                 <span className="text-muted-foreground">Não emitida</span>
                               )}
