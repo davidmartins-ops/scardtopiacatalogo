@@ -602,7 +602,7 @@ const AdminOrdersPanel = () => {
                           <span className="inline-flex items-center gap-1.5">
                             <MapPin className="h-3 w-3" />
                             Dados de envio
-                            {labelUrl ? (
+                            {(sfId || order.tracking_code || labelUrl) ? (
                               <Badge variant="outline" className="text-[10px] gap-1 bg-success/10 text-success border-success/30 ml-1">
                                 <CheckCircle2 className="h-2.5 w-2.5" /> Etiqueta emitida
                               </Badge>
