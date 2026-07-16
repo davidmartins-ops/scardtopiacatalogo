@@ -859,5 +859,110 @@ const ShippingLabelHistoryDialog = ({ orderId, onClose }: { orderId: string | nu
   );
 };
 
+const ShippingOptionDialog = ({ order, onClose }: { order: any | null; onClose: () => void }) => {
+  const calc = useCalculateShipping();
+  const generateLabel = useGenerateShippingLabel();
+  const [options, setOptions] = useState<ShippingOption[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const orderId = order?.id ?? null;
+  const hasLabel = !!order?.superfrete_order_id;
+
+  useEffect(() => {
+    if (!order) {
+      setOptions([]);
+      setSelectedId(null);
+      setLoadError(null);
+      return;
+    }
+    const ci = (order.customer_info ?? {}) as any;
+    const addr = (ci.address ?? ci.shipping ?? ci) as any;
+    const cep = String(addr.cep ?? addr.postal_code ?? "").replace(/\D/g, "");
+    const items = Array.isArray(order.items) ? order.items : [];
+    const itemCount = items.reduce((s: number, it: any) => s + Number(it.quantity || 0), 0) || 1;
+    if (cep.length !== 8) {
+      setLoadError("Pedido sem CEP de entrega válido.");
+      return;
+    }
+    setLoadError(null);
+    calc.mutateAsync({ cep, itemCount })
+      .then((opts) => {
+        opts.sort((a, b) => a.price - b.price);
+        setOptions(opts);
+        setSelectedId(opts[0]?.id ?? null);
+      })
+      .catch((e) => setLoadError((e as Error).message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
+
+  const submit = async () => {
+    if (!order || !selectedId) return;
+    toast.loading(hasLabel ? "Reenviando etiqueta SuperFrete…" : "Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
+    try {
+      const data = await generateLabel.mutateAsync({ orderId: order.id, checkout: true, serviceId: selectedId });
+      toast.success(hasLabel ? "Etiqueta reenviada!" : "Etiqueta gerada!", {
+        id: `lbl-${order.id}`,
+        description: data?.trackingCode ? `Rastreio: ${data.trackingCode}` : undefined,
+      });
+      onClose();
+    } catch (e) {
+      toast.error("Falha ao processar etiqueta", { id: `lbl-${order.id}`, description: (e as Error).message, duration: 10000 });
+    }
+  };
+
+  return (
+    <Dialog open={!!order} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display flex items-center gap-2">
+            <Truck className="h-4 w-4 text-primary" /> Escolher opção de envio
+          </DialogTitle>
+        </DialogHeader>
+        {calc.isPending ? (
+          <div className="py-8 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+        ) : loadError ? (
+          <p className="text-sm text-destructive py-4">{loadError}</p>
+        ) : options.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4">Nenhuma opção de envio disponível.</p>
+        ) : (
+          <div className="space-y-2">
+            {options.map((opt) => {
+              const active = selectedId === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSelectedId(opt.id)}
+                  className={`w-full text-left border rounded-lg p-3 transition ${active ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">{opt.name}</div>
+                      <div className="text-[11px] text-muted-foreground">{opt.company} · {opt.deliveryDays} dias úteis</div>
+                    </div>
+                    <div className="text-sm font-semibold text-primary">R$ {opt.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                </button>
+              );
+            })}
+            <p className="text-[11px] text-muted-foreground pt-1">
+              A etiqueta será paga com o saldo da carteira SuperFrete. Sem saldo, recarregue no app SuperFrete ou pague com cartão de crédito.
+            </p>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={submit} disabled={!selectedId || generateLabel.isPending}>
+            {generateLabel.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+            {hasLabel ? "Reenviar etiqueta" : "Gerar etiqueta"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default AdminOrdersPanel;
+
 
