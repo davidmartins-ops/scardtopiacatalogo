@@ -673,20 +673,7 @@ const AdminOrdersPanel = () => {
                     size="sm"
                     variant="outline"
                     className="h-7 px-2 gap-1 text-xs"
-                    disabled={generateLabel.isPending}
-                    onClick={async () => {
-                      const isResend = hasLabel;
-                      toast.loading(isResend ? "Reenviando etiqueta SuperFrete…" : "Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
-                      try {
-                        const data = await generateLabel.mutateAsync({ orderId: order.id, checkout: true });
-                        toast.success(isResend ? "Etiqueta reenviada!" : "Etiqueta gerada!", {
-                          id: `lbl-${order.id}`,
-                          description: data?.trackingCode ? `Rastreio: ${data.trackingCode}` : undefined,
-                        });
-                      } catch (e) {
-                        toast.error("Falha ao processar etiqueta", { id: `lbl-${order.id}`, description: (e as Error).message });
-                      }
-                    }}
+                    onClick={() => setLabelOrderId(order.id)}
                   >
                     {hasLabel ? <Send className="h-3 w-3" /> : <Printer className="h-3 w-3" />}
                     {hasLabel ? "Reenviar etiqueta" : "Gerar etiqueta"}
