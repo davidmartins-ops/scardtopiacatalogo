@@ -49,7 +49,7 @@ const AdminOrdersPanel = () => {
   const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
   const qc = useQueryClient();
   const syncShipping = useSyncShippingStatus();
-  const generateLabel = useGenerateShippingLabel();
+  
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customerFilter, setCustomerFilter] = useState<string>("all");
