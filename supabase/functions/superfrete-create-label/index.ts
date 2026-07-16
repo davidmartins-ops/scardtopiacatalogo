@@ -132,10 +132,19 @@ Deno.serve(async (req) => {
       }),
     });
     const calcText = await calcRes.text();
-    if (!calcRes.ok) {
-      return new Response(JSON.stringify({ error: "Falha ao calcular frete", detail: calcText }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const calcCT = calcRes.headers.get("content-type") ?? "";
+    console.log("SuperFrete calculator response", {
+      status: calcRes.status,
+      contentType: calcCT,
+      bodyPreview: calcText.slice(0, 500),
+    });
+    if (!calcRes.ok || !calcCT.includes("application/json")) {
+      return new Response(JSON.stringify({
+        error: "Falha ao calcular frete",
+        provider_status: calcRes.status,
+        provider_content_type: calcCT,
+        detail: calcText.slice(0, 500),
+      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const opts = JSON.parse(calcText).filter((o: any) => !o.error);
     opts.sort((a: any, b: any) => Number(a.price) - Number(b.price));
@@ -201,11 +210,20 @@ Deno.serve(async (req) => {
     body: JSON.stringify(cartBody),
   });
   const cartText = await cartRes.text();
-  if (!cartRes.ok) {
-    console.error("SuperFrete cart error", cartRes.status, cartText);
-    return new Response(JSON.stringify({ error: "Falha ao criar envio", detail: cartText }), {
-      status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const cartCT = cartRes.headers.get("content-type") ?? "";
+  console.log("SuperFrete cart response", {
+    status: cartRes.status,
+    contentType: cartCT,
+    bodyPreview: cartText.slice(0, 500),
+  });
+  if (!cartRes.ok || !cartCT.includes("application/json")) {
+    console.error("SuperFrete cart error", cartRes.status, cartText.slice(0, 1000));
+    return new Response(JSON.stringify({
+      error: "Falha ao criar envio",
+      provider_status: cartRes.status,
+      provider_content_type: cartCT,
+      detail: cartText.slice(0, 500),
+    }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
   const cart = JSON.parse(cartText);
   const sfOrderId: string = cart.id;
@@ -255,7 +273,7 @@ Deno.serve(async (req) => {
         console.error("SuperFrete insufficient balance", checkoutRes.status, apiMessage);
         return new Response(
           JSON.stringify({
-            error: "Saldo insuficiente na carteira SuperFrete. Recarregue pelo app SuperFrete para gerar a etiqueta.",
+            error: "Saldo insuficiente na carteira SuperFrete. Recarregue a carteira pelo app SuperFrete ou pague a etiqueta com cartão de crédito para continuar.",
             code: "insufficient_balance",
             provider_status: checkoutRes.status,
             provider_message: apiMessage || undefined,

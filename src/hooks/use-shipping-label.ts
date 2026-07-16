@@ -70,12 +70,33 @@ export const useSyncShippingStatus = () => {
   });
 };
 
+export interface ShippingOption {
+  id: number;
+  name: string;
+  company: string;
+  price: number;
+  deliveryDays: string;
+}
+
+export const useCalculateShipping = () => {
+  return useMutation({
+    mutationFn: async ({ cep, itemCount }: { cep: string; itemCount: number }) => {
+      const { data, error } = await supabase.functions.invoke("superfrete-calculate", {
+        body: { cep, itemCount },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      return (data as { options: ShippingOption[] }).options ?? [];
+    },
+  });
+};
+
 export const useGenerateShippingLabel = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ orderId, checkout = true }: { orderId: string; checkout?: boolean }) => {
+    mutationFn: async ({ orderId, checkout = true, serviceId }: { orderId: string; checkout?: boolean; serviceId?: number }) => {
       const { data, error } = await supabase.functions.invoke("superfrete-create-label", {
-        body: { orderId, checkout },
+        body: { orderId, checkout, serviceId },
       });
       if (error) throw error;
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
