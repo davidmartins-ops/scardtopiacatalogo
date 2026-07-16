@@ -210,11 +210,20 @@ Deno.serve(async (req) => {
     body: JSON.stringify(cartBody),
   });
   const cartText = await cartRes.text();
-  if (!cartRes.ok) {
-    console.error("SuperFrete cart error", cartRes.status, cartText);
-    return new Response(JSON.stringify({ error: "Falha ao criar envio", detail: cartText }), {
-      status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const cartCT = cartRes.headers.get("content-type") ?? "";
+  console.log("SuperFrete cart response", {
+    status: cartRes.status,
+    contentType: cartCT,
+    bodyPreview: cartText.slice(0, 500),
+  });
+  if (!cartRes.ok || !cartCT.includes("application/json")) {
+    console.error("SuperFrete cart error", cartRes.status, cartText.slice(0, 1000));
+    return new Response(JSON.stringify({
+      error: "Falha ao criar envio",
+      provider_status: cartRes.status,
+      provider_content_type: cartCT,
+      detail: cartText.slice(0, 500),
+    }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
   const cart = JSON.parse(cartText);
   const sfOrderId: string = cart.id;
