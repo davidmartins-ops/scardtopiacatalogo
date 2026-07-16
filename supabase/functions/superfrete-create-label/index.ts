@@ -326,6 +326,9 @@ Deno.serve(async (req) => {
         console.error("SuperFrete order info parse failed", e);
       }
     }
+  }
+
+
 
 
   // Determine new label status
