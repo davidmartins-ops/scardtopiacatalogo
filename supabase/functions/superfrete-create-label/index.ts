@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
         console.error("SuperFrete insufficient balance", checkoutRes.status, apiMessage);
         return new Response(
           JSON.stringify({
-            error: "Saldo insuficiente na carteira SuperFrete. Recarregue pelo app SuperFrete para gerar a etiqueta.",
+            error: "Saldo insuficiente na carteira SuperFrete. Recarregue a carteira pelo app SuperFrete ou pague a etiqueta com cartão de crédito para continuar.",
             code: "insufficient_balance",
             provider_status: checkoutRes.status,
             provider_message: apiMessage || undefined,
