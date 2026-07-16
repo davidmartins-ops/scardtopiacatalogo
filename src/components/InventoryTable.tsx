@@ -397,10 +397,52 @@ const InventoryTable = ({ data }: Props) => {
 
   const typeFilters = ["all", "Foil", "Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil", "Silver Scroll"];
 
+  const stockSummary = useMemo(() => {
+    const inStock = data.filter((i) => i.quantity > 0).length;
+    const lowStock = data.filter((i) => i.quantity > 0 && i.quantity <= 2).length;
+    const outOfStock = data.filter((i) => i.quantity === 0).length;
+    return { inStock, lowStock, outOfStock, total: data.length };
+  }, [data]);
+
+  const summaryCards = [
+    { key: "in_stock" as const, label: "Com estoque", value: stockSummary.inStock, tone: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60", activeTone: "bg-emerald-500/15 border-emerald-500/60" },
+    { key: "low_stock" as const, label: "Estoque baixo (≤2)", value: stockSummary.lowStock, tone: "text-amber-400 border-amber-500/30 hover:border-amber-500/60", activeTone: "bg-amber-500/15 border-amber-500/60" },
+    { key: "out_of_stock" as const, label: "Sem estoque", value: stockSummary.outOfStock, tone: "text-rose-400 border-rose-500/30 hover:border-rose-500/60", activeTone: "bg-rose-500/15 border-rose-500/60" },
+  ];
+
   return (
     <>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <button
+          type="button"
+          onClick={() => setFilterStock("all")}
+          aria-pressed={filterStock === "all"}
+          className={`glass-card p-3 sm:p-4 text-left transition-all border ${filterStock === "all" ? "bg-primary/10 border-primary/60" : "border-border/60 hover:border-primary/40"}`}
+        >
+          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-medium">Total</p>
+          <p className="mt-1 text-xl sm:text-2xl font-display font-bold text-primary">{stockSummary.total}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">produtos</p>
+        </button>
+        {summaryCards.map((c) => {
+          const active = filterStock === c.key;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setFilterStock(active ? "all" : c.key)}
+              aria-pressed={active}
+              className={`glass-card p-3 sm:p-4 text-left transition-all border ${active ? c.activeTone : c.tone}`}
+            >
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-medium">{c.label}</p>
+              <p className={`mt-1 text-xl sm:text-2xl font-display font-bold ${c.tone.split(" ")[0]}`}>{c.value}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{active ? "filtrando" : "clique para filtrar"}</p>
+            </button>
+          );
+        })}
+      </div>
       <div className="glass-card overflow-hidden">
         <div className="flex flex-col gap-3 p-3 sm:p-4 border-b border-border">
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
