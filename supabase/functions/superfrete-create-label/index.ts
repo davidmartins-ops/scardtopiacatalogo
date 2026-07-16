@@ -132,10 +132,19 @@ Deno.serve(async (req) => {
       }),
     });
     const calcText = await calcRes.text();
-    if (!calcRes.ok) {
-      return new Response(JSON.stringify({ error: "Falha ao calcular frete", detail: calcText }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const calcCT = calcRes.headers.get("content-type") ?? "";
+    console.log("SuperFrete calculator response", {
+      status: calcRes.status,
+      contentType: calcCT,
+      bodyPreview: calcText.slice(0, 500),
+    });
+    if (!calcRes.ok || !calcCT.includes("application/json")) {
+      return new Response(JSON.stringify({
+        error: "Falha ao calcular frete",
+        provider_status: calcRes.status,
+        provider_content_type: calcCT,
+        detail: calcText.slice(0, 500),
+      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const opts = JSON.parse(calcText).filter((o: any) => !o.error);
     opts.sort((a: any, b: any) => Number(a.price) - Number(b.price));
