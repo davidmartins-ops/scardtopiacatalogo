@@ -227,16 +227,78 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ orders: [sfOrderId] }),
     });
     const checkoutText = await checkoutRes.text();
+    const checkoutCT = checkoutRes.headers.get("content-type") ?? "";
+    const checkoutIsJson = checkoutCT.includes("application/json");
+    console.log("SuperFrete checkout response", {
+      status: checkoutRes.status,
+      contentType: checkoutCT,
+      bodyPreview: checkoutText.slice(0, 500),
+    });
+
     if (!checkoutRes.ok) {
-      console.warn("SuperFrete checkout warning", checkoutRes.status, checkoutText);
-    } else {
-      try {
-        const checkout = JSON.parse(checkoutText);
-        const item = Array.isArray(checkout.purchase?.orders)
-          ? checkout.purchase.orders[0]
-          : checkout.orders?.[0] ?? checkout;
-        trackingCode = item?.tracking ?? item?.protocol ?? null;
-      } catch { /* ignore */ }
+      // Parse best-effort error message
+      let apiMessage = "";
+      if (checkoutIsJson) {
+        try {
+          const j = JSON.parse(checkoutText);
+          apiMessage = j.message ?? j.error ?? "";
+        } catch { /* ignore */ }
+      }
+      const lower = (apiMessage + " " + checkoutText).toLowerCase();
+      const insufficient =
+        checkoutRes.status === 409 ||
+        lower.includes("sem saldo") ||
+        lower.includes("saldo") ||
+        lower.includes("insufficient");
+
+      if (insufficient) {
+        console.error("SuperFrete insufficient balance", checkoutRes.status, apiMessage);
+        return new Response(
+          JSON.stringify({
+            error: "Saldo insuficiente na carteira SuperFrete. Recarregue pelo app SuperFrete para gerar a etiqueta.",
+            code: "insufficient_balance",
+            provider_status: checkoutRes.status,
+            provider_message: apiMessage || undefined,
+          }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Non-JSON (HTML) or other error — surface real detail without JSON.parse
+      console.error("SuperFrete checkout error", checkoutRes.status, checkoutText.slice(0, 1000));
+      return new Response(
+        JSON.stringify({
+          error: "Falha no checkout SuperFrete",
+          provider_status: checkoutRes.status,
+          provider_content_type: checkoutCT,
+          provider_message: apiMessage || undefined,
+          detail: checkoutIsJson ? undefined : checkoutText.slice(0, 500),
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (!checkoutIsJson) {
+      console.error("SuperFrete checkout returned non-JSON on 2xx", checkoutText.slice(0, 500));
+      return new Response(
+        JSON.stringify({
+          error: "Resposta inesperada do SuperFrete (não-JSON)",
+          provider_status: checkoutRes.status,
+          provider_content_type: checkoutCT,
+          detail: checkoutText.slice(0, 500),
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    try {
+      const checkout = JSON.parse(checkoutText);
+      const item = Array.isArray(checkout.purchase?.orders)
+        ? checkout.purchase.orders[0]
+        : checkout.orders?.[0] ?? checkout;
+      trackingCode = item?.tracking ?? item?.protocol ?? null;
+    } catch (e) {
+      console.error("SuperFrete checkout JSON parse failed", e, checkoutText.slice(0, 500));
     }
 
     // Fetch label / order info to obtain print URL
@@ -248,12 +310,23 @@ Deno.serve(async (req) => {
         accept: "application/json",
       },
     });
-    if (infoRes.ok) {
-      const info = await infoRes.json();
-      trackingCode = trackingCode ?? info.tracking ?? info.protocol ?? null;
-      labelUrl = info.print_url ?? info.tag?.url ?? null;
+    const infoText = await infoRes.text();
+    const infoCT = infoRes.headers.get("content-type") ?? "";
+    console.log("SuperFrete order info response", {
+      status: infoRes.status,
+      contentType: infoCT,
+      bodyPreview: infoText.slice(0, 300),
+    });
+    if (infoRes.ok && infoCT.includes("application/json")) {
+      try {
+        const info = JSON.parse(infoText);
+        trackingCode = trackingCode ?? info.tracking ?? info.protocol ?? null;
+        labelUrl = info.print_url ?? info.tag?.url ?? null;
+      } catch (e) {
+        console.error("SuperFrete order info parse failed", e);
+      }
     }
-  }
+
 
   // Determine new label status
   const isResend = !!order.superfrete_order_id;
