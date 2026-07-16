@@ -602,7 +602,7 @@ const AdminOrdersPanel = () => {
                           <span className="inline-flex items-center gap-1.5">
                             <MapPin className="h-3 w-3" />
                             Dados de envio
-                            {labelUrl ? (
+                            {(sfId || order.tracking_code || labelUrl) ? (
                               <Badge variant="outline" className="text-[10px] gap-1 bg-success/10 text-success border-success/30 ml-1">
                                 <CheckCircle2 className="h-2.5 w-2.5" /> Etiqueta emitida
                               </Badge>
@@ -642,6 +642,10 @@ const AdminOrdersPanel = () => {
                                 <a href={labelUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
                                   <Printer className="h-3 w-3" /> Abrir DANFE / etiqueta
                                 </a>
+                              ) : (sfId || order.tracking_code) ? (
+                                <span className="text-success inline-flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Emitida (aguardando URL — sincronize)
+                                </span>
                               ) : (
                                 <span className="text-muted-foreground">Não emitida</span>
                               )}

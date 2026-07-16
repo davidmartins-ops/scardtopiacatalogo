@@ -333,15 +333,44 @@ Deno.serve(async (req) => {
     console.log("SuperFrete order info response", {
       status: infoRes.status,
       contentType: infoCT,
-      bodyPreview: infoText.slice(0, 300),
+      bodyPreview: infoText.slice(0, 500),
     });
     if (infoRes.ok && infoCT.includes("application/json")) {
       try {
         const info = JSON.parse(infoText);
         trackingCode = trackingCode ?? info.tracking ?? info.protocol ?? null;
-        labelUrl = info.print_url ?? info.tag?.url ?? null;
+        labelUrl = info.print_url ?? info.tag?.url ?? info.url ?? null;
       } catch (e) {
         console.error("SuperFrete order info parse failed", e);
+      }
+    }
+
+    // Fallback: request the print URL explicitly via /api/v0/tag
+    if (!labelUrl) {
+      try {
+        const tagRes = await fetch(`${baseUrl}/api/v0/tag`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-Agent": USER_AGENT,
+            accept: "application/json",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ orders: [sfOrderId], mode: "public" }),
+        });
+        const tagText = await tagRes.text();
+        const tagCT = tagRes.headers.get("content-type") ?? "";
+        console.log("SuperFrete tag response", {
+          status: tagRes.status,
+          contentType: tagCT,
+          bodyPreview: tagText.slice(0, 500),
+        });
+        if (tagRes.ok && tagCT.includes("application/json")) {
+          const tag = JSON.parse(tagText);
+          labelUrl = tag.url ?? tag.print_url ?? tag?.[0]?.url ?? null;
+        }
+      } catch (e) {
+        console.error("SuperFrete tag fetch failed", e);
       }
     }
   }
@@ -353,7 +382,7 @@ Deno.serve(async (req) => {
   const isResend = !!order.superfrete_order_id;
   const eventType: "issued" | "resent" = isResend ? "resent" : "issued";
   const nowIso = new Date().toISOString();
-  const newStatus = labelUrl || trackingCode ? "released" : (order.shipping_label_status ?? "pending");
+  const newStatus = (labelUrl || trackingCode || sfOrderId) ? "released" : (order.shipping_label_status ?? "pending");
 
   // Persist on the order
   await admin
