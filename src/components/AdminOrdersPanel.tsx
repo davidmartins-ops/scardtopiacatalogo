@@ -60,6 +60,7 @@ const AdminOrdersPanel = () => {
   const [editNote, setEditNote] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [historyOrderId, setHistoryOrderId] = useState<string | null>(null);
+  const [labelOrderId, setLabelOrderId] = useState<string | null>(null);
 
   // Auto-sync SuperFrete label status once per mount for non-terminal labels
   useEffect(() => {
