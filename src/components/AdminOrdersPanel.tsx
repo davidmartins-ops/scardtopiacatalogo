@@ -900,6 +900,8 @@ const ShippingOptionDialog = ({ order, onClose }: { order: any | null; onClose: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
+  const syncStatus = useSyncShippingStatus();
+
   const submit = async () => {
     if (!order || !selectedId) return;
     toast.loading(hasLabel ? "Reenviando etiqueta SuperFrete…" : "Gerando etiqueta SuperFrete…", { id: `lbl-${order.id}` });
@@ -910,6 +912,44 @@ const ShippingOptionDialog = ({ order, onClose }: { order: any | null; onClose: 
         description: data?.trackingCode ? `Rastreio: ${data.trackingCode}` : undefined,
       });
       onClose();
+
+      // Auto-poll for shipping_label_url if SuperFrete hasn't returned it yet
+      if (!data?.labelUrl) {
+        const orderId = order.id;
+        const start = Date.now();
+        const maxMs = 2 * 60 * 1000; // 2 minutes
+        const delays = [4000, 6000, 8000, 12000, 15000, 20000, 30000];
+        let attempt = 0;
+        const poll = async () => {
+          if (Date.now() - start > maxMs) {
+            toast.info("Etiqueta emitida — URL de impressão ainda não disponível. Use 'Sincronizar status' mais tarde.", { id: `lbl-poll-${orderId}` });
+            return;
+          }
+          try {
+            const res = await syncStatus.mutateAsync([orderId]);
+            const r = res?.results?.[0];
+            const { data: fresh } = await supabase
+              .from("orders")
+              .select("shipping_label_url")
+              .eq("id", orderId)
+              .maybeSingle();
+            if (fresh?.shipping_label_url) {
+              toast.success("URL da etiqueta disponível", {
+                id: `lbl-poll-${orderId}`,
+                description: "Abra 'Dados de envio' para imprimir.",
+              });
+              return;
+            }
+            toast.loading("Aguardando URL da etiqueta…", { id: `lbl-poll-${orderId}`, description: r?.status ? `Status: ${r.status}` : undefined });
+          } catch {
+            /* ignore transient */
+          }
+          const wait = delays[Math.min(attempt++, delays.length - 1)];
+          setTimeout(poll, wait);
+        };
+        toast.loading("Aguardando URL da etiqueta…", { id: `lbl-poll-${orderId}` });
+        setTimeout(poll, 4000);
+      }
     } catch (e) {
       toast.error("Falha ao processar etiqueta", { id: `lbl-${order.id}`, description: (e as Error).message, duration: 10000 });
     }

@@ -138,9 +138,35 @@ Deno.serve(async (req) => {
       const rawStatus =
         info.status ?? info.tracking_status ?? info.state ?? (info.delivered_at ? "delivered" : info.posted_at ? "posted" : null);
       const tracking = info.tracking ?? info.protocol ?? row.tracking_code ?? null;
-      const labelUrl = info.print_url ?? info.tag?.url ?? row.shipping_label_url ?? null;
+      let labelUrl = info.print_url ?? info.tag?.url ?? info.url ?? row.shipping_label_url ?? null;
+
+      // If the URL is still missing, try /api/v0/tag to fetch it
+      if (!labelUrl) {
+        try {
+          const tagRes = await fetch(`${baseUrl}/api/v0/tag`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-Agent": USER_AGENT,
+              accept: "application/json",
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({ orders: [row.superfrete_order_id], mode: "public" }),
+          });
+          const tagText = await tagRes.text();
+          const tagCT = tagRes.headers.get("content-type") ?? "";
+          console.log("SuperFrete tag (sync) response", { status: tagRes.status, contentType: tagCT, bodyPreview: tagText.slice(0, 500) });
+          if (tagRes.ok && tagCT.includes("application/json")) {
+            const tag = JSON.parse(tagText);
+            labelUrl = tag.url ?? tag.print_url ?? tag?.[0]?.url ?? null;
+          }
+        } catch (e) {
+          console.error("SuperFrete tag (sync) fetch failed", e);
+        }
+      }
+
       const mapped = mapStatus(rawStatus, !!tracking);
-      const changed = mapped !== row.shipping_label_status;
+      const changed = mapped !== row.shipping_label_status || (!!labelUrl && labelUrl !== row.shipping_label_url);
 
       await admin
         .from("orders")
