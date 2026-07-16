@@ -382,7 +382,7 @@ Deno.serve(async (req) => {
   const isResend = !!order.superfrete_order_id;
   const eventType: "issued" | "resent" = isResend ? "resent" : "issued";
   const nowIso = new Date().toISOString();
-  const newStatus = labelUrl || trackingCode ? "released" : (order.shipping_label_status ?? "pending");
+  const newStatus = (labelUrl || trackingCode || sfOrderId) ? "released" : (order.shipping_label_status ?? "pending");
 
   // Persist on the order
   await admin
