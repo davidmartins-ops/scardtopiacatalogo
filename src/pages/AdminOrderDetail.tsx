@@ -101,11 +101,10 @@ const AdminOrderDetail = () => {
   }
 
   const shortId = order.id.slice(0, 8).toUpperCase();
-  const labelStatus = ((order as { shipping_label_status?: ShippingLabelStatus | null }).shipping_label_status ??
-    "pending") as ShippingLabelStatus;
+  const labelStatus = ((orderRaw.shipping_label_status as ShippingLabelStatus | null | undefined) ?? "pending") as ShippingLabelStatus;
   const labelMeta = SHIPPING_LABEL_STATUS_META[labelStatus];
-  const labelUrl = (order as { shipping_label_url?: string | null }).shipping_label_url ?? null;
-  const superfreteId = (order as { superfrete_order_id?: string | null }).superfrete_order_id ?? null;
+  const labelUrl = (orderRaw.shipping_label_url as string | null | undefined) ?? null;
+  const superfreteId = (orderRaw.superfrete_order_id as string | null | undefined) ?? null;
 
   const saveStatus = async () => {
     if (!status || (status === order.status && tracking === (order.tracking_code ?? ""))) {
