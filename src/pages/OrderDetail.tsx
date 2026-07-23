@@ -34,11 +34,49 @@ const OrderDetailPage = () => {
   useSEO({ title: "Detalhes do pedido", noindex: true });
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useCustomerAuth();
   const { data, isLoading } = useOrderDetail(orderId);
   const { data: inventory = [] } = useInventory();
   const { syncCart } = useSavedCart();
   const { disputes, createDispute } = useOrderDisputes(orderId);
   const { refunds, requestRefund } = useOrderRefunds(orderId);
+
+  // Access control: this is the customer-facing page. Only the owner can view it.
+  // Admins (or anyone else with a link) are redirected — admins to the admin
+  // management page, others back to their account.
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [denied, setDenied] = useState(false);
+  useEffect(() => {
+    if (authLoading || isLoading) return;
+    const order = data?.order;
+    if (!order || !orderId) {
+      setAccessChecked(true);
+      return;
+    }
+    if (!user) {
+      navigate(`/conta/login?next=/conta/pedidos/${orderId}`, { replace: true });
+      return;
+    }
+    if (order.user_id === user.id) {
+      setAccessChecked(true);
+      return;
+    }
+    // Not the owner — check if the viewer is an admin, then redirect
+    (async () => {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (roleRow) {
+        navigate(`/admin/pedidos/${orderId}`, { replace: true });
+      } else {
+        setDenied(true);
+        setAccessChecked(true);
+      }
+    })();
+  }, [authLoading, isLoading, data, user, orderId, navigate]);
 
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("defective");
