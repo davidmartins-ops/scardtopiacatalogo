@@ -69,7 +69,8 @@ const AdminOrderDetail = () => {
 
   const order = data?.order;
   const history = data?.history ?? [];
-  const customer = (order?.customer_info ?? {}) as Record<string, unknown>;
+  const orderRaw = (order ?? {}) as unknown as Record<string, unknown>;
+  const customer = ((orderRaw.customer_info ?? {}) as Record<string, unknown>);
 
   const [status, setStatus] = useState<OrderStatus | "">("");
   const [tracking, setTracking] = useState<string>("");
