@@ -1,6 +1,8 @@
 import useSEO from "@/hooks/use-seo";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { useOrderDetail, useOrderDisputes, type OrderStatus } from "@/hooks/use-orders";
 import { useOrderRefunds, type RefundMethod, type RefundStatus } from "@/hooks/use-refunds";
 import { useInventory } from "@/hooks/use-inventory";
@@ -32,11 +34,49 @@ const OrderDetailPage = () => {
   useSEO({ title: "Detalhes do pedido", noindex: true });
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useCustomerAuth();
   const { data, isLoading } = useOrderDetail(orderId);
   const { data: inventory = [] } = useInventory();
   const { syncCart } = useSavedCart();
   const { disputes, createDispute } = useOrderDisputes(orderId);
   const { refunds, requestRefund } = useOrderRefunds(orderId);
+
+  // Access control: this is the customer-facing page. Only the owner can view it.
+  // Admins (or anyone else with a link) are redirected — admins to the admin
+  // management page, others back to their account.
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [denied, setDenied] = useState(false);
+  useEffect(() => {
+    if (authLoading || isLoading) return;
+    const order = data?.order;
+    if (!order || !orderId) {
+      setAccessChecked(true);
+      return;
+    }
+    if (!user) {
+      navigate(`/conta/login?next=/conta/pedidos/${orderId}`, { replace: true });
+      return;
+    }
+    if (order.user_id === user.id) {
+      setAccessChecked(true);
+      return;
+    }
+    // Not the owner — check if the viewer is an admin, then redirect
+    (async () => {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (roleRow) {
+        navigate(`/admin/pedidos/${orderId}`, { replace: true });
+      } else {
+        setDenied(true);
+        setAccessChecked(true);
+      }
+    })();
+  }, [authLoading, isLoading, data, user, orderId, navigate]);
 
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("defective");
@@ -127,10 +167,19 @@ const OrderDetailPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || authLoading || !accessChecked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (denied) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-3 px-4 text-center">
+        <p className="text-muted-foreground">Este pedido pertence a outra conta. Acesso restrito.</p>
+        <Link to="/conta?tab=orders"><Button variant="outline">Ir para meus pedidos</Button></Link>
       </div>
     );
   }
