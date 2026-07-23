@@ -77,7 +77,7 @@ const AdminOrderDetail = () => {
   const [note, setNote] = useState<string>("");
 
   // Initialize form defaults when order loads
-  useMemo(() => {
+  useEffect(() => {
     if (order) {
       setStatus((prev) => prev || order.status);
       setTracking((prev) => (prev !== "" ? prev : order.tracking_code ?? ""));
