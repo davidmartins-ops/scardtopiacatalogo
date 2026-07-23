@@ -1,5 +1,5 @@
 import useSEO from "@/hooks/use-seo";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useOrderDetail, useAdminOrders, type OrderStatus } from "@/hooks/use-orders";
 import {
