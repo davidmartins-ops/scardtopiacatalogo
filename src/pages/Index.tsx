@@ -35,6 +35,18 @@ const Index = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const { unreadCount: notifUnread } = useAdminNotifications();
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "drops";
+
+  // Scroll to hash target after tab render
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const id = window.location.hash.slice(1);
+    const t = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [activeTab]);
 
   // Live count of orders awaiting action (pending_payment + payment_confirmed)
   useEffect(() => {
