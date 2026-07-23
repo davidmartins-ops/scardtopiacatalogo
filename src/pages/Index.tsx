@@ -1,6 +1,6 @@
 import useSEO from "@/hooks/use-seo";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,18 @@ const Index = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const { unreadCount: notifUnread } = useAdminNotifications();
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "drops";
+
+  // Scroll to hash target after tab render
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const id = window.location.hash.slice(1);
+    const t = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [activeTab]);
 
   // Live count of orders awaiting action (pending_payment + payment_confirmed)
   useEffect(() => {
@@ -178,7 +190,7 @@ const Index = () => {
           </section>
           <section className="xl:col-span-3" aria-labelledby="dashboard-inventory-heading">
             <h2 id="dashboard-inventory-heading" className="sr-only">Inventário e gestão</h2>
-            <Tabs defaultValue="drops" className="w-full">
+            <Tabs value={activeTab} onValueChange={(v) => setSearchParams((p) => { p.set("tab", v); return p; }, { replace: true })} className="w-full">
               <TabsList className="w-full mb-4 bg-muted/50 backdrop-blur-sm flex flex-wrap h-auto gap-1 p-1 justify-start">
                 <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
                 <TabsTrigger value="singles" className="flex-1 font-display text-xs sm:text-sm">Singles ({singles.length})</TabsTrigger>

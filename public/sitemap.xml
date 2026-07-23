@@ -201,11 +201,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD-01-EN-F-NM</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD-02-EN-NF-NM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -237,6 +232,11 @@
   </url>
   <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD-08-EN-NF-NM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD-01-EN-F-NM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

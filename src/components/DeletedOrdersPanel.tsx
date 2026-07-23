@@ -35,10 +35,37 @@ const DeletedOrdersPanel = () => {
       ]);
       if (auditRes.error) throw auditRes.error;
       if (ordersRes.error) throw ordersRes.error;
+      const rows = (auditRes.data ?? []) as AuditRow[];
       const existing = new Set((ordersRes.data ?? []).map((o) => o.id as string));
-      return { rows: (auditRes.data ?? []) as AuditRow[], existing };
+
+      // Enrich with product names and customer display names
+      const itemIds = Array.from(new Set(rows.map((r) => r.inventory_item_id).filter(Boolean)));
+      const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter((v): v is string => !!v)));
+
+      const [invRes, profRes] = await Promise.all([
+        itemIds.length
+          ? supabase.from("inventory").select("id, name").in("id", itemIds)
+          : Promise.resolve({ data: [], error: null } as any),
+        userIds.length
+          ? supabase.from("customer_profiles").select("id, display_name").in("id", userIds)
+          : Promise.resolve({ data: [], error: null } as any),
+      ]);
+
+      const productNames = new Map<string, string>();
+      for (const p of (invRes.data ?? []) as { id: string; name: string }[]) {
+        productNames.set(p.id, p.name);
+      }
+      const customerNames = new Map<string, string>();
+      for (const p of (profRes.data ?? []) as { id: string; display_name: string | null }[]) {
+        if (p.display_name) customerNames.set(p.id, p.display_name);
+      }
+
+      return { rows, existing, productNames, customerNames };
     },
   });
+
+  const productNames = data?.productNames ?? new Map<string, string>();
+  const customerNames = data?.customerNames ?? new Map<string, string>();
 
   const { deletedGroups, orphans } = useMemo(() => {
     const rows = data?.rows ?? [];
@@ -112,11 +139,11 @@ const DeletedOrdersPanel = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div id="deleted-orders-panel" className="space-y-4 scroll-mt-24">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-display text-lg flex items-center gap-2"><Trash2 className="h-4 w-4" /> Pedidos excluídos com impacto em estoque</h3>
-          <p className="text-xs text-muted-foreground">Rastreia reposições automáticas e detecta débitos órfãos.</p>
+          <p className="text-xs text-muted-foreground">Rastreia reposições automáticas e detecta débitos órfãos por conta e produto.</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-1">
           <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Atualizar
@@ -130,27 +157,42 @@ const DeletedOrdersPanel = () => {
             <span className="font-medium text-sm">Débitos órfãos ({orphans.length}) — pedido excluído sem reposição</span>
           </div>
           <ul className="space-y-2">
-            {orphans.map((o) => (
-              <li key={o.orderId} className="rounded border bg-card p-2 text-xs">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-mono truncate">{o.orderId}</p>
-                    <p className="text-muted-foreground">{formatDate(o.lastAt)}</p>
-                    <ul className="mt-1 space-y-0.5">
-                      {o.debit.map((d) => (
-                        <li key={d.id}>
-                          <Badge variant="outline" className="mr-1 h-4 text-[10px]">{d.inventory_item_id}</Badge>
-                          <span>débito {d.quantity_delta}</span>
-                        </li>
-                      ))}
-                    </ul>
+            {orphans.map((o) => {
+              const userIds = Array.from(new Set(o.debit.map((d) => d.user_id).filter((v): v is string => !!v)));
+              return (
+                <li key={o.orderId} className="rounded border bg-card p-2 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-mono truncate" title={o.orderId}>Pedido: {o.orderId}</p>
+                      <p className="text-muted-foreground">{formatDate(o.lastAt)}</p>
+                      {userIds.length > 0 && (
+                        <p className="mt-1">
+                          <span className="text-[10px] uppercase text-muted-foreground mr-1">Conta:</span>
+                          {userIds.map((uid) => (
+                            <Badge key={uid} variant="secondary" className="mr-1 h-4 text-[10px]">
+                              {customerNames.get(uid) ?? uid.slice(0, 8)}
+                            </Badge>
+                          ))}
+                        </p>
+                      )}
+                      <p className="text-[10px] uppercase text-muted-foreground mt-1">Produtos afetados</p>
+                      <ul className="mt-0.5 space-y-0.5">
+                        {o.debit.map((d) => (
+                          <li key={d.id} className="flex flex-wrap items-center gap-1">
+                            <span className="font-medium">{productNames.get(d.inventory_item_id) ?? "(sem nome)"}</span>
+                            <Badge variant="outline" className="h-4 text-[10px]">{d.inventory_item_id}</Badge>
+                            <span className="text-muted-foreground">débito {d.quantity_delta}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Button size="sm" variant="destructive" onClick={() => runRestock(o.orderId, o.debit)} className="shrink-0 h-7">
+                      Repor estoque
+                    </Button>
                   </div>
-                  <Button size="sm" variant="destructive" onClick={() => runRestock(o.orderId, o.debit)} className="shrink-0 h-7">
-                    Repor estoque
-                  </Button>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -179,9 +221,10 @@ const DeletedOrdersPanel = () => {
                     <p className="text-[10px] uppercase text-muted-foreground">Débito</p>
                     <ul className="mt-0.5 space-y-0.5">
                       {g.debit.map((d) => (
-                        <li key={d.id}>
-                          <Badge variant="outline" className="mr-1 h-4 text-[10px]">{d.inventory_item_id}</Badge>
-                          {d.quantity_delta}
+                        <li key={d.id} className="flex flex-wrap items-center gap-1">
+                          <span className="font-medium">{productNames.get(d.inventory_item_id) ?? "(sem nome)"}</span>
+                          <Badge variant="outline" className="h-4 text-[10px]">{d.inventory_item_id}</Badge>
+                          <span className="text-muted-foreground">{d.quantity_delta}</span>
                         </li>
                       ))}
                     </ul>
@@ -190,9 +233,10 @@ const DeletedOrdersPanel = () => {
                     <p className="text-[10px] uppercase text-muted-foreground">Reposição</p>
                     <ul className="mt-0.5 space-y-0.5">
                       {g.restock.map((d) => (
-                        <li key={d.id}>
-                          <Badge variant="outline" className="mr-1 h-4 text-[10px]">{d.inventory_item_id}</Badge>
-                          +{d.quantity_delta}
+                        <li key={d.id} className="flex flex-wrap items-center gap-1">
+                          <span className="font-medium">{productNames.get(d.inventory_item_id) ?? "(sem nome)"}</span>
+                          <Badge variant="outline" className="h-4 text-[10px]">{d.inventory_item_id}</Badge>
+                          <span className="text-muted-foreground">+{d.quantity_delta}</span>
                         </li>
                       ))}
                     </ul>
