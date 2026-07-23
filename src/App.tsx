@@ -33,6 +33,7 @@ import AdminNotifications from "./pages/AdminNotifications.tsx";
 import AdminReconciliation from "./pages/AdminReconciliation.tsx";
 import AdminRefunds from "./pages/AdminRefunds.tsx";
 import AdminEmails from "./pages/AdminEmails.tsx";
+import AdminOrderDetail from "./pages/AdminOrderDetail.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import OAuthConsent from "./pages/OAuthConsent.tsx";
 import CookieBanner from "./components/CookieBanner";
