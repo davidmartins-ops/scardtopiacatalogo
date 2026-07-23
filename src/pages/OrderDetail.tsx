@@ -167,10 +167,19 @@ const OrderDetailPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || authLoading || !accessChecked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (denied) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-3 px-4 text-center">
+        <p className="text-muted-foreground">Este pedido pertence a outra conta. Acesso restrito.</p>
+        <Link to="/conta?tab=orders"><Button variant="outline">Ir para meus pedidos</Button></Link>
       </div>
     );
   }
