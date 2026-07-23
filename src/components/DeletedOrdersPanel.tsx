@@ -35,10 +35,37 @@ const DeletedOrdersPanel = () => {
       ]);
       if (auditRes.error) throw auditRes.error;
       if (ordersRes.error) throw ordersRes.error;
+      const rows = (auditRes.data ?? []) as AuditRow[];
       const existing = new Set((ordersRes.data ?? []).map((o) => o.id as string));
-      return { rows: (auditRes.data ?? []) as AuditRow[], existing };
+
+      // Enrich with product names and customer display names
+      const itemIds = Array.from(new Set(rows.map((r) => r.inventory_item_id).filter(Boolean)));
+      const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter((v): v is string => !!v)));
+
+      const [invRes, profRes] = await Promise.all([
+        itemIds.length
+          ? supabase.from("inventory").select("id, name").in("id", itemIds)
+          : Promise.resolve({ data: [], error: null } as any),
+        userIds.length
+          ? supabase.from("customer_profiles").select("id, display_name").in("id", userIds)
+          : Promise.resolve({ data: [], error: null } as any),
+      ]);
+
+      const productNames = new Map<string, string>();
+      for (const p of (invRes.data ?? []) as { id: string; name: string }[]) {
+        productNames.set(p.id, p.name);
+      }
+      const customerNames = new Map<string, string>();
+      for (const p of (profRes.data ?? []) as { id: string; display_name: string | null }[]) {
+        if (p.display_name) customerNames.set(p.id, p.display_name);
+      }
+
+      return { rows, existing, productNames, customerNames };
     },
   });
+
+  const productNames = data?.productNames ?? new Map<string, string>();
+  const customerNames = data?.customerNames ?? new Map<string, string>();
 
   const { deletedGroups, orphans } = useMemo(() => {
     const rows = data?.rows ?? [];
