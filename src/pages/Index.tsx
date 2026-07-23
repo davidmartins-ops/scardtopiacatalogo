@@ -178,7 +178,7 @@ const Index = () => {
           </section>
           <section className="xl:col-span-3" aria-labelledby="dashboard-inventory-heading">
             <h2 id="dashboard-inventory-heading" className="sr-only">Inventário e gestão</h2>
-            <Tabs defaultValue="drops" className="w-full">
+            <Tabs value={activeTab} onValueChange={(v) => setSearchParams((p) => { p.set("tab", v); return p; }, { replace: true })} className="w-full">
               <TabsList className="w-full mb-4 bg-muted/50 backdrop-blur-sm flex flex-wrap h-auto gap-1 p-1 justify-start">
                 <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
                 <TabsTrigger value="singles" className="flex-1 font-display text-xs sm:text-sm">Singles ({singles.length})</TabsTrigger>
