@@ -221,9 +221,10 @@ const DeletedOrdersPanel = () => {
                     <p className="text-[10px] uppercase text-muted-foreground">Débito</p>
                     <ul className="mt-0.5 space-y-0.5">
                       {g.debit.map((d) => (
-                        <li key={d.id}>
-                          <Badge variant="outline" className="mr-1 h-4 text-[10px]">{d.inventory_item_id}</Badge>
-                          {d.quantity_delta}
+                        <li key={d.id} className="flex flex-wrap items-center gap-1">
+                          <span className="font-medium">{productNames.get(d.inventory_item_id) ?? "(sem nome)"}</span>
+                          <Badge variant="outline" className="h-4 text-[10px]">{d.inventory_item_id}</Badge>
+                          <span className="text-muted-foreground">{d.quantity_delta}</span>
                         </li>
                       ))}
                     </ul>
@@ -232,9 +233,10 @@ const DeletedOrdersPanel = () => {
                     <p className="text-[10px] uppercase text-muted-foreground">Reposição</p>
                     <ul className="mt-0.5 space-y-0.5">
                       {g.restock.map((d) => (
-                        <li key={d.id}>
-                          <Badge variant="outline" className="mr-1 h-4 text-[10px]">{d.inventory_item_id}</Badge>
-                          +{d.quantity_delta}
+                        <li key={d.id} className="flex flex-wrap items-center gap-1">
+                          <span className="font-medium">{productNames.get(d.inventory_item_id) ?? "(sem nome)"}</span>
+                          <Badge variant="outline" className="h-4 text-[10px]">{d.inventory_item_id}</Badge>
+                          <span className="text-muted-foreground">+{d.quantity_delta}</span>
                         </li>
                       ))}
                     </ul>
