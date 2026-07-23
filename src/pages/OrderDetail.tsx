@@ -1,6 +1,8 @@
 import useSEO from "@/hooks/use-seo";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { useOrderDetail, useOrderDisputes, type OrderStatus } from "@/hooks/use-orders";
 import { useOrderRefunds, type RefundMethod, type RefundStatus } from "@/hooks/use-refunds";
 import { useInventory } from "@/hooks/use-inventory";
