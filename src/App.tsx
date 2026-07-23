@@ -95,6 +95,7 @@ const App = () => (
           <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
           <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
           <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
+          <Route path="/admin/pedidos/:orderId" element={<ProtectedRoute><AdminOrderDetail /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
