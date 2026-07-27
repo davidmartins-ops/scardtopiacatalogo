@@ -188,17 +188,9 @@ const AddItemDialog = () => {
             <Input id="name" placeholder="Secret Lair x ..." value={form.name} onChange={(e) => handleChange("name", e.target.value)} maxLength={200} className="bg-muted border-border" />
           </div>
 
-          {/* CORREÇÃO 28.1: ID is auto-built from SET + collector number + language + foil + condition. */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="set">Set *</Label>
-              <Input id="set" placeholder="SLD" value={idParts.set} onChange={(e) => handleIdPartChange("set", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="num">Nº Coletor *</Label>
-              <Input id="num" placeholder="01" value={idParts.num} onChange={(e) => handleIdPartChange("num", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
-            </div>
-          </div>
+          {/* CORREÇÃO 28.1: ID is auto-built from SET + collector number + language + foil + condition.
+              Set e Nº Coletor são gerados automaticamente a partir do nome e do timestamp. */}
+
           <div className="space-y-2">
             <Label htmlFor="id" className="flex items-center justify-between">
               <span>ID digitado *</span>
