@@ -259,6 +259,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += "\n";
     }
 
+    const credits = creditsToApplyFor(channel);
+    if (credits > 0) {
+      const gross = channelTotal + getFreightValue();
+      msg += `🎁 Créditos aplicados: -R$ ${credits.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+      msg += `Total a pagar: R$ ${Math.max(0, gross - credits).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
+    }
+
     msg += "Gostaria de fechar esse pedido!";
     return msg;
   };
