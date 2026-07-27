@@ -39,6 +39,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import OAuthConsent from "./pages/OAuthConsent.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -88,40 +89,42 @@ const App = () => (
         <a href="#main-content" className="skip-link">
           Pular para o conteúdo principal
         </a>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/admin" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-          <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
-          <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
-          <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
-          <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
-          <Route path="/admin/pedidos/:orderId" element={<ProtectedRoute><AdminOrderDetail /></ProtectedRoute>} />
-          <Route path="/admin/creditos" element={<ProtectedRoute><AdminStoreCredits /></ProtectedRoute>} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
-          <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
-          <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
-          <Route path="/catalogo/carta/:name" element={<CardVersions />} />
-          <Route path="/conta/login" element={<CustomerLogin />} />
-          <Route path="/conta" element={<CustomerDashboard />} />
-          <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
-          <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
-          <Route path="/conta/pedidos/:orderId" element={<OrderDetail />} />
-          <Route path="/pedido/sucesso" element={<PedidoSucesso />} />
-          <Route path="/pedido/falha" element={<PedidoFalha />} />
-          <Route path="/unsubscribe" element={<Unsubscribe />} />
-          <Route path="/colecao/:collectionId" element={<PublicCollection />} />
-          <Route path="/tendencias" element={<TrendingCards />} />
-          <Route path="/privacidade" element={<Privacy />} />
-          <Route path="/termos" element={<Terms />} />
-          <Route path="/sobre" element={<Sobre />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/admin" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+            <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
+            <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
+            <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
+            <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
+            <Route path="/admin/pedidos/:orderId" element={<ProtectedRoute><AdminOrderDetail /></ProtectedRoute>} />
+            <Route path="/admin/creditos" element={<ProtectedRoute><AdminStoreCredits /></ProtectedRoute>} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
+            <Route path="/catalogo" element={<Catalogo />} />
+            <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
+            <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
+            <Route path="/catalogo/carta/:name" element={<CardVersions />} />
+            <Route path="/conta/login" element={<CustomerLogin />} />
+            <Route path="/conta" element={<CustomerDashboard />} />
+            <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
+            <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
+            <Route path="/conta/pedidos/:orderId" element={<OrderDetail />} />
+            <Route path="/pedido/sucesso" element={<PedidoSucesso />} />
+            <Route path="/pedido/falha" element={<PedidoFalha />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/colecao/:collectionId" element={<PublicCollection />} />
+            <Route path="/tendencias" element={<TrendingCards />} />
+            <Route path="/privacidade" element={<Privacy />} />
+            <Route path="/termos" element={<Terms />} />
+            <Route path="/sobre" element={<Sobre />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
         <SiteFooter />
         <CookieBanner />
       </BrowserRouter>
