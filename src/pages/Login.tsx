@@ -481,7 +481,7 @@ const Login = () => {
                       src={banner.image_url}
                       alt={banner.alt}
                       className="w-full h-full object-cover flex-shrink-0"
-                      style={{ minWidth: "100%" }}
+                      style={{ minWidth: "100%", objectPosition: banner.image_position ?? "center" }}
                     />
                   ))}
                 </div>
