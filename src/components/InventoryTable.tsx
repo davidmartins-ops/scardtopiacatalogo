@@ -592,7 +592,7 @@ const InventoryTable = ({ data }: Props) => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full font-body text-sm min-w-[700px]">
+          <table className="w-full font-body text-sm min-w-[960px] table-auto">
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-2 py-3 text-center w-8">
