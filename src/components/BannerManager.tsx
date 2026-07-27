@@ -225,6 +225,17 @@ const BannerManager = () => {
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Vincular a um produto (clicável)</Label>
+              <div className="grid grid-cols-[130px_1fr] gap-2">
+                <Select value={productTypeFilter} onValueChange={(v) => setProductTypeFilter(v as "all" | "drop" | "single")}>
+                  <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="drop">Drops</SelectItem>
+                    <SelectItem value="single">Singles</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Buscar por nome..." className="bg-muted border-border" />
+              </div>
               <Select value={form.inventory_item_id} onValueChange={(v) => setForm((p) => ({ ...p, inventory_item_id: v }))}>
                 <SelectTrigger className="bg-muted border-border"><SelectValue placeholder="Nenhum (banner estático)" /></SelectTrigger>
                 <SelectContent className="max-h-[300px]">
