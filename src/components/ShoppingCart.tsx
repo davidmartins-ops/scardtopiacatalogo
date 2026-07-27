@@ -425,6 +425,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
           receiptUrl: urlData.publicUrl,
+          creditsApplied: creditsToApplyFor("pix"),
           customerInfo: buildCustomerInfo(),
         });
         if (result === false) {
