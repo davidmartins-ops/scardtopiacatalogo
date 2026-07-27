@@ -28,12 +28,21 @@ const BannerManager = () => {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [productTypeFilter, setProductTypeFilter] = useState<"all" | "drop" | "single">("all");
+  const [productSearch, setProductSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const inventoryOptions = useMemo(
-    () => [...inventory].sort((a, b) => a.name.localeCompare(b.name)),
-    [inventory]
-  );
+  const inventoryOptions = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    return [...inventory]
+      .filter((it) => {
+        const type = (it.product_type ?? "drop") as "drop" | "single";
+        if (productTypeFilter !== "all" && type !== productTypeFilter) return false;
+        if (q && !it.name.toLowerCase().includes(q)) return false;
+        return true;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [inventory, productTypeFilter, productSearch]);
 
   const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo", inventory_item_id: "none" });
 
