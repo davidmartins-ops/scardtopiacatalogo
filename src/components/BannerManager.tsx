@@ -204,12 +204,29 @@ const BannerManager = () => {
             <div className="space-y-2">
               <Label>Imagem *</Label>
               {imagePreview ? (
-                <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                <>
+                  <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" style={{ objectPosition: `${posX}% ${posY}%` }} />
+                    <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Posição horizontal</Label>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{posX}%</span>
+                    </div>
+                    <Slider value={[posX]} onValueChange={(v) => setPosX(v[0])} min={0} max={100} step={1} />
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Posição vertical</Label>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{posY}%</span>
+                    </div>
+                    <Slider value={[posY]} onValueChange={(v) => setPosY(v[0])} min={0} max={100} step={1} />
+                    <button type="button" onClick={() => { setPosX(50); setPosY(50); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                      Centralizar
+                    </button>
+                  </div>
+                </>
               ) : (
                 <button type="button" onClick={() => fileRef.current?.click()} className="w-full h-28 rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/10 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                   <Upload className="h-5 w-5" />
