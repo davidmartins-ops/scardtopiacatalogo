@@ -151,6 +151,7 @@ export type Database = {
           created_at: string
           display_page: string
           id: string
+          image_position: string
           image_url: string
           inventory_item_id: string | null
           is_active: boolean
@@ -165,6 +166,7 @@ export type Database = {
           created_at?: string
           display_page?: string
           id?: string
+          image_position?: string
           image_url: string
           inventory_item_id?: string | null
           is_active?: boolean
@@ -179,6 +181,7 @@ export type Database = {
           created_at?: string
           display_page?: string
           id?: string
+          image_position?: string
           image_url?: string
           inventory_item_id?: string | null
           is_active?: boolean

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
 const DISPLAY_PAGES = [
@@ -45,12 +46,22 @@ const BannerManager = () => {
   }, [inventory, productTypeFilter, productSearch]);
 
   const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo", inventory_item_id: "none" });
+  const [posX, setPosX] = useState(50);
+  const [posY, setPosY] = useState(50);
+
+  const parsePos = (s?: string): [number, number] => {
+    if (!s || s === "center") return [50, 50];
+    const m = s.match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+    if (m) return [Math.round(+m[1]), Math.round(+m[2])];
+    return [50, 50];
+  };
 
   const openNew = () => {
     setEditingBanner(null);
     setForm({ alt: "", label: "🔥 Lançamento", title: "", subtitle: "", sort_order: String(banners.length), display_page: "all", inventory_item_id: "none" });
     setImagePreview(null);
     setImageFile(null);
+    setPosX(50); setPosY(50);
     setDialogOpen(true);
   };
 
@@ -59,6 +70,8 @@ const BannerManager = () => {
     setForm({ alt: b.alt, label: b.label, title: b.title, subtitle: b.subtitle, sort_order: String(b.sort_order), display_page: b.display_page ?? "all", inventory_item_id: b.inventory_item_id ?? "none" });
     setImagePreview(b.image_url);
     setImageFile(null);
+    const [x, y] = parsePos(b.image_position);
+    setPosX(x); setPosY(y);
     setDialogOpen(true);
   };
 
@@ -92,6 +105,7 @@ const BannerManager = () => {
         is_active: true,
         display_page: form.display_page,
         inventory_item_id: form.inventory_item_id === "none" ? null : form.inventory_item_id,
+        image_position: `${posX}% ${posY}%`,
       };
 
       if (editingBanner) {
@@ -190,12 +204,29 @@ const BannerManager = () => {
             <div className="space-y-2">
               <Label>Imagem *</Label>
               {imagePreview ? (
-                <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                <>
+                  <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" style={{ objectPosition: `${posX}% ${posY}%` }} />
+                    <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Posição horizontal</Label>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{posX}%</span>
+                    </div>
+                    <Slider value={[posX]} onValueChange={(v) => setPosX(v[0])} min={0} max={100} step={1} />
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Posição vertical</Label>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{posY}%</span>
+                    </div>
+                    <Slider value={[posY]} onValueChange={(v) => setPosY(v[0])} min={0} max={100} step={1} />
+                    <button type="button" onClick={() => { setPosX(50); setPosY(50); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                      Centralizar
+                    </button>
+                  </div>
+                </>
               ) : (
                 <button type="button" onClick={() => fileRef.current?.click()} className="w-full h-28 rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/10 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                   <Upload className="h-5 w-5" />

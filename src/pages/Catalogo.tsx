@@ -451,7 +451,7 @@ const CatalogBanner = () => {
         {banners.map((b, idx) => {
           const href = linkedHrefFor(b.inventory_item_id);
           const Img = (
-            <img src={b.image_url} alt={b.alt} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={b.image_url} alt={b.alt} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: b.image_position ?? "center" }} />
           );
           return (
             <div key={idx} className="relative w-full h-full flex-shrink-0" style={{ minWidth: "100%" }}>
