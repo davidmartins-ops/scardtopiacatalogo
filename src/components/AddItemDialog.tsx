@@ -49,7 +49,7 @@ const AddItemDialog = () => {
     const num = parts.num.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (!set || !num) return "";
     const foilTag = description === "Non-Foil" ? "NF" : "F";
-    return `${set}-${num}-${language}-${foilTag}-${condition}`;
+    return `${set}${num}${language}${foilTag}${condition}`;
   };
 
   const handleChange = (field: string, value: string) => {
