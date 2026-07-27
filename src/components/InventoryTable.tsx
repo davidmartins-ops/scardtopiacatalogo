@@ -592,7 +592,7 @@ const InventoryTable = ({ data }: Props) => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full font-body text-sm min-w-[700px]">
+          <table className="w-full font-body text-sm min-w-[960px] table-auto">
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-2 py-3 text-center w-8">
@@ -741,11 +741,19 @@ const InventoryTable = ({ data }: Props) => {
                       </>
                     ) : (
                       <>
-                        <td className="px-2 sm:px-3 py-2.5 max-w-[200px] truncate">{item.name}</td>
-                        <td className="px-2 sm:px-3 py-2.5">
-                          <Badge variant="outline" className={`text-xs ${descriptionStyles[item.description]}`}>{item.description}</Badge>
+                        <td className="px-2 sm:px-3 py-2.5 min-w-[240px] max-w-[340px]">
+                          <span
+                            className="block font-medium text-foreground leading-snug break-words whitespace-normal"
+                            title={item.name}
+                          >
+                            {item.name}
+                          </span>
                         </td>
-                        <td className="px-2 sm:px-3 py-2.5 text-xs text-muted-foreground truncate max-w-[100px]">{item.category}</td>
+                        <td className="px-2 sm:px-3 py-2.5">
+                          <Badge variant="outline" className={`text-xs whitespace-nowrap ${descriptionStyles[item.description]}`}>{item.description}</Badge>
+                        </td>
+                        <td className="px-2 sm:px-3 py-2.5 text-xs text-muted-foreground max-w-[140px] break-words whitespace-normal leading-snug" title={item.category}>{item.category}</td>
+
                         <td className="px-2 sm:px-3 py-2.5 text-center">
                           <Badge variant="outline" className="text-[10px]">{item.language ?? "PT"}</Badge>
                         </td>
