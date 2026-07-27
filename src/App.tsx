@@ -34,6 +34,7 @@ import AdminReconciliation from "./pages/AdminReconciliation.tsx";
 import AdminRefunds from "./pages/AdminRefunds.tsx";
 import AdminEmails from "./pages/AdminEmails.tsx";
 import AdminOrderDetail from "./pages/AdminOrderDetail.tsx";
+import AdminStoreCredits from "./pages/AdminStoreCredits.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import OAuthConsent from "./pages/OAuthConsent.tsx";
 import CookieBanner from "./components/CookieBanner";
@@ -96,6 +97,7 @@ const App = () => (
           <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
           <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
           <Route path="/admin/pedidos/:orderId" element={<ProtectedRoute><AdminOrderDetail /></ProtectedRoute>} />
+          <Route path="/admin/creditos" element={<ProtectedRoute><AdminStoreCredits /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
