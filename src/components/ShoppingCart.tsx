@@ -215,6 +215,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
+  // Credit to apply: min(balance, total for channel + freight). 0 if opt-out or no balance.
+  const creditsToApplyFor = (channel: "whatsapp" | "pix" | "card" | null) => {
+    if (!useCredits || creditBalance <= 0) return 0;
+    const gross = amountForChannel(channel) + getFreightValue();
+    return Math.max(0, Math.min(creditBalance, gross));
+  };
+
   const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
     const isPix = channel === "pix";
     const channelTotal = amountForChannel(channel);
