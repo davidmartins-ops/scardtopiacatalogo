@@ -12,6 +12,9 @@ import { type InventoryItem } from "@/data/inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { useMyStoreCredit } from "@/hooks/use-store-credits";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Coins } from "lucide-react";
 
 export interface CartItem {
   item: InventoryItem;
@@ -30,6 +33,7 @@ interface ShoppingCartProps {
     meta?: {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
+      creditsApplied?: number;
       customerInfo?: {
         name?: string;
         email?: string;
@@ -136,6 +140,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
   const { profile, user } = useCustomerAuth();
+  const { balance: creditBalance } = useMyStoreCredit();
+  const [useCredits, setUseCredits] = useState(false);
   const navigate = useNavigate();
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
@@ -209,6 +215,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
+  // Credit to apply: min(balance, total for channel + freight). 0 if opt-out or no balance.
+  const creditsToApplyFor = (channel: "whatsapp" | "pix" | "card" | null) => {
+    if (!useCredits || creditBalance <= 0) return 0;
+    const gross = amountForChannel(channel) + getFreightValue();
+    return Math.max(0, Math.min(creditBalance, gross));
+  };
+
   const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
     const isPix = channel === "pix";
     const channelTotal = amountForChannel(channel);
@@ -244,6 +257,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         msg += `Total (com frete): R$ ${(channelTotal + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
       }
       msg += "\n";
+    }
+
+    const credits = creditsToApplyFor(channel);
+    if (credits > 0) {
+      const gross = channelTotal + getFreightValue();
+      msg += `🎁 Créditos aplicados: -R$ ${credits.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+      msg += `Total a pagar: R$ ${Math.max(0, gross - credits).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     }
 
     msg += "Gostaria de fechar esse pedido!";
@@ -318,12 +338,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           total_price: ci.item.price * ci.qty,
         }));
         const cardTotal = amountForChannel("card");
+        const cardCredits = creditsToApplyFor("card");
         const { data: orderRow, error: orderErr } = await supabase
           .from("orders")
           .insert({
             user_id: user.id,
             items: orderItems as any,
             total: cardTotal,
+            credits_applied: cardCredits,
             status: "pending_payment" as any,
             payment_method: "credit" as any,
             customer_info: buildCustomerInfo() as any,
@@ -349,6 +371,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       if (onOrderPlaced) {
         const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
+          creditsApplied: creditsToApplyFor("whatsapp"),
           customerInfo: buildCustomerInfo(),
         });
         if (result === false) {
@@ -402,6 +425,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
           receiptUrl: urlData.publicUrl,
+          creditsApplied: creditsToApplyFor("pix"),
           customerInfo: buildCustomerInfo(),
         });
         if (result === false) {
@@ -551,8 +575,35 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
-              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-bold text-primary">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              {deliveryMethod === "shipping" && getFreightValue() > 0 && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium text-foreground">R$ {getFreightValue().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              )}
+              {creditsToApplyFor(pendingChannel) > 0 && (
+                <div className="flex justify-between text-success"><span>Créditos aplicados</span><span className="font-medium">− R$ {creditsToApplyFor(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              )}
+              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total a pagar</span><span className="font-bold text-primary">R$ {Math.max(0, amountForChannel(pendingChannel) + getFreightValue() - creditsToApplyFor(pendingChannel)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             </div>
+
+            {user && creditBalance > 0 && (
+              <label className="flex items-start gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5 cursor-pointer">
+                <Checkbox
+                  checked={useCredits}
+                  onCheckedChange={(v) => setUseCredits(v === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1 text-xs">
+                  <p className="font-medium text-foreground flex items-center gap-1.5">
+                    <Coins className="h-3.5 w-3.5 text-primary" />
+                    Usar meus créditos ({`R$ ${creditBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} disponível)
+                  </p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Aplicamos automaticamente até o valor total do pedido (incluindo frete).
+                  </p>
+                </div>
+              </label>
+            )}
+
             <p className="text-xs text-muted-foreground">
               Ao confirmar, registramos seu pedido e damos baixa no estoque automaticamente.
               Em caso de falha, seus itens permanecem no carrinho.

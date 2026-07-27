@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, user_id, total, items")
+      .select("id, user_id, total, items, credits_applied")
       .eq("id", order_id)
       .maybeSingle();
     if (orderErr || !order) {
@@ -82,15 +82,23 @@ Deno.serve(async (req) => {
     }
 
     const items = Array.isArray(order.items) ? order.items : [];
-    const itemsPayload = items.map((i: any) => ({
+    const rawItems = items.map((i: any) => ({
       description: String(i.name ?? "Item"),
       quantity: Number(i.quantity) || 1,
       price: Math.round((Number(i.unit_price) || 0) * 100),
     }));
 
-    // Recompute total from items (cents) to match what InfinitePay expects
-    const total = itemsPayload.reduce((s, it) => s + it.price * it.quantity, 0);
-    if (!Number.isFinite(total) || total <= 0) {
+    const grossCents = rawItems.reduce((s, it) => s + it.price * it.quantity, 0);
+    const creditsCents = Math.round((Number(order.credits_applied) || 0) * 100);
+    const netCents = Math.max(0, grossCents - creditsCents);
+
+    // When credits are applied, collapse to a single consolidated line so the
+    // payable amount matches order.total minus credits.
+    const itemsPayload = creditsCents > 0
+      ? [{ description: `Pedido ${order_id.slice(0, 8)} (créditos aplicados)`, quantity: 1, price: netCents }]
+      : rawItems;
+
+    if (!Number.isFinite(netCents) || netCents <= 0) {
       return new Response(JSON.stringify({ error: "Invalid order total" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

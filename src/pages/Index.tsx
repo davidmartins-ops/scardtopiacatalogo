@@ -1,7 +1,7 @@
 import useSEO from "@/hooks/use-seo";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell, Mail } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell, Mail, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -231,6 +231,9 @@ const Index = () => {
                 </TabsTrigger>
                 <TabsTrigger value="emails" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
                   <Link to="/admin/emails"><Mail className="h-3.5 w-3.5" /> E-mails</Link>
+                </TabsTrigger>
+                <TabsTrigger value="credits" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                  <Link to="/admin/creditos"><Coins className="h-3.5 w-3.5" /> Créditos</Link>
                 </TabsTrigger>
                 <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <Shield className="h-3.5 w-3.5" /> Admins

@@ -884,6 +884,7 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          credits_applied: number
           customer_info: Json
           id: string
           items: Json
@@ -913,6 +914,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credits_applied?: number
           customer_info?: Json
           id?: string
           items?: Json
@@ -942,6 +944,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credits_applied?: number
           customer_info?: Json
           id?: string
           items?: Json
@@ -1217,6 +1220,65 @@ export type Database = {
         }
         Relationships: []
       }
+      store_credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          note: string | null
+          order_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          order_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          order_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_credit_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_credits: {
+        Row: {
+          balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -1267,6 +1329,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_store_credit: {
+        Args: { _amount: number; _note?: string; _user_id: string }
+        Returns: number
+      }
       check_orphan_stock_debits: { Args: never; Returns: number }
       decrement_inventory_stock: {
         Args: { _item_id: string; _qty: number }
