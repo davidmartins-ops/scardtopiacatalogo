@@ -33,6 +33,7 @@ interface ShoppingCartProps {
     meta?: {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
+      creditsApplied?: number;
       customerInfo?: {
         name?: string;
         email?: string;
@@ -139,6 +140,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
   const { profile, user } = useCustomerAuth();
+  const { balance: creditBalance } = useMyStoreCredit();
+  const [useCredits, setUseCredits] = useState(false);
   const navigate = useNavigate();
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
