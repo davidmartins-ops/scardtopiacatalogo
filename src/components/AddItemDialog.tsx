@@ -84,10 +84,18 @@ const AddItemDialog = () => {
     setImages([]);
   };
 
+  // Preview do ID compacto que o trigger irá gravar no banco (remove qualquer não alfanumérico e uppercase).
+  const compactId = form.id.replace(/[^A-Za-z0-9]+/g, "").toUpperCase();
+  const isCompactValid = /^[A-Z0-9]{3,}$/.test(compactId);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.id.trim() || !form.name.trim() || !form.price.trim() || !form.category.trim()) {
       toast.error("Preencha os campos obrigatórios (ID, Nome, Preço e Categoria).");
+      return;
+    }
+    if (!isCompactValid) {
+      toast.error("ID compacto inválido. Use apenas letras e números (mín. 3 caracteres); hífens e espaços serão removidos.");
       return;
     }
     const price = parseFloat(form.price);
@@ -102,7 +110,7 @@ const AddItemDialog = () => {
     const gallery = images.slice(1);
 
     const pricePix = parseFloat(form.price_pix || "0");
-    const itemId = form.id.trim().toUpperCase().replace(/[-\s]+/g, "");
+    const itemId = compactId;
 
     const { error } = await supabase.from("inventory").insert({
       id: itemId,
@@ -119,10 +127,12 @@ const AddItemDialog = () => {
 
     if (error) {
       setLoading(false);
-      if (error.code === "23505") toast.error("Já existe um item com este ID.");
+      if (error.code === "23505") toast.error(`Já existe um item com o ID compacto "${itemId}".`);
+      else if (error.code === "23514") toast.error("ID compacto fora do padrão (apenas letras maiúsculas e números).");
       else toast.error("Erro ao adicionar item.");
       return;
     }
+
 
     if (gallery.length > 0) {
       const rows = gallery.map((img, idx) => ({
@@ -178,11 +188,19 @@ const AddItemDialog = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="id" className="flex items-center justify-between">
-              <span>ID gerado *</span>
-              <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SETNUMLANGF/NFCOND"}</span>
+              <span>ID digitado *</span>
+              <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SET+NUM+LANG+F/NF+COND"}</span>
             </Label>
-            <Input id="id" placeholder="SLD01PTFNM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
+            <Input id="id" placeholder="SLD-01-PT-F-NM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
+            <div className={`text-[11px] font-mono rounded-md border px-2 py-1.5 ${form.id.trim() === "" ? "text-muted-foreground border-border/60 bg-muted/40" : isCompactValid ? "text-primary border-primary/30 bg-primary/5" : "text-destructive border-destructive/40 bg-destructive/5"}`}>
+              <span className="text-muted-foreground mr-2">ID compacto (será salvo):</span>
+              {compactId || <span className="italic">—</span>}
+              {form.id.trim() !== "" && !isCompactValid && (
+                <div className="mt-1 text-[10px] not-italic">Precisa ter no mínimo 3 caracteres alfanuméricos. Hífens e espaços são removidos automaticamente.</div>
+              )}
+            </div>
           </div>
+
 
           {/* Drop Description */}
           <div className="space-y-2">
