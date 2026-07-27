@@ -105,6 +105,7 @@ const BannerManager = () => {
         is_active: true,
         display_page: form.display_page,
         inventory_item_id: form.inventory_item_id === "none" ? null : form.inventory_item_id,
+        image_position: `${posX}% ${posY}%`,
       };
 
       if (editingBanner) {
