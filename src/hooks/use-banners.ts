@@ -12,7 +12,15 @@ export interface Banner {
   is_active: boolean;
   display_page: "all" | "login" | "catalogo";
   inventory_item_id?: string | null;
+  image_position?: string;
 }
+
+const normalize = (d: any): Banner => ({
+  ...d,
+  display_page: d.display_page ?? "all",
+  inventory_item_id: d.inventory_item_id ?? null,
+  image_position: d.image_position ?? "center",
+});
 
 export const useBanners = () => {
   return useQuery({
@@ -23,7 +31,7 @@ export const useBanners = () => {
         .select("*")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all", inventory_item_id: d.inventory_item_id ?? null })) as Banner[];
+      return (data ?? []).map(normalize);
     },
   });
 };
@@ -38,7 +46,7 @@ export const useActiveBanners = (page?: "login" | "catalogo") => {
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      const all = (data ?? []).map((d: any) => ({ ...d, display_page: d.display_page ?? "all", inventory_item_id: d.inventory_item_id ?? null })) as Banner[];
+      const all = (data ?? []).map(normalize);
       if (!page) return all;
       return all.filter((b) => b.display_page === "all" || b.display_page === page);
     },
