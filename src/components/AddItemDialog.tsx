@@ -41,8 +41,21 @@ const AddItemDialog = () => {
     language: "PT", condition: "NM", status: "none" as string, drop_description: "",
   });
   // CORREÇÃO 28.1: build SET-NUM-LANG-F/NF-COND automatically until the admin overrides it manually.
+  // Auto-generate SET (from name) and NUM (timestamp-based) so admin doesn't need to fill them.
   const [idParts, setIdParts] = useState({ set: "", num: "" });
   const [idAutoTouched, setIdAutoTouched] = useState(false);
+
+  const deriveSetFromName = (name: string) => {
+    const clean = name.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (clean.length >= 3) return clean.slice(0, 3);
+    if (clean.length > 0) return (clean + "XXX").slice(0, 3);
+    return "DRP";
+  };
+
+  const generateNum = () => {
+    // 5-char base36 from timestamp — compact, unique per second.
+    return Math.floor(Date.now() / 1000).toString(36).toUpperCase().slice(-5);
+  };
 
   const buildAutoId = (parts: { set: string; num: string }, language: string, description: string, condition: string) => {
     const set = parts.set.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -55,7 +68,15 @@ const AddItemDialog = () => {
   const handleChange = (field: string, value: string) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
-      if (!idAutoTouched && (field === "language" || field === "description" || field === "condition")) {
+      // Auto-derive set from name and generate num on first name entry
+      if (field === "name" && !idAutoTouched) {
+        const autoSet = deriveSetFromName(value);
+        const autoNum = idParts.num || generateNum();
+        const nextParts = { set: autoSet, num: autoNum };
+        setIdParts(nextParts);
+        const auto = buildAutoId(nextParts, next.language, next.description, next.condition);
+        if (auto) next.id = auto;
+      } else if (!idAutoTouched && (field === "language" || field === "description" || field === "condition")) {
         const auto = buildAutoId(idParts, next.language, next.description, next.condition);
         if (auto) next.id = auto;
       }
@@ -63,19 +84,11 @@ const AddItemDialog = () => {
     });
   };
 
-  const handleIdPartChange = (field: "set" | "num", value: string) => {
-    const nextParts = { ...idParts, [field]: value };
-    setIdParts(nextParts);
-    if (!idAutoTouched) {
-      const auto = buildAutoId(nextParts, form.language, form.description, form.condition);
-      if (auto) setForm((prev) => ({ ...prev, id: auto }));
-    }
-  };
-
   const handleIdManualChange = (value: string) => {
     setIdAutoTouched(true);
     setForm((prev) => ({ ...prev, id: value }));
   };
+
 
   const resetForm = () => {
     setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
@@ -175,17 +188,9 @@ const AddItemDialog = () => {
             <Input id="name" placeholder="Secret Lair x ..." value={form.name} onChange={(e) => handleChange("name", e.target.value)} maxLength={200} className="bg-muted border-border" />
           </div>
 
-          {/* CORREÇÃO 28.1: ID is auto-built from SET + collector number + language + foil + condition. */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="set">Set *</Label>
-              <Input id="set" placeholder="SLD" value={idParts.set} onChange={(e) => handleIdPartChange("set", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="num">Nº Coletor *</Label>
-              <Input id="num" placeholder="01" value={idParts.num} onChange={(e) => handleIdPartChange("num", e.target.value)} maxLength={6} className="bg-muted border-border uppercase" />
-            </div>
-          </div>
+          {/* CORREÇÃO 28.1: ID is auto-built from SET + collector number + language + foil + condition.
+              Set e Nº Coletor são gerados automaticamente a partir do nome e do timestamp. */}
+
           <div className="space-y-2">
             <Label htmlFor="id" className="flex items-center justify-between">
               <span>ID digitado *</span>
