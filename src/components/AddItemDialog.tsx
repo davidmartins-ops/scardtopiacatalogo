@@ -179,9 +179,9 @@ const AddItemDialog = () => {
           <div className="space-y-2">
             <Label htmlFor="id" className="flex items-center justify-between">
               <span>ID gerado *</span>
-              <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SET-NUM-LANG-F/NF-COND"}</span>
+              <span className="text-[10px] text-muted-foreground">{idAutoTouched ? "Editado manualmente" : "Auto: SETNUMLANGF/NFCOND"}</span>
             </Label>
-            <Input id="id" placeholder="SLD-01-PT-F-NM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
+            <Input id="id" placeholder="SLD01PTFNM" value={form.id} onChange={(e) => handleIdManualChange(e.target.value)} maxLength={40} className="bg-muted border-border font-mono text-xs" />
           </div>
 
           {/* Drop Description */}
