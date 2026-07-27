@@ -670,6 +670,7 @@ const Catalogo = () => {
     meta?: {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
+      creditsApplied?: number;
       customerInfo?: Record<string, unknown>;
     }
   ): Promise<boolean> => {
@@ -696,6 +697,7 @@ const Catalogo = () => {
         user_id: user?.id ?? null,
         items: orderItems as never,
         total,
+        credits_applied: Number(meta?.creditsApplied ?? 0),
         status: isPix ? "pending_payment" : "payment_confirmed",
         receipt_url: meta?.receiptUrl ?? null,
         payment_method: (meta?.paymentMethod ?? "whatsapp") as never,
