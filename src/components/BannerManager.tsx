@@ -46,12 +46,22 @@ const BannerManager = () => {
   }, [inventory, productTypeFilter, productSearch]);
 
   const [form, setForm] = useState({ alt: "", label: "", title: "", subtitle: "", sort_order: "0", display_page: "all" as "all" | "login" | "catalogo", inventory_item_id: "none" });
+  const [posX, setPosX] = useState(50);
+  const [posY, setPosY] = useState(50);
+
+  const parsePos = (s?: string): [number, number] => {
+    if (!s || s === "center") return [50, 50];
+    const m = s.match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+    if (m) return [Math.round(+m[1]), Math.round(+m[2])];
+    return [50, 50];
+  };
 
   const openNew = () => {
     setEditingBanner(null);
     setForm({ alt: "", label: "🔥 Lançamento", title: "", subtitle: "", sort_order: String(banners.length), display_page: "all", inventory_item_id: "none" });
     setImagePreview(null);
     setImageFile(null);
+    setPosX(50); setPosY(50);
     setDialogOpen(true);
   };
 
@@ -60,6 +70,8 @@ const BannerManager = () => {
     setForm({ alt: b.alt, label: b.label, title: b.title, subtitle: b.subtitle, sort_order: String(b.sort_order), display_page: b.display_page ?? "all", inventory_item_id: b.inventory_item_id ?? "none" });
     setImagePreview(b.image_url);
     setImageFile(null);
+    const [x, y] = parsePos(b.image_position);
+    setPosX(x); setPosY(y);
     setDialogOpen(true);
   };
 
