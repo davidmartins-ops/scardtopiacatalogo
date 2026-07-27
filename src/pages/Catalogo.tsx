@@ -387,7 +387,7 @@ const ItemGrid = ({
                 const versionsCount = versions.length;
                 const versionsHref = isSingles && versionsCount > 1 ? `/catalogo/carta/${encodeURIComponent(item.name)}` : undefined;
                 return (
-                  <div key={item.id} className="animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
+                  <div key={item.id} className="cv-auto animate-scale-in max-w-[280px] sm:max-w-[320px] md:max-w-[360px] mx-auto w-full" style={{ animationDelay: `${0.4 + i * 0.05}s`, opacity: 0 }}>
                     <ProductCard
                       item={item}
                       isSingle={isSingles}
