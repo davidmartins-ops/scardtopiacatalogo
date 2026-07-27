@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Slider } from "@/components/ui/slider";
+
 import { toast } from "sonner";
 
 const DISPLAY_PAGES = [
@@ -205,23 +205,44 @@ const BannerManager = () => {
               <Label>Imagem *</Label>
               {imagePreview ? (
                 <>
-                  <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" style={{ objectPosition: `${posX}% ${posY}%` }} />
-                    <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors">
+                  <div
+                    className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20 cursor-grab active:cursor-grabbing select-none touch-none"
+                    onPointerDown={(e) => {
+                      const el = e.currentTarget;
+                      el.setPointerCapture(e.pointerId);
+                      const rect = el.getBoundingClientRect();
+                      const move = (clientX: number, clientY: number) => {
+                        const x = Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
+                        const y = Math.max(0, Math.min(100, Math.round(((clientY - rect.top) / rect.height) * 100)));
+                        setPosX(x); setPosY(y);
+                      };
+                      move(e.clientX, e.clientY);
+                      const onMove = (ev: PointerEvent) => move(ev.clientX, ev.clientY);
+                      const onUp = (ev: PointerEvent) => {
+                        try { el.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
+                        el.removeEventListener("pointermove", onMove);
+                        el.removeEventListener("pointerup", onUp);
+                        el.removeEventListener("pointercancel", onUp);
+                      };
+                      el.addEventListener("pointermove", onMove);
+                      el.addEventListener("pointerup", onUp);
+                      el.addEventListener("pointercancel", onUp);
+                    }}
+                  >
+                    <img src={imagePreview} alt="Preview" draggable={false} className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: `${posX}% ${posY}%` }} />
+                    <div
+                      className="absolute w-6 h-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-lg bg-primary/70 pointer-events-none"
+                      style={{ left: `${posX}%`, top: `${posY}%` }}
+                    />
+                    <div className="absolute bottom-1 left-1 text-[10px] font-medium text-white/90 bg-black/40 rounded px-1.5 py-0.5 tabular-nums pointer-events-none">
+                      {posX}% · {posY}%
+                    </div>
+                    <button type="button" onPointerDown={(e) => e.stopPropagation()} onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors z-10">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs">Posição horizontal</Label>
-                      <span className="text-[10px] text-muted-foreground tabular-nums">{posX}%</span>
-                    </div>
-                    <Slider value={[posX]} onValueChange={(v) => setPosX(v[0])} min={0} max={100} step={1} />
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs">Posição vertical</Label>
-                      <span className="text-[10px] text-muted-foreground tabular-nums">{posY}%</span>
-                    </div>
-                    <Slider value={[posY]} onValueChange={(v) => setPosY(v[0])} min={0} max={100} step={1} />
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[10px] text-muted-foreground">Arraste sobre a imagem para ajustar o enquadramento.</p>
                     <button type="button" onClick={() => { setPosX(50); setPosY(50); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
                       Centralizar
                     </button>
