@@ -102,7 +102,7 @@ const AddItemDialog = () => {
     const gallery = images.slice(1);
 
     const pricePix = parseFloat(form.price_pix || "0");
-    const itemId = form.id.trim().toUpperCase();
+    const itemId = form.id.trim().toUpperCase().replace(/[-\s]+/g, "");
 
     const { error } = await supabase.from("inventory").insert({
       id: itemId,
