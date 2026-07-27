@@ -338,12 +338,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           total_price: ci.item.price * ci.qty,
         }));
         const cardTotal = amountForChannel("card");
+        const cardCredits = creditsToApplyFor("card");
         const { data: orderRow, error: orderErr } = await supabase
           .from("orders")
           .insert({
             user_id: user.id,
             items: orderItems as any,
             total: cardTotal,
+            credits_applied: cardCredits,
             status: "pending_payment" as any,
             payment_method: "credit" as any,
             customer_info: buildCustomerInfo() as any,
@@ -369,6 +371,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       if (onOrderPlaced) {
         const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
+          creditsApplied: creditsToApplyFor("whatsapp"),
           customerInfo: buildCustomerInfo(),
         });
         if (result === false) {
