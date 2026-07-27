@@ -108,6 +108,24 @@
     pointer-events: none;
   }
 
+  /* Mobile: heavy backdrop-blur across many stacked cards saturates the GPU on
+     iOS Safari / Android Chrome and can cause blank paint frames while scrolling.
+     Drop the blur (keep the translucent background) below the md breakpoint. */
+  @media (max-width: 767px) {
+    .glass-card,
+    .glass-card.backdrop-blur-xl {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: hsl(var(--card));
+    }
+  }
+
+  /* Skip painting offscreen list items — huge win on long catalog grids. */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 400px;
+  }
+
   /* Premium glow on hover */
   .glow-hover {
     @apply transition-all duration-500;
