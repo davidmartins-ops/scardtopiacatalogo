@@ -627,7 +627,17 @@ const InventoryTable = ({ data }: Props) => {
                         {isSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
                       </button>
                     </td>
-                    <td className="px-2 sm:px-3 py-2.5 font-mono text-primary text-xs max-w-[120px]"><span className="line-clamp-2 break-all">{item.id}</span></td>
+                    <td className="px-2 sm:px-3 py-2.5 font-mono text-primary text-xs max-w-[140px]">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="line-clamp-2 break-all" title="ID compacto (salvo no banco)">{item.id}</span>
+                        <span
+                          className="text-[9px] uppercase tracking-wider text-muted-foreground/70 not-italic"
+                          title="Formato: apenas letras maiúsculas e números, sem hífens ou espaços"
+                        >
+                          compacto
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-2 sm:px-3 py-2.5 text-center">
                       {item.image_url ? (
                         <img src={item.image_url} alt="" className="h-8 w-8 rounded object-cover mx-auto border border-border/40" />
