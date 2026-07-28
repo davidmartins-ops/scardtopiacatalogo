@@ -680,12 +680,21 @@ const InventoryTable = ({ data }: Props) => {
                           </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
-                          <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
-                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-24"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col gap-1">
+                            <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
+                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-32"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <Select value={editForm.availability} onValueChange={(v) => setEditForm((p) => ({ ...p, availability: v }))}>
+                              <SelectTrigger className="h-8 text-[11px] bg-muted border-border w-32"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pronta_entrega">Pronta Entrega</SelectItem>
+                                <SelectItem value="encomenda">Via Encomenda</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
                           <div className="flex flex-col gap-1">
