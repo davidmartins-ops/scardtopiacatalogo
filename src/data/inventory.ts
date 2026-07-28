@@ -13,6 +13,7 @@ export interface InventoryItem {
   language?: string;
   condition?: string;
   status?: "none" | "pre_sale" | "launch";
+  availability?: "pronta_entrega" | "encomenda";
   drop_description?: string;
 }
 
