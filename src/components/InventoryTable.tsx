@@ -85,7 +85,7 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", price_pix: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil", drop_description: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", price_pix: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", availability: "pronta_entrega", description: "Foil", drop_description: "" });
 
   // Drop description dialog
   const [descDialogItem, setDescDialogItem] = useState<InventoryItem | null>(null);
