@@ -41,16 +41,21 @@ const InventoryAuditPanel = () => {
   // Reset page when filters change
   useEffect(() => { setPage(0); }, [from, to, itemFilter, userFilter]);
 
-  // Sync state → URL whenever any param changes
+  // Sync state → URL whenever any param changes.
+  // IMPORTANT: preserve params owned by the parent (e.g. `tab=audit`) — otherwise
+  // this panel would erase the active tab and the parent would fall back to "drops".
   useEffect(() => {
-    const next = new URLSearchParams();
-    if (from) next.set("from", from);
-    if (to) next.set("to", to);
-    if (itemFilter.trim()) next.set("item", itemFilter.trim());
-    if (userFilter.trim()) next.set("user", userFilter.trim());
-    if (page > 0) next.set("page", String(page));
-    if (exportLimit !== 1000) next.set("exportLimit", String(exportLimit));
-    setSearchParams(next, { replace: true });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      const setOrDel = (k: string, v: string) => (v ? next.set(k, v) : next.delete(k));
+      setOrDel("from", from);
+      setOrDel("to", to);
+      setOrDel("item", itemFilter.trim());
+      setOrDel("user", userFilter.trim());
+      if (page > 0) next.set("page", String(page)); else next.delete("page");
+      if (exportLimit !== 1000) next.set("exportLimit", String(exportLimit)); else next.delete("exportLimit");
+      return next;
+    }, { replace: true });
   }, [from, to, itemFilter, userFilter, page, exportLimit, setSearchParams]);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
