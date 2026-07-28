@@ -252,16 +252,28 @@ const AddItemDialog = () => {
           </div>
 
           {/* Status */}
-          <div className="space-y-2">
-            <Label>Status do Produto</Label>
-            <Select value={form.status} onValueChange={(v) => handleChange("status", v)}>
-              <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                <SelectItem value="pre_sale">Pré Venda</SelectItem>
-                <SelectItem value="launch">Lançamento</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Status do Produto</Label>
+              <Select value={form.status} onValueChange={(v) => handleChange("status", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  <SelectItem value="pre_sale">Pré Venda</SelectItem>
+                  <SelectItem value="launch">Lançamento</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Disponibilidade</Label>
+              <Select value={form.availability} onValueChange={(v) => handleChange("availability", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pronta_entrega">Pronta Entrega</SelectItem>
+                  <SelectItem value="encomenda">Via Encomenda</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Multi image upload — primeira imagem vira principal, demais formam a galeria */}
