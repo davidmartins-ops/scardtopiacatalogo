@@ -250,7 +250,7 @@ const InventoryTable = ({ data }: Props) => {
         name: editForm.name.trim(), price, price_pix: pricePix, quantity,
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
-        status: editForm.status, description: editForm.description,
+        status: editForm.status, availability: editForm.availability, description: editForm.description,
         drop_description: editForm.drop_description,
       } as any)
       .eq("id", id);
