@@ -206,9 +206,27 @@ const BannerManager = () => {
               {imagePreview ? (
                 <>
                   <div
-                    className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20 cursor-grab active:cursor-grabbing select-none touch-none"
+                    role="slider"
+                    tabIndex={0}
+                    aria-label="Ajustar enquadramento da imagem"
+                    aria-valuetext={`Horizontal ${posX}%, vertical ${posY}%`}
+                    className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-muted/20 cursor-grab active:cursor-grabbing select-none touch-none focus:outline-none focus:ring-2 focus:ring-primary/60"
+                    onKeyDown={(e) => {
+                      const step = e.shiftKey ? 10 : 1;
+                      let handled = true;
+                      if (e.key === "ArrowLeft") setPosX((v) => Math.max(0, v - step));
+                      else if (e.key === "ArrowRight") setPosX((v) => Math.min(100, v + step));
+                      else if (e.key === "ArrowUp") setPosY((v) => Math.max(0, v - step));
+                      else if (e.key === "ArrowDown") setPosY((v) => Math.min(100, v + step));
+                      else if (e.key === "Home") { setPosX(0); setPosY(0); }
+                      else if (e.key === "End") { setPosX(100); setPosY(100); }
+                      else if (e.key === "Enter" || e.key === " ") { setPosX(50); setPosY(50); }
+                      else handled = false;
+                      if (handled) e.preventDefault();
+                    }}
                     onPointerDown={(e) => {
                       const el = e.currentTarget;
+                      el.focus();
                       el.setPointerCapture(e.pointerId);
                       const rect = el.getBoundingClientRect();
                       const move = (clientX: number, clientY: number) => {
@@ -235,18 +253,19 @@ const BannerManager = () => {
                       style={{ left: `${posX}%`, top: `${posY}%` }}
                     />
                     <div className="absolute bottom-1 left-1 text-[10px] font-medium text-white/90 bg-black/40 rounded px-1.5 py-0.5 tabular-nums pointer-events-none">
-                      {posX}% · {posY}%
+                      X {posX}% · Y {posY}%
                     </div>
                     <button type="button" onPointerDown={(e) => e.stopPropagation()} onClick={() => { setImagePreview(null); setImageFile(null); }} className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-destructive/80 transition-colors z-10">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <div className="flex items-center justify-between pt-1">
-                    <p className="text-[10px] text-muted-foreground">Arraste sobre a imagem para ajustar o enquadramento.</p>
+                    <p className="text-[10px] text-muted-foreground">Arraste, toque ou use as setas do teclado (Shift = passo 10).</p>
                     <button type="button" onClick={() => { setPosX(50); setPosY(50); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
                       Centralizar
                     </button>
                   </div>
+
                 </>
               ) : (
                 <button type="button" onClick={() => fileRef.current?.click()} className="w-full h-28 rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/10 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
