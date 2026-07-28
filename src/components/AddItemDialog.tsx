@@ -38,7 +38,7 @@ const AddItemDialog = () => {
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
-    language: "PT", condition: "NM", status: "none" as string, drop_description: "",
+    language: "PT", condition: "NM", status: "none" as string, availability: "pronta_entrega" as string, drop_description: "",
   });
   // CORREÇÃO 28.1: build SET-NUM-LANG-F/NF-COND automatically until the admin overrides it manually.
   // Auto-generate SET (from name) and NUM (timestamp-based) so admin doesn't need to fill them.
