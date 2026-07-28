@@ -135,6 +135,7 @@ const AddItemDialog = () => {
       language: form.language,
       condition: form.condition,
       status: form.status,
+      availability: form.availability,
       drop_description: form.drop_description,
     } as any);
 
