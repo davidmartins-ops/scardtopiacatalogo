@@ -771,13 +771,20 @@ const InventoryTable = ({ data }: Props) => {
                           <Badge variant="outline" className="text-[10px]">{item.condition ?? "NM"}</Badge>
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 text-center">
-                          {item.status === "pre_sale" ? (
-                            <Badge variant="secondary" className="text-[10px]">Pré Venda</Badge>
-                          ) : item.status === "launch" ? (
-                            <Badge className="text-[10px]">Lançamento</Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-[10px]">—</span>
-                          )}
+                          <div className="flex flex-col items-center gap-1">
+                            {item.status === "pre_sale" ? (
+                              <Badge variant="secondary" className="text-[10px]">Pré Venda</Badge>
+                            ) : item.status === "launch" ? (
+                              <Badge className="text-[10px]">Lançamento</Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-[10px]">—</span>
+                            )}
+                            {((item as any).availability ?? "pronta_entrega") === "encomenda" ? (
+                              <Badge variant="outline" className="text-[9px] border-amber-500/40 text-amber-600 bg-amber-500/10 whitespace-nowrap">Encomenda</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[9px] border-emerald-500/40 text-emerald-600 bg-emerald-500/10 whitespace-nowrap">Pronta Entrega</Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs whitespace-nowrap">
                           <div className="flex flex-col leading-tight">
