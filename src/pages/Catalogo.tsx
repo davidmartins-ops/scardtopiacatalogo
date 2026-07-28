@@ -119,6 +119,7 @@ const ItemGrid = ({
   const [foilFilter, setFoilFilter] = useState<string>("all");
   const [setFilter, setSetFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "launch" | "pre_sale" | "none">("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "pronta_entrega" | "encomenda">("all");
   const { sets: allSets } = useMtgSets();
 
   useEffect(() => {
@@ -200,6 +201,7 @@ const ItemGrid = ({
       const matchesFoil = foilFilter === "all" || item.description === foilFilter;
       const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
       const matchesStatus = statusFilter === "all" || (item.status ?? "none") === statusFilter;
+      const matchesAvailability = availabilityFilter === "all" || ((item as any).availability ?? "pronta_entrega") === availabilityFilter;
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
         const profile = manaProfiles[item.id];
         if (!profile) return false;
@@ -208,9 +210,9 @@ const ItemGrid = ({
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesStatus;
+      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesStatus && matchesAvailability;
     });
-  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter, availabilityFilter]);
 
   // Sets present in current items (only for singles)
   const availableSets = useMemo(() => {
@@ -354,6 +356,34 @@ const ItemGrid = ({
           })}
           {statusFilter !== "all" && (
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setStatusFilter("all")}>Limpar</button>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Disponibilidade:</span>
+          {([
+            { v: "all", label: "Todas" },
+            { v: "pronta_entrega", label: "Pronta Entrega" },
+            { v: "encomenda", label: "Via Encomenda" },
+          ] as const).map((opt) => {
+            const count = opt.v === "all"
+              ? (items ?? []).length
+              : (items ?? []).filter((i) => ((i as any).availability ?? "pronta_entrega") === opt.v).length;
+            const active = availabilityFilter === opt.v;
+            return (
+              <button
+                key={opt.v}
+                type="button"
+                onClick={() => setAvailabilityFilter(opt.v)}
+                aria-pressed={active}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+              >
+                {opt.label} ({count})
+              </button>
+            );
+          })}
+          {availabilityFilter !== "all" && (
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setAvailabilityFilter("all")}>Limpar</button>
           )}
         </div>
         <div className="flex items-center gap-2">
