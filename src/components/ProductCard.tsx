@@ -250,12 +250,21 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           </h3>
         </div>
 
-        {/* Foil badge */}
+        {/* Foil badge + Availability */}
         <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
           <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
             <Icon className="h-2.5 w-2.5" />
             {config?.label ?? item.description}
           </Badge>
+          {((item as any).availability ?? "pronta_entrega") === "encomenda" ? (
+            <Badge variant="outline" className="gap-1 text-[10px] bg-amber-500/15 text-amber-600 border-amber-500/30">
+              <Package className="h-2.5 w-2.5" /> Via Encomenda
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="gap-1 text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
+              <Package className="h-2.5 w-2.5" /> Pronta Entrega
+            </Badge>
+          )}
         </div>
 
 
