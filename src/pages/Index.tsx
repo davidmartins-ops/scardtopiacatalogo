@@ -214,6 +214,9 @@ const Index = () => {
                 <TabsTrigger value="disputes" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ShoppingBag className="h-3.5 w-3.5" /> Devoluções
                 </TabsTrigger>
+                <TabsTrigger value="audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                  <ClipboardList className="h-3.5 w-3.5" /> Auditoria
+                </TabsTrigger>
                 <TabsTrigger value="order-audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
                   <ClipboardList className="h-3.5 w-3.5" /> Hist. Pedidos
                 </TabsTrigger>
