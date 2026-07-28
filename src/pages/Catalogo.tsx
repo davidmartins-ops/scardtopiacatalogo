@@ -446,12 +446,12 @@ const CatalogBanner = () => {
   const activeHref = linkedHrefFor(activeBanner?.inventory_item_id);
 
   return (
-    <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] max-h-[420px] overflow-hidden group">
+    <div className="relative w-full aspect-[4/3] xs:aspect-[16/9] sm:aspect-[16/5] max-h-[420px] overflow-hidden group">
       <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
         {banners.map((b, idx) => {
           const href = linkedHrefFor(b.inventory_item_id);
           const Img = (
-            <img src={b.image_url} alt={b.alt} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: b.image_position ?? "center" }} />
+            <img src={b.image_url} alt={b.alt} loading={idx === 0 ? "eager" : "lazy"} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: b.image_position ?? "center" }} />
           );
           return (
             <div key={idx} className="relative w-full h-full flex-shrink-0" style={{ minWidth: "100%" }}>
@@ -464,13 +464,16 @@ const CatalogBanner = () => {
           );
         })}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/40 to-background pointer-events-none" />
+      {/* Scrim: stronger on mobile for legibility over busy artwork */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 sm:via-background/50 to-transparent pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-10 pointer-events-none">
-        <span className="inline-block px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-1">{activeBanner?.label}</span>
-        <h1 className="text-lg sm:text-xl font-display font-bold text-foreground drop-shadow-lg">{activeBanner?.title}</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">{activeBanner?.subtitle}</p>
+        <span className="inline-block px-2.5 py-0.5 rounded-full bg-primary/95 text-primary-foreground text-[10px] font-bold uppercase tracking-wider mb-2 shadow-md">{activeBanner?.label}</span>
+        <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground leading-tight [text-shadow:0_2px_12px_rgba(0,0,0,0.6)] line-clamp-2">{activeBanner?.title}</h1>
+        {activeBanner?.subtitle && (
+          <p className="text-[13px] sm:text-sm text-foreground/85 mt-1 [text-shadow:0_1px_8px_rgba(0,0,0,0.55)] line-clamp-2">{activeBanner?.subtitle}</p>
+        )}
         {activeHref && (
-          <Link to={activeHref} className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-brand-gold hover:underline pointer-events-auto" onClick={() => trackEvent("banner_cta_click", inventory.find((i) => i.id === activeBanner?.inventory_item_id))}>
+          <Link to={activeHref} className="inline-flex items-center gap-1 mt-2 text-[11px] sm:text-xs font-semibold text-brand-gold hover:underline pointer-events-auto [text-shadow:0_1px_6px_rgba(0,0,0,0.5)]" onClick={() => trackEvent("banner_cta_click", inventory.find((i) => i.id === activeBanner?.inventory_item_id))}>
             🔍 Ver Conteúdo do Drop →
           </Link>
         )}
