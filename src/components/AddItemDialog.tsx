@@ -91,7 +91,7 @@ const AddItemDialog = () => {
 
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
+    setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", availability: "pronta_entrega", drop_description: "" });
     setIdParts({ set: "", num: "" });
     setIdAutoTouched(false);
     setImages([]);
