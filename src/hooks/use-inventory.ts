@@ -29,6 +29,7 @@ export const useInventory = () => {
         language: (item as any).language ?? "PT",
         condition: (item as any).condition ?? "NM",
         status: (item as any).status ?? "none",
+        availability: (item as any).availability ?? "pronta_entrega",
         drop_description: (item as any).drop_description ?? "",
       }));
     },
