@@ -609,6 +609,7 @@ export type Database = {
       }
       inventory: {
         Row: {
+          availability: string
           category: string
           condition: string
           created_at: string
@@ -627,6 +628,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          availability?: string
           category: string
           condition?: string
           created_at?: string
@@ -645,6 +647,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          availability?: string
           category?: string
           condition?: string
           created_at?: string

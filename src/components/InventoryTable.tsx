@@ -85,7 +85,7 @@ const InventoryTable = ({ data }: Props) => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", price_pix: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", description: "Foil", drop_description: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", price_pix: "", quantity: "", category: "", discount: "", language: "PT", condition: "NM", status: "none", availability: "pronta_entrega", description: "Foil", drop_description: "" });
 
   // Drop description dialog
   const [descDialogItem, setDescDialogItem] = useState<InventoryItem | null>(null);
@@ -227,7 +227,8 @@ const InventoryTable = ({ data }: Props) => {
       name: item.name, price: String(item.price), price_pix: String(item.price_pix ?? 0), quantity: String(item.quantity),
       category: item.category, discount: String(item.discount ?? 0),
       language: item.language ?? "PT", condition: item.condition ?? "NM",
-      status: item.status ?? "none", description: item.description ?? "Foil",
+      status: item.status ?? "none", availability: (item as any).availability ?? "pronta_entrega",
+      description: item.description ?? "Foil",
       drop_description: (item as any).drop_description ?? "",
     });
   };
@@ -249,7 +250,7 @@ const InventoryTable = ({ data }: Props) => {
         name: editForm.name.trim(), price, price_pix: pricePix, quantity,
         category: editForm.category.trim(), discount,
         language: editForm.language, condition: editForm.condition,
-        status: editForm.status, description: editForm.description,
+        status: editForm.status, availability: editForm.availability, description: editForm.description,
         drop_description: editForm.drop_description,
       } as any)
       .eq("id", id);
@@ -679,12 +680,21 @@ const InventoryTable = ({ data }: Props) => {
                           </Select>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
-                          <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
-                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-24"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col gap-1">
+                            <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
+                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-32"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <Select value={editForm.availability} onValueChange={(v) => setEditForm((p) => ({ ...p, availability: v }))}>
+                              <SelectTrigger className="h-8 text-[11px] bg-muted border-border w-32"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pronta_entrega">Pronta Entrega</SelectItem>
+                                <SelectItem value="encomenda">Via Encomenda</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2">
                           <div className="flex flex-col gap-1">
@@ -761,13 +771,20 @@ const InventoryTable = ({ data }: Props) => {
                           <Badge variant="outline" className="text-[10px]">{item.condition ?? "NM"}</Badge>
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 text-center">
-                          {item.status === "pre_sale" ? (
-                            <Badge variant="secondary" className="text-[10px]">Pré Venda</Badge>
-                          ) : item.status === "launch" ? (
-                            <Badge className="text-[10px]">Lançamento</Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-[10px]">—</span>
-                          )}
+                          <div className="flex flex-col items-center gap-1">
+                            {item.status === "pre_sale" ? (
+                              <Badge variant="secondary" className="text-[10px]">Pré Venda</Badge>
+                            ) : item.status === "launch" ? (
+                              <Badge className="text-[10px]">Lançamento</Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-[10px]">—</span>
+                            )}
+                            {((item as any).availability ?? "pronta_entrega") === "encomenda" ? (
+                              <Badge variant="outline" className="text-[9px] border-amber-500/40 text-amber-600 bg-amber-500/10 whitespace-nowrap">Encomenda</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[9px] border-emerald-500/40 text-emerald-600 bg-emerald-500/10 whitespace-nowrap">Pronta Entrega</Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 py-2.5 tabular-nums text-xs whitespace-nowrap">
                           <div className="flex flex-col leading-tight">

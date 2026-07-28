@@ -38,7 +38,7 @@ const AddItemDialog = () => {
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
-    language: "PT", condition: "NM", status: "none" as string, drop_description: "",
+    language: "PT", condition: "NM", status: "none" as string, availability: "pronta_entrega" as string, drop_description: "",
   });
   // CORREÇÃO 28.1: build SET-NUM-LANG-F/NF-COND automatically until the admin overrides it manually.
   // Auto-generate SET (from name) and NUM (timestamp-based) so admin doesn't need to fill them.
@@ -91,7 +91,7 @@ const AddItemDialog = () => {
 
 
   const resetForm = () => {
-    setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", drop_description: "" });
+    setForm({ id: "", name: "", description: "Foil", price: "", price_pix: "", quantity: "1", category: "", language: "PT", condition: "NM", status: "none", availability: "pronta_entrega", drop_description: "" });
     setIdParts({ set: "", num: "" });
     setIdAutoTouched(false);
     setImages([]);
@@ -135,6 +135,7 @@ const AddItemDialog = () => {
       language: form.language,
       condition: form.condition,
       status: form.status,
+      availability: form.availability,
       drop_description: form.drop_description,
     } as any);
 
@@ -251,16 +252,28 @@ const AddItemDialog = () => {
           </div>
 
           {/* Status */}
-          <div className="space-y-2">
-            <Label>Status do Produto</Label>
-            <Select value={form.status} onValueChange={(v) => handleChange("status", v)}>
-              <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                <SelectItem value="pre_sale">Pré Venda</SelectItem>
-                <SelectItem value="launch">Lançamento</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Status do Produto</Label>
+              <Select value={form.status} onValueChange={(v) => handleChange("status", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  <SelectItem value="pre_sale">Pré Venda</SelectItem>
+                  <SelectItem value="launch">Lançamento</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Disponibilidade</Label>
+              <Select value={form.availability} onValueChange={(v) => handleChange("availability", v)}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pronta_entrega">Pronta Entrega</SelectItem>
+                  <SelectItem value="encomenda">Via Encomenda</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Multi image upload — primeira imagem vira principal, demais formam a galeria */}
