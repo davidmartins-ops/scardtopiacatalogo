@@ -1,0 +1,1 @@
+CREATE POLICY "Admins can view all customer profiles" ON public.customer_profiles FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
