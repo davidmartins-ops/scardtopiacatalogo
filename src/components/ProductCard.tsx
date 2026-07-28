@@ -256,7 +256,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             <Icon className="h-2.5 w-2.5" />
             {config?.label ?? item.description}
           </Badge>
-          {!isOutOfStock && (
+          {!isOutOfStock && !isSingle && (
             ((item as any).availability ?? "pronta_entrega") === "encomenda" ? (
               <Badge variant="outline" className="gap-1 text-[10px] bg-amber-500/15 text-amber-600 border-amber-500/30">
                 <Package className="h-2.5 w-2.5" /> Via Encomenda
