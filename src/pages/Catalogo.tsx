@@ -358,6 +358,34 @@ const ItemGrid = ({
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setStatusFilter("all")}>Limpar</button>
           )}
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Disponibilidade:</span>
+          {([
+            { v: "all", label: "Todas" },
+            { v: "pronta_entrega", label: "Pronta Entrega" },
+            { v: "encomenda", label: "Via Encomenda" },
+          ] as const).map((opt) => {
+            const count = opt.v === "all"
+              ? (items ?? []).length
+              : (items ?? []).filter((i) => ((i as any).availability ?? "pronta_entrega") === opt.v).length;
+            const active = availabilityFilter === opt.v;
+            return (
+              <button
+                key={opt.v}
+                type="button"
+                onClick={() => setAvailabilityFilter(opt.v)}
+                aria-pressed={active}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+              >
+                {opt.label} ({count})
+              </button>
+            );
+          })}
+          {availabilityFilter !== "all" && (
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setAvailabilityFilter("all")}>Limpar</button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Preço:</span>
