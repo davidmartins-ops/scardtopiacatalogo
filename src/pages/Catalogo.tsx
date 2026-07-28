@@ -201,6 +201,7 @@ const ItemGrid = ({
       const matchesFoil = foilFilter === "all" || item.description === foilFilter;
       const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
       const matchesStatus = statusFilter === "all" || (item.status ?? "none") === statusFilter;
+      const matchesAvailability = availabilityFilter === "all" || ((item as any).availability ?? "pronta_entrega") === availabilityFilter;
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
         const profile = manaProfiles[item.id];
         if (!profile) return false;
@@ -209,9 +210,9 @@ const ItemGrid = ({
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesStatus;
+      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesStatus && matchesAvailability;
     });
-  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter, availabilityFilter]);
 
   // Sets present in current items (only for singles)
   const availableSets = useMemo(() => {
