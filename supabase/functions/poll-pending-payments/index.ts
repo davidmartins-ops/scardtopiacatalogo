@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const { data: orders, error } = await supabase
       .from("orders")
       .select("id, total, status, payment_transaction_id, payment_invoice_slug, created_at")
-      .in("status", ["pending_payment", "awaiting_payment", "pending"])
+      .eq("status", "pending_payment")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(50);
