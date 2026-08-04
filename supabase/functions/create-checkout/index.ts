@@ -131,6 +131,44 @@ Deno.serve(async (req) => {
 
     const checkout_url = data.url ?? data.checkout_url ?? data.link;
 
+    if (typeof checkout_url !== "string" || !/^https:\/\/[^\s]+$/.test(checkout_url)) {
+      console.error("InfinitePay returned no valid link:", JSON.stringify(data));
+      return new Response(
+        JSON.stringify({
+          error: "O provedor de pagamento não retornou um link válido. Tente novamente em instantes.",
+          code: "invalid_checkout_url",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 }
+      );
+    }
+
+    // Validate the link actually resolves (an invalid merchant handle still
+    // returns 200 from the API but the checkout page does not exist).
+    try {
+      const probe = await fetch(checkout_url, { method: "GET", redirect: "follow" });
+      const html = (await probe.text()).slice(0, 4000);
+      const notFound =
+        probe.status === 404 ||
+        /página não encontrada|pagina nao encontrada|page not found|not_found/i.test(html);
+      if (!probe.ok || notFound) {
+        console.error("InfinitePay checkout link invalid", {
+          status: probe.status,
+          handle: INFINITEPAY_HANDLE,
+          preview: html.slice(0, 300),
+        });
+        return new Response(
+          JSON.stringify({
+            error:
+              "O link de pagamento gerado é inválido (identificador da loja InfinitePay não reconhecido). Verifique a configuração do handle antes de tentar novamente.",
+            code: "invalid_merchant_handle",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 }
+        );
+      }
+    } catch (probeErr) {
+      console.warn("Checkout link probe failed (continuing):", probeErr);
+    }
+
     await supabase.from("orders").update({
       status: "pending_payment",
     }).eq("id", order_id);
@@ -139,6 +177,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ checkout_url, raw: data }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
+
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("Checkout error:", msg);
