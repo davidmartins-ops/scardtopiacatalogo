@@ -368,7 +368,7 @@ const ItemGrid = ({
           ] as const).map((opt) => {
             const count = opt.v === "all"
               ? (items ?? []).length
-              : (items ?? []).filter((i) => ((i as any).availability ?? "pronta_entrega") === opt.v).length;
+              : (items ?? []).filter((i) => i.quantity > 0 && ((i as any).availability ?? "pronta_entrega") === opt.v).length;
             const active = availabilityFilter === opt.v;
             return (
               <button
