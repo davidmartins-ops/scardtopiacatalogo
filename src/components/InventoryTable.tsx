@@ -779,7 +779,9 @@ const InventoryTable = ({ data }: Props) => {
                             ) : (
                               <span className="text-muted-foreground text-[10px]">—</span>
                             )}
-                            {((item as any).availability ?? "pronta_entrega") === "encomenda" ? (
+                            {item.quantity <= 0 ? (
+                              <Badge variant="outline" className="text-[9px] border-muted-foreground/40 text-muted-foreground bg-muted/30 whitespace-nowrap">Indisponível</Badge>
+                            ) : ((item as any).availability ?? "pronta_entrega") === "encomenda" ? (
                               <Badge variant="outline" className="text-[9px] border-amber-500/40 text-amber-600 bg-amber-500/10 whitespace-nowrap">Encomenda</Badge>
                             ) : (
                               <Badge variant="outline" className="text-[9px] border-emerald-500/40 text-emerald-600 bg-emerald-500/10 whitespace-nowrap">Pronta Entrega</Badge>
