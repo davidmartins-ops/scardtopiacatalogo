@@ -25,6 +25,9 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = false
   [functions.infinitepay-webhook]
     verify_jwt = false
+  [functions.poll-pending-payments]
+    verify_jwt = false
+
 
   [functions.check-order-sla]
     verify_jwt = false
