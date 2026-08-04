@@ -359,13 +359,22 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         const { data: checkoutData, error: fnErr } = await supabase.functions.invoke("create-checkout", {
           body: { order_id: orderRow.id },
         });
-        if (fnErr || !checkoutData?.checkout_url) {
-          setOrderError(fnErr?.message ?? "Falha ao gerar link de pagamento.");
+        const checkoutUrl = typeof checkoutData?.checkout_url === "string" ? checkoutData.checkout_url : null;
+        if (fnErr || checkoutData?.error || !checkoutUrl || !/^https:\/\//.test(checkoutUrl)) {
+          const code = checkoutData?.code as string | undefined;
+          const msg =
+            code === "invalid_merchant_handle"
+              ? "O link de pagamento não pôde ser aberto: a configuração da loja no InfinitePay está inválida. Seu pedido foi registrado — finalize pelo PIX ou WhatsApp e avise-nos."
+              : (checkoutData?.error as string | undefined) ??
+                fnErr?.message ??
+                "Não foi possível gerar um link de pagamento válido. Tente novamente em instantes.";
+          setOrderError(msg);
           return;
         }
         setConfirmOrderOpen(false);
-        window.location.href = checkoutData.checkout_url as string;
+        window.location.href = checkoutUrl;
         return;
+
       }
 
       if (onOrderPlaced) {

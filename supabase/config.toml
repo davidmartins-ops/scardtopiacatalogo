@@ -23,6 +23,9 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = true
   [functions.confirm-payment]
     verify_jwt = false
+  [functions.infinitepay-webhook]
+    verify_jwt = false
+
   [functions.check-order-sla]
     verify_jwt = false
   [functions.share-product]
