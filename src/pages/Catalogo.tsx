@@ -201,7 +201,7 @@ const ItemGrid = ({
       const matchesFoil = foilFilter === "all" || item.description === foilFilter;
       const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
       const matchesStatus = statusFilter === "all" || (item.status ?? "none") === statusFilter;
-      const matchesAvailability = availabilityFilter === "all" || ((item as any).availability ?? "pronta_entrega") === availabilityFilter;
+      const matchesAvailability = availabilityFilter === "all" || (item.quantity > 0 && ((item as any).availability ?? "pronta_entrega") === availabilityFilter);
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
         const profile = manaProfiles[item.id];
         if (!profile) return false;
