@@ -198,7 +198,9 @@ const AdminReconciliation = () => {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link>
           </Button>
-          <img src={logo} alt="Logo" className="h-8 w-auto" />
+          <Link to="/admin" aria-label="Voltar ao painel">
+            <img src={logo} alt="Logo" className="h-8 w-auto" />
+          </Link>
           <h1 className="font-display text-lg sm:text-xl">Reconciliação financeira</h1>
         </div>
       </header>

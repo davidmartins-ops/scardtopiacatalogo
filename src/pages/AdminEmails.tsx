@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2, RefreshCw, Mail, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import useSEO from "@/hooks/use-seo";
+import logo from "@/assets/logo.png";
+
 
 type TemplateMeta = { name: string; displayName: string; hasPreviewData: boolean; subject: string };
 type LogRow = {
@@ -103,8 +105,11 @@ const AdminEmails = () => {
   return (
     <div className="min-h-screen bg-background font-body">
       <div className="border-b bg-card sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-2">
+        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild><Link to="/admin"><ArrowLeft className="h-4 w-4 mr-1" />Admin</Link></Button>
+          <Link to="/admin" aria-label="Voltar ao painel">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-8 w-auto" />
+          </Link>
           <h1 className="font-display text-xl">E-mails transacionais</h1>
         </div>
       </div>
