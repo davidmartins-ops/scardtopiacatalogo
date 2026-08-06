@@ -53,6 +53,9 @@ const AdminNotifications = () => {
           <Button variant="ghost" size="icon" asChild aria-label="Voltar">
             <Link to="/admin"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
+          <Link to="/admin" aria-label="Voltar ao painel">
+            <img src={logo} alt="Spencer's Cardtopia" className="h-8 w-auto" />
+          </Link>
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-lg sm:text-xl flex items-center gap-2">
               <Bell className="h-5 w-5" /> Notificações
