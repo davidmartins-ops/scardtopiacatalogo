@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2, RefreshCw, Mail, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import useSEO from "@/hooks/use-seo";
+import logo from "@/assets/logo.png";
+
 
 type TemplateMeta = { name: string; displayName: string; hasPreviewData: boolean; subject: string };
 type LogRow = {
