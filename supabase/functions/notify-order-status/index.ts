@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
   const admin = createClient(supabaseUrl, serviceKey)
 
-  // Authenticate caller: must be an admin
+  // Authenticate caller: must be an admin (or the service role, for backend flows)
   const authHeader = req.headers.get('Authorization') ?? ''
   if (!authHeader.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -23,25 +23,72 @@ Deno.serve(async (req) => {
     })
   }
   const token = authHeader.slice('Bearer '.length)
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  })
-  const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token)
-  if (claimsErr || !claimsData?.claims?.sub) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  const isServiceRole = token === serviceKey
+  if (!isServiceRole) {
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
     })
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token)
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const { data: roleRow } = await admin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', claimsData.claims.sub)
+      .eq('role', 'admin')
+      .maybeSingle()
+    if (!roleRow) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
   }
-  const { data: roleRow } = await admin
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', claimsData.claims.sub)
-    .eq('role', 'admin')
-    .maybeSingle()
-  if (!roleRow) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), {
-      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+
+  // Sends the "order paid" alert to every admin. Never throws.
+  const notifyAdmins = async (order: any) => {
+    try {
+      const { data: roleRows } = await admin
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin')
+      const ids = Array.from(new Set((roleRows ?? []).map((r: any) => r.user_id)))
+      const info = (order.customer_info ?? {}) as Record<string, any>
+      const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items
+      const address = (info.address ?? {}) as Record<string, any>
+      const templateData = {
+        orderId: order.id,
+        customerName: info.name ?? info.full_name ?? 'Cliente',
+        customerEmail: info.email ?? null,
+        customerPhone: info.phone ?? null,
+        paymentMethod: order.payment_method,
+        total: Number(order.total ?? 0),
+        creditsApplied: Number(order.credits_applied ?? 0),
+        city: address.city ?? info.city ?? null,
+        state: address.state ?? info.state ?? null,
+        items,
+      }
+      for (const id of ids) {
+        const { data: u } = await admin.auth.admin.getUserById(id as string)
+        const adminEmail = u?.user?.email
+        if (!adminEmail) continue
+        const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+          body: JSON.stringify({
+            templateName: 'admin-order-paid',
+            recipientEmail: adminEmail,
+            idempotencyKey: `admin-order-paid-${order.id}-${adminEmail}`,
+            templateData,
+          }),
+        })
+        if (!res.ok) console.error('admin-order-paid failed', adminEmail, res.status, await res.text())
+      }
+    } catch (e) {
+      console.error('notifyAdmins failed', e)
+    }
   }
 
   try {
@@ -54,7 +101,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await admin
       .from('orders')
-      .select('id, user_id, status, items, total')
+      .select('id, user_id, status, items, total, customer_info, payment_method, credits_applied')
       .eq('id', orderId)
       .maybeSingle()
 
@@ -64,12 +111,17 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (status === 'payment_confirmed') {
+      await notifyAdmins(order)
+    }
+
     if (!order.user_id) {
-      // Visitor order — no email available
+      // Visitor order — no customer email available
       return new Response(JSON.stringify({ skipped: 'guest_order' }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
 
     // Email preferences: skip if the customer opted out of order updates
     const { data: profile } = await admin
