@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Coins, Loader2, Search, Plus, Minus, History } from "lucide-react";
 import { toast } from "sonner";
 import useSEO from "@/hooks/use-seo";
+import logo from "@/assets/logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
