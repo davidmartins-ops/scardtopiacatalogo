@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 const typeMeta: Record<AdminNotificationType, { label: string; icon: typeof Bell; color: string }> = {
   new_order: { label: "Pedido", icon: ShoppingBag, color: "text-primary" },
