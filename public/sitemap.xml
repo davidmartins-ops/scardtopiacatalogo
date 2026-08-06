@@ -476,11 +476,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/single/TMT166FNM</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/single/UNF486ENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -717,6 +712,11 @@
   </url>
   <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/single/A257ENNFNM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/single/SOS71ENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1902,11 +1902,6 @@
   </url>
   <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/single/SOS340ENNFNM</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/single/SOC90ENNFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
