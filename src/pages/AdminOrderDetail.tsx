@@ -181,7 +181,7 @@ const AdminOrderDetail = () => {
           <Button variant="ghost" size="sm" asChild className="gap-1">
             <Link to="/admin"><ArrowLeft className="h-4 w-4" /> Painel</Link>
           </Button>
-          <Link to="/"><img src={logo} alt="Spencer's Cardtopia" className="h-9" /></Link>
+          <Link to="/admin"><img src={logo} alt="Spencer's Cardtopia" className="h-9" /></Link>
           <div className="w-20" />
         </div>
       </header>
