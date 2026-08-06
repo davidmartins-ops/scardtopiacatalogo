@@ -43,4 +43,7 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = false
   [functions.admin-store-credit]
     verify_jwt = true
+  [functions.daily-cash-closure-reminder]
+    verify_jwt = false
+
 
