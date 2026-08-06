@@ -134,6 +134,9 @@ const AdminStoreCredits = () => {
             <Button variant="ghost" size="sm" asChild>
               <Link to="/admin"><ArrowLeft className="h-4 w-4 mr-1" /> Painel</Link>
             </Button>
+            <Link to="/admin" aria-label="Voltar ao painel">
+              <img src={logo} alt="Spencer's Cardtopia" className="h-8 w-auto" />
+            </Link>
             <h1 className="font-display text-2xl font-semibold flex items-center gap-2">
               <Coins className="h-6 w-6 text-primary" /> Créditos do site
             </h1>
