@@ -622,8 +622,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                     Usar meus créditos ({`R$ ${creditBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} disponível)
                   </p>
                   <p className="text-muted-foreground mt-0.5">
-                    Aplicamos automaticamente até o valor total do pedido (incluindo frete).
+                    Aplicamos automaticamente até o valor total do pedido (incluindo frete). Em
+                    drops, os créditos cobrem no máximo 50% do valor dos drops.
                   </p>
+
                 </div>
               </label>
             )}
