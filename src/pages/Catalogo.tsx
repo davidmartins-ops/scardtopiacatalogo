@@ -740,7 +740,7 @@ const Catalogo = () => {
       } as never).select("id").single();
       if (orderErr) {
         console.error("[CHECKOUT] Falha ao inserir pedido:", orderErr);
-        toast.error(`Erro ao salvar pedido: ${orderErr.message}`);
+        toast.error(friendlyOrderError(orderErr, "Erro ao salvar pedido. Tente novamente."), { duration: 8000 });
         throw orderErr;
       }
       console.info("[CHECKOUT] Pedido criado", { orderId: (orderRow as any)?.id, isPix, total });
