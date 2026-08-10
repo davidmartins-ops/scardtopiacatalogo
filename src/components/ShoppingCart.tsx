@@ -215,12 +215,27 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return 0;
   };
 
-  // Credit to apply: min(balance, total for channel + freight). 0 if opt-out or no balance.
+  // Subtotal de drops no canal selecionado (créditos limitados a 50% desse valor).
+  const dropSubtotalFor = (channel: "whatsapp" | "pix" | "card" | null) =>
+    items.reduce((s, ci) => {
+      if ((ci.item.product_type ?? "drop") !== "drop") return s;
+      if (channel === "pix") {
+        const discount = ci.item.discount ?? 0;
+        const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+        return s + base * (1 - discount / 100) * ci.qty;
+      }
+      return s + ci.item.price * ci.qty;
+    }, 0);
+
+  // Credit to apply: min(balance, allowed). Drops aceitam no máximo 50% em créditos.
   const creditsToApplyFor = (channel: "whatsapp" | "pix" | "card" | null) => {
     if (!useCredits || creditBalance <= 0) return 0;
     const gross = amountForChannel(channel) + getFreightValue();
-    return Math.max(0, Math.min(creditBalance, gross));
+    const dropSubtotal = dropSubtotalFor(channel);
+    const allowed = gross - dropSubtotal * 0.5;
+    return Math.max(0, Math.min(creditBalance, allowed));
   };
+
 
   const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
     const isPix = channel === "pix";
