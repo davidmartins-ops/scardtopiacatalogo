@@ -89,7 +89,27 @@ Deno.serve(async (req) => {
     }));
 
     const grossCents = rawItems.reduce((s, it) => s + it.price * it.quantity, 0);
-    const creditsCents = Math.round((Number(order.credits_applied) || 0) * 100);
+
+    // Regra de créditos: em drops, os créditos cobrem no máximo 50% do valor dos drops.
+    const itemIds = items.map((i: any) => String(i.id)).filter(Boolean);
+    const { data: invRows } = itemIds.length
+      ? await supabase.from("inventory").select("id, product_type").in("id", itemIds)
+      : { data: [] as { id: string; product_type: string | null }[] };
+    const typeById = new Map((invRows ?? []).map((r: any) => [r.id, r.product_type ?? "drop"]));
+    const dropCents = items.reduce((s: number, i: any) => {
+      const type = typeById.get(String(i.id)) ?? "drop";
+      if (type !== "drop") return s;
+      return s + Math.round((Number(i.unit_price) || 0) * 100) * (Number(i.quantity) || 1);
+    }, 0);
+    const maxCreditsCents = Math.max(0, grossCents - Math.round(dropCents * 0.5));
+
+    const requestedCreditsCents = Math.round((Number(order.credits_applied) || 0) * 100);
+    const creditsCents = Math.min(requestedCreditsCents, maxCreditsCents);
+    if (requestedCreditsCents > creditsCents) {
+      console.warn("Credits capped by drop 50% rule", {
+        order_id, requestedCreditsCents, maxCreditsCents, dropCents,
+      });
+    }
     const netCents = Math.max(0, grossCents - creditsCents);
 
     // When credits are applied, collapse to a single consolidated line so the
@@ -97,6 +117,7 @@ Deno.serve(async (req) => {
     const itemsPayload = creditsCents > 0
       ? [{ description: `Pedido ${order_id.slice(0, 8)} (créditos aplicados)`, quantity: 1, price: netCents }]
       : rawItems;
+
 
     if (!Number.isFinite(netCents) || netCents <= 0) {
       return new Response(JSON.stringify({ error: "Invalid order total" }), {
