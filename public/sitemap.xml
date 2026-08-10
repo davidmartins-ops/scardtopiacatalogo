@@ -161,12 +161,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD01ENFNM</loc>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLDTNT01</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLDTNT01</loc>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD01ENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -108,8 +108,36 @@ const sections: Section[] = [
         aText:
           "PIX: confirmação imediata após o envio do comprovante. Cartão de crédito: aprovação em poucos minutos. Boleto: compensação em até 2 dias úteis.",
       },
+      {
+        q: "Como funcionam os créditos da loja?",
+        a: (
+          <div className="space-y-3">
+            <p>
+              Se você tiver créditos disponíveis, pode aplicá-los ao finalizar o pedido — eles
+              abatem o valor dos itens e também do frete.
+            </p>
+            <div
+              role="note"
+              className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground"
+            >
+              <AlertTriangle
+                className="h-4 w-4 mt-0.5 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
+              <p>
+                <strong>Limite em drops:</strong> nos drops, os créditos cobrem no máximo{" "}
+                <strong>50% do valor dos drops</strong> do pedido. O restante deve ser pago
+                normalmente (PIX, cartão ou boleto).
+              </p>
+            </div>
+          </div>
+        ),
+        aText:
+          "Se você tiver créditos disponíveis, pode aplicá-los ao finalizar o pedido, abatendo itens e frete. Nos drops, os créditos cobrem no máximo 50% do valor dos drops do pedido; o restante deve ser pago normalmente por PIX, cartão ou boleto.",
+      },
     ],
   },
+
   {
     id: "pedidos-envio",
     title: "Pedidos e Envio",
