@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useMyStoreCredit } from "@/hooks/use-store-credits";
+import { friendlyOrderError } from "@/lib/order-errors";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coins } from "lucide-react";
 
