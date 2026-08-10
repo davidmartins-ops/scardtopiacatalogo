@@ -60,6 +60,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 import SetCombobox from "@/components/SetCombobox";
 import useSEO from "@/hooks/use-seo";
+import { friendlyOrderError } from "@/lib/order-errors";
+
 
 const MTG_COLORS = [
   { value: "W", label: "Branco", className: "bg-amber-50 text-amber-800 border-amber-300" },
@@ -738,7 +740,7 @@ const Catalogo = () => {
       } as never).select("id").single();
       if (orderErr) {
         console.error("[CHECKOUT] Falha ao inserir pedido:", orderErr);
-        toast.error(`Erro ao salvar pedido: ${orderErr.message}`);
+        toast.error(friendlyOrderError(orderErr, "Erro ao salvar pedido. Tente novamente."), { duration: 8000 });
         throw orderErr;
       }
       console.info("[CHECKOUT] Pedido criado", { orderId: (orderRow as any)?.id, isPix, total });

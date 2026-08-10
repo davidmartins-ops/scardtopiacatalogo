@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useMyStoreCredit } from "@/hooks/use-store-credits";
+import { friendlyOrderError } from "@/lib/order-errors";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coins } from "lucide-react";
 
@@ -368,9 +370,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           .select("id")
           .single();
         if (orderErr || !orderRow) {
-          setOrderError(orderErr?.message ?? "Falha ao criar pedido.");
+          setOrderError(friendlyOrderError(orderErr, "Falha ao criar pedido."));
           return;
         }
+
         const { data: checkoutData, error: fnErr } = await supabase.functions.invoke("create-checkout", {
           body: { order_id: orderRow.id },
         });
@@ -407,7 +410,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       const msg = buildMessage("whatsapp");
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
-      setOrderError(err?.message ?? "Erro inesperado ao registrar pedido. Tente novamente.");
+      setOrderError(friendlyOrderError(err));
+
     } finally {
       setSubmittingOrder(false);
     }
