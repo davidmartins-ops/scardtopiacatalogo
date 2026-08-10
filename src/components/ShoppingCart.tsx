@@ -368,9 +368,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           .select("id")
           .single();
         if (orderErr || !orderRow) {
-          setOrderError(orderErr?.message ?? "Falha ao criar pedido.");
+          setOrderError(friendlyOrderError(orderErr, "Falha ao criar pedido."));
           return;
         }
+
         const { data: checkoutData, error: fnErr } = await supabase.functions.invoke("create-checkout", {
           body: { order_id: orderRow.id },
         });
