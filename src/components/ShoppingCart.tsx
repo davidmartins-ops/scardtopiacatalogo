@@ -410,7 +410,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       const msg = buildMessage("whatsapp");
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
-      setOrderError(err?.message ?? "Erro inesperado ao registrar pedido. Tente novamente.");
+      setOrderError(friendlyOrderError(err));
+
     } finally {
       setSubmittingOrder(false);
     }
