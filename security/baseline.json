@@ -1,0 +1,5 @@
+{
+  "$comment": "Accepted (known) HIGH/CRITICAL dependency findings. CI blocks deployment on anything not listed here. Regenerate with: node scripts/security-gate.mjs --update",
+  "updated_at": "2026-08-10T21:00:00.000Z",
+  "accepted": []
+}
