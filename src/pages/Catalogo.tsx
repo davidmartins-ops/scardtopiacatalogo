@@ -52,6 +52,9 @@ import ShoppingCart, { type CartItem } from "@/components/ShoppingCart";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { useIsAdmin } from "@/hooks/use-is-admin";
+import { Shield } from "lucide-react";
+
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { type OrderItem } from "@/hooks/use-orders";
@@ -607,6 +610,8 @@ const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user, profile, signOut } = useCustomerAuth();
+  const { isAdmin } = useIsAdmin();
+
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
   const queryClient = useQueryClient();
@@ -857,8 +862,16 @@ const Catalogo = () => {
                 <span className="hidden sm:inline">Tendências</span>
               </Button>
             </Link>
+            {isAdmin && (
+              <Link to="/admin">
+                <Button size="sm" variant="outline" className="gap-1.5 bg-transparent border-brand-gold/60 text-brand-gold hover:bg-brand-gold hover:text-brand-gold-foreground hover:border-brand-gold transition-colors duration-200">
+                  <Shield className="h-4 w-4" /><span className="hidden sm:inline">Gerenciamento</span>
+                </Button>
+              </Link>
+            )}
             {user ? (
               <>
+
                 <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><Heart className="h-4 w-4" /><span className="hidden sm:inline">Favoritos</span></Button></Link>
                 <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><Layers className="h-4 w-4" /><span className="hidden sm:inline">Decks</span></Button></Link>
                 <Link to="/conta"><Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Coleções</span></Button></Link>
