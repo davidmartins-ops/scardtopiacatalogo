@@ -52,6 +52,9 @@ import ShoppingCart, { type CartItem } from "@/components/ShoppingCart";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
+import { useIsAdmin } from "@/hooks/use-is-admin";
+import { Shield } from "lucide-react";
+
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { type OrderItem } from "@/hooks/use-orders";
