@@ -607,6 +607,8 @@ const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user, profile, signOut } = useCustomerAuth();
+  const { isAdmin } = useIsAdmin();
+
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
   const queryClient = useQueryClient();
