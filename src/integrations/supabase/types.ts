@@ -1361,6 +1361,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      log_admin_access_attempt: {
+        Args: { _granted: boolean; _metadata?: Json; _path: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
