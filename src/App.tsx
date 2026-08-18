@@ -40,6 +40,7 @@ import OAuthConsent from "./pages/OAuthConsent.tsx";
 import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import AdminRoute from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -92,14 +93,14 @@ const App = () => (
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/admin" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/admin/relatorios" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-            <Route path="/admin/notificacoes" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
-            <Route path="/admin/reconciliacao" element={<ProtectedRoute><AdminReconciliation /></ProtectedRoute>} />
-            <Route path="/admin/reembolsos" element={<ProtectedRoute><AdminRefunds /></ProtectedRoute>} />
-            <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
-            <Route path="/admin/pedidos/:orderId" element={<ProtectedRoute><AdminOrderDetail /></ProtectedRoute>} />
-            <Route path="/admin/creditos" element={<ProtectedRoute><AdminStoreCredits /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><Index /></AdminRoute>} />
+            <Route path="/admin/relatorios" element={<AdminRoute><AdminReports /></AdminRoute>} />
+            <Route path="/admin/notificacoes" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+            <Route path="/admin/reconciliacao" element={<AdminRoute><AdminReconciliation /></AdminRoute>} />
+            <Route path="/admin/reembolsos" element={<AdminRoute><AdminRefunds /></AdminRoute>} />
+            <Route path="/admin/emails" element={<AdminRoute><AdminEmails /></AdminRoute>} />
+            <Route path="/admin/pedidos/:orderId" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
+            <Route path="/admin/creditos" element={<AdminRoute><AdminStoreCredits /></AdminRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
