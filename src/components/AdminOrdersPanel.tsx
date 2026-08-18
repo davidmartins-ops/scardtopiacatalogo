@@ -7,6 +7,7 @@ import {
   SHIPPING_LABEL_STATUS_META,
   type ShippingLabelStatus,
   useCalculateShipping,
+  useCancelShippingLabel,
   type ShippingOption,
 } from "@/hooks/use-shipping-label";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, UserCircle2, MapPin, Copy, ChevronDown, RefreshCw, History, Send } from "lucide-react";
+import { User, UserCircle2, MapPin, Copy, ChevronDown, RefreshCw, History, Send, Undo2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditCard, Clock, Wrench, Pencil, Download, Calendar, Printer } from "lucide-react";
@@ -50,6 +51,29 @@ const AdminOrdersPanel = () => {
   const { orders, isLoading, updateStatus, removeOrder } = useAdminOrders();
   const qc = useQueryClient();
   const syncShipping = useSyncShippingStatus();
+  const cancelLabel = useCancelShippingLabel();
+  const [revertLabelId, setRevertLabelId] = useState<string | null>(null);
+
+  const revertLabel = async (orderId: string, force: boolean) => {
+    toast.loading("Revertendo etiqueta…", { id: `revert-${orderId}` });
+    try {
+      const res = await cancelLabel.mutateAsync({ orderId, reason: "Etiqueta gerada incorretamente", force });
+      toast.success(
+        res.providerCanceled
+          ? "Etiqueta cancelada na SuperFrete. Pode emitir uma nova."
+          : "Etiqueta revertida no pedido. Pode emitir uma nova.",
+        { id: `revert-${orderId}` },
+      );
+      await logAdminAction("shipping_label_revert", "order", orderId, { force, providerCanceled: res.providerCanceled });
+      setRevertLabelId(null);
+    } catch (e) {
+      const err = e as Error & { canForce?: boolean };
+      toast.error(err.message || "Falha ao reverter etiqueta", {
+        id: `revert-${orderId}`,
+        description: err.canForce ? 'Use "Reverter apenas no pedido".' : undefined,
+      });
+    }
+  };
   
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -710,6 +734,17 @@ const AdminOrdersPanel = () => {
                       <RefreshCw className="h-3 w-3" /> Sincronizar
                     </Button>
                   )}
+                  {(hasLabel || order.tracking_code) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 gap-1 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                      disabled={cancelLabel.isPending}
+                      onClick={() => setRevertLabelId(order.id)}
+                    >
+                      <Undo2 className="h-3 w-3" /> Reverter etiqueta
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => setHistoryOrderId(order.id)}>
                     <History className="h-3 w-3" /> Histórico
                   </Button>
@@ -763,6 +798,37 @@ const AdminOrdersPanel = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!revertLabelId} onOpenChange={(open) => !open && setRevertLabelId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reverter etiqueta gerada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tentaremos cancelar a etiqueta na SuperFrete e limparemos o rastreio, o arquivo da
+              etiqueta e o ID SuperFrete deste pedido, liberando a emissão de uma nova. Se a
+              SuperFrete recusar (etiqueta já postada/coletada), use "Reverter apenas no pedido".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <Button
+              variant="outline"
+              disabled={cancelLabel.isPending}
+              onClick={() => revertLabelId && revertLabel(revertLabelId, true)}
+            >
+              Reverter apenas no pedido
+            </Button>
+            <Button
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={cancelLabel.isPending}
+              onClick={() => revertLabelId && revertLabel(revertLabelId, false)}
+            >
+              {cancelLabel.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+              Cancelar na SuperFrete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="bg-card border-border">
