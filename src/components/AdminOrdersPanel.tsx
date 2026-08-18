@@ -25,6 +25,7 @@ import { Loader2, Package, Search, Truck, CheckCircle2, XCircle, Trash2, CreditC
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { logAdminAction } from "@/lib/admin-audit";
 
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string; icon: typeof Package; className: string }[] = [
@@ -144,6 +145,10 @@ const AdminOrdersPanel = () => {
         tracking_code: editTracking.trim() || null,
         note: editNote.trim() || undefined,
       });
+      await logAdminAction("order_status_change", "order", editingOrderId, {
+        status: editStatus,
+        tracking_code: editTracking.trim() || null,
+      });
       toast.success("Pedido atualizado! Email enviado ao cliente.");
       setEditingOrderId(null);
     } catch {
@@ -155,6 +160,7 @@ const AdminOrdersPanel = () => {
     if (!deleteId) return;
     try {
       await removeOrder.mutateAsync(deleteId);
+      await logAdminAction("order_delete", "order", deleteId, {});
       toast.success("Pedido removido!");
     } catch {
       toast.error("Erro ao remover pedido.");
