@@ -361,6 +361,46 @@ const AdminOrderDetail = () => {
                 </Button>
               </a>
             )}
+            {(superfreteId || order.tracking_code || labelUrl) && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={cancelLabel.isPending}
+                    className="gap-1 text-destructive border-destructive/40 hover:bg-destructive/10"
+                  >
+                    {cancelLabel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
+                    Reverter etiqueta
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reverter etiqueta do pedido #{shortId}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tentaremos cancelar a etiqueta na SuperFrete e limparemos o rastreio e o arquivo
+                      da etiqueta deste pedido, liberando a emissão de uma nova. Se a SuperFrete recusar
+                      o cancelamento (etiqueta já postada), use "Reverter apenas no pedido".
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => revertLabel(true)}
+                      className="bg-muted text-foreground hover:bg-muted/70"
+                    >
+                      Reverter apenas no pedido
+                    </AlertDialogAction>
+                    <AlertDialogAction
+                      onClick={() => revertLabel(false)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Cancelar na SuperFrete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
           {events.length > 0 && (
             <div className="mt-4">
