@@ -53,7 +53,6 @@ import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import AdminPanelButton from "@/components/AdminPanelButton";
-import { Shield } from "lucide-react";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
