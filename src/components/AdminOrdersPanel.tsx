@@ -734,6 +734,17 @@ const AdminOrdersPanel = () => {
                       <RefreshCw className="h-3 w-3" /> Sincronizar
                     </Button>
                   )}
+                  {(hasLabel || order.tracking_code) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 gap-1 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                      disabled={cancelLabel.isPending}
+                      onClick={() => setRevertLabelId(order.id)}
+                    >
+                      <Undo2 className="h-3 w-3" /> Reverter etiqueta
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-xs" onClick={() => setHistoryOrderId(order.id)}>
                     <History className="h-3 w-3" /> Histórico
                   </Button>
