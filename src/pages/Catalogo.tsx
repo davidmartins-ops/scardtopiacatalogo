@@ -52,8 +52,7 @@ import ShoppingCart, { type CartItem } from "@/components/ShoppingCart";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
-import { Shield } from "lucide-react";
+import AdminPanelButton from "@/components/AdminPanelButton";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
@@ -610,7 +609,6 @@ const Catalogo = () => {
   const { data: inventoryData = [], isLoading, error } = useInventory();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user, profile, signOut } = useCustomerAuth();
-  const { isAdmin } = useIsAdmin();
 
   const { isFavorite, toggleFavorite } = useFavorites();
   const { savedItems, isLoading: savedCartLoading, syncCart } = useSavedCart();
@@ -862,13 +860,7 @@ const Catalogo = () => {
                 <span className="hidden sm:inline">Tendências</span>
               </Button>
             </Link>
-            {isAdmin && (
-              <Link to="/admin">
-                <Button size="sm" variant="outline" className="gap-1.5 bg-transparent border-brand-gold/60 text-brand-gold hover:bg-brand-gold hover:text-brand-gold-foreground hover:border-brand-gold transition-colors duration-200">
-                  <Shield className="h-4 w-4" /><span className="hidden sm:inline">Gerenciamento</span>
-                </Button>
-              </Link>
-            )}
+            <AdminPanelButton />
             {user ? (
               <>
 
