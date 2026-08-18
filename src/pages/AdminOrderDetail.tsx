@@ -45,6 +45,7 @@ import {
   Trash2,
   Save,
   Package,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
