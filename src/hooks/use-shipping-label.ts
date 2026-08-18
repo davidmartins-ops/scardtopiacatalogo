@@ -91,6 +91,38 @@ export const useCalculateShipping = () => {
   });
 };
 
+export const useCancelShippingLabel = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ orderId, reason, force = false }: { orderId: string; reason?: string; force?: boolean }) => {
+      const { data, error } = await supabase.functions.invoke("superfrete-cancel-label", {
+        body: { orderId, reason, force },
+      });
+      if (error) {
+        const ctx = (error as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const payload = await ctx.json();
+            const err = new Error(payload.error ?? error.message) as Error & { canForce?: boolean };
+            err.canForce = Boolean(payload.canForce);
+            throw err;
+          } catch (parsed) {
+            if (parsed instanceof Error && parsed.message) throw parsed;
+          }
+        }
+        throw error;
+      }
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      return data as { success: boolean; providerCanceled: boolean; forced: boolean };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+      qc.invalidateQueries({ queryKey: ["shipping-label-events"] });
+      qc.invalidateQueries({ queryKey: ["order-detail"] });
+    },
+  });
+};
+
 export const useGenerateShippingLabel = () => {
   const qc = useQueryClient();
   return useMutation({
