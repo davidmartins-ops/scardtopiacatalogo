@@ -78,6 +78,9 @@ const AdminOrderDetail = () => {
   const [status, setStatus] = useState<OrderStatus | "">("");
   const [tracking, setTracking] = useState<string>("");
   const [note, setNote] = useState<string>("");
+  const [revertOpen, setRevertOpen] = useState(false);
+  const [revertReason, setRevertReason] = useState("Etiqueta gerada incorretamente");
+  const [justReverted, setJustReverted] = useState(false);
 
   // Initialize form defaults when order loads
   useEffect(() => {
@@ -156,10 +159,11 @@ const AdminOrderDetail = () => {
   };
 
   const revertLabel = async (force: boolean) => {
+    if (cancelLabel.isPending) return;
     try {
       const res = await cancelLabel.mutateAsync({
         orderId: order.id,
-        reason: "Etiqueta gerada incorretamente",
+        reason: revertReason.trim() || "Etiqueta gerada incorretamente",
         force,
       });
       toast.success(
@@ -167,6 +171,9 @@ const AdminOrderDetail = () => {
           ? "Etiqueta cancelada na SuperFrete. Você já pode emitir uma nova."
           : "Etiqueta revertida no pedido. Você já pode emitir uma nova.",
       );
+      setRevertOpen(false);
+      setRevertReason("");
+      setJustReverted(true);
     } catch (e: unknown) {
       const err = e as Error & { canForce?: boolean };
       toast.error(err.message || "Falha ao reverter etiqueta.", {
