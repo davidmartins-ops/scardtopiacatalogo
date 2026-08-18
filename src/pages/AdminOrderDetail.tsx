@@ -372,7 +372,7 @@ const AdminOrderDetail = () => {
               </a>
             )}
             {(superfreteId || order.tracking_code || labelUrl) && (
-              <AlertDialog>
+              <AlertDialog open={revertOpen} onOpenChange={(open) => !cancelLabel.isPending && setRevertOpen(open)}>
                 <AlertDialogTrigger asChild>
                   <Button
                     size="sm"
@@ -393,25 +393,68 @@ const AdminOrderDetail = () => {
                       o cancelamento (etiqueta já postada), use "Reverter apenas no pedido".
                     </AlertDialogDescription>
                   </AlertDialogHeader>
+                  <div className="space-y-3 text-sm">
+                    <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-1 text-xs">
+                      <p><span className="text-muted-foreground">Pedido:</span> <span className="font-mono">#{shortId}</span></p>
+                      <p><span className="text-muted-foreground">Cliente:</span> {String(customer.name ?? "—")}</p>
+                      <p><span className="text-muted-foreground">Rastreio atual:</span> <span className="font-mono">{order.tracking_code ?? "—"}</span></p>
+                      <p><span className="text-muted-foreground">ID SuperFrete:</span> <span className="font-mono">{superfreteId ?? "—"}</span></p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="revert-reason">Motivo da reversão</Label>
+                      <Textarea
+                        id="revert-reason"
+                        rows={2}
+                        value={revertReason}
+                        disabled={cancelLabel.isPending}
+                        onChange={(e) => setRevertReason(e.target.value)}
+                        placeholder="Ex: endereço incorreto, serviço de envio errado"
+                      />
+                      <p className="text-[11px] text-muted-foreground">O motivo fica registrado no histórico da etiqueta.</p>
+                    </div>
+                  </div>
                   <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => revertLabel(true)}
-                      className="bg-muted text-foreground hover:bg-muted/70"
+                    <AlertDialogCancel disabled={cancelLabel.isPending}>Cancelar</AlertDialogCancel>
+                    <Button
+                      variant="outline"
+                      disabled={cancelLabel.isPending}
+                      onClick={(e) => { e.preventDefault(); revertLabel(true); }}
                     >
                       Reverter apenas no pedido
-                    </AlertDialogAction>
-                    <AlertDialogAction
-                      onClick={() => revertLabel(false)}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    </Button>
+                    <Button
+                      disabled={cancelLabel.isPending}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-1"
+                      onClick={(e) => { e.preventDefault(); revertLabel(false); }}
                     >
+                      {cancelLabel.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       Cancelar na SuperFrete
-                    </AlertDialogAction>
+                    </Button>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             )}
           </div>
+
+          {justReverted && (
+            <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm">
+                <p className="font-semibold text-primary">Etiqueta revertida</p>
+                <p className="text-xs text-muted-foreground">
+                  Confira os dados de envio e emita a nova etiqueta para este pedido.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={emitLabel} disabled={generateLabel.isPending} className="gap-1">
+                  {generateLabel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                  Emitir nova etiqueta
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setJustReverted(false)}>
+                  Depois
+                </Button>
+              </div>
+            </div>
+          )}
           {events.length > 0 && (
             <div className="mt-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Histórico da etiqueta</p>
