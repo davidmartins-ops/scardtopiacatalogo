@@ -6,6 +6,7 @@ import {
   useShippingLabelEvents,
   useSyncShippingStatus,
   useGenerateShippingLabel,
+  useCancelShippingLabel,
   SHIPPING_LABEL_STATUS_META,
   type ShippingLabelStatus,
 } from "@/hooks/use-shipping-label";
@@ -66,6 +67,7 @@ const AdminOrderDetail = () => {
   const { data: events = [] } = useShippingLabelEvents(orderId);
   const syncStatus = useSyncShippingStatus();
   const generateLabel = useGenerateShippingLabel();
+  const cancelLabel = useCancelShippingLabel();
 
   const order = data?.order;
   const history = data?.history ?? [];
@@ -149,6 +151,28 @@ const AdminOrderDetail = () => {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Falha ao emitir etiqueta.";
       toast.error(msg);
+    }
+  };
+
+  const revertLabel = async (force: boolean) => {
+    try {
+      const res = await cancelLabel.mutateAsync({
+        orderId: order.id,
+        reason: "Etiqueta gerada incorretamente",
+        force,
+      });
+      toast.success(
+        res.providerCanceled
+          ? "Etiqueta cancelada na SuperFrete. Você já pode emitir uma nova."
+          : "Etiqueta revertida no pedido. Você já pode emitir uma nova.",
+      );
+    } catch (e: unknown) {
+      const err = e as Error & { canForce?: boolean };
+      toast.error(err.message || "Falha ao reverter etiqueta.", {
+        description: err.canForce
+          ? "Use \"Reverter apenas no pedido\" para liberar a emissão de uma nova etiqueta."
+          : undefined,
+      });
     }
   };
 
