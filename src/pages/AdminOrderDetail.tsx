@@ -149,9 +149,11 @@ const AdminOrderDetail = () => {
   };
 
   const emitLabel = async () => {
+    if (generateLabel.isPending) return;
     try {
       const res = await generateLabel.mutateAsync({ orderId: order.id, checkout: true });
       toast.success(res.resent ? "Etiqueta reenviada." : "Etiqueta emitida.");
+      setJustReverted(false);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Falha ao emitir etiqueta.";
       toast.error(msg);
