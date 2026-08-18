@@ -799,6 +799,37 @@ const AdminOrdersPanel = () => {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog open={!!revertLabelId} onOpenChange={(open) => !open && setRevertLabelId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reverter etiqueta gerada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tentaremos cancelar a etiqueta na SuperFrete e limparemos o rastreio, o arquivo da
+              etiqueta e o ID SuperFrete deste pedido, liberando a emissão de uma nova. Se a
+              SuperFrete recusar (etiqueta já postada/coletada), use "Reverter apenas no pedido".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <Button
+              variant="outline"
+              disabled={cancelLabel.isPending}
+              onClick={() => revertLabelId && revertLabel(revertLabelId, true)}
+            >
+              Reverter apenas no pedido
+            </Button>
+            <Button
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={cancelLabel.isPending}
+              onClick={() => revertLabelId && revertLabel(revertLabelId, false)}
+            >
+              {cancelLabel.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+              Cancelar na SuperFrete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
