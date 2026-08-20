@@ -784,7 +784,7 @@ const Catalogo = () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       if (user) queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
       clearCart();
-      toast.success("Pedido registrado e estoque atualizado!");
+      toast.success("Pedido registrado! Ele será confirmado após a validação do pagamento.");
       return true;
     } catch (err) {
       console.error("Order error:", err);
