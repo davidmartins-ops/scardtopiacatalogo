@@ -6,6 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://www.spencerscardtopia.com.br";
+const INFINITEPAY_HANDLE = Deno.env.get("INFINITEPAY_HANDLE") ?? "spencers-cardtopia";
+
 const BodySchema = z.object({
   special_order_id: z.string().uuid(),
   payment_method: z.enum(["pix", "credit", "debit"]).default("pix"),
@@ -19,6 +22,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const INFINITEPAY_API_KEY = Deno.env.get("INFINITEPAY_API_KEY");
 
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -53,7 +57,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await admin
       .from("special_orders")
-      .select("id, user_id, status, total, customer_info, shipping_address")
+      .select("id, user_id, status, total, customer_info")
       .eq("id", special_order_id)
       .maybeSingle();
     if (orderErr || !order) {
@@ -77,60 +81,57 @@ Deno.serve(async (req) => {
       .select("name, quantity, unit_price")
       .eq("special_order_id", special_order_id);
     const items = (itemsRes.data ?? []).map((i: any) => ({
-      description: i.name,
-      quantity: Number(i.quantity),
-      price: Math.round(Number(i.unit_price) * 100),
+      description: String(i.name ?? "Item"),
+      quantity: Number(i.quantity) || 1,
+      price: Math.round((Number(i.unit_price) || 0) * 100),
     }));
 
     const totalCents = Math.round(Number(order.total) * 100);
-    const payload = {
-      description: `Encomenda especial ${special_order_id.slice(0, 8)}`,
-      amount: totalCents,
-      items,
-      customer: {
-        ...(order.customer_info ?? {}),
-        email: order.customer_info?.email ?? undefined,
-        phone: order.customer_info?.phone ?? undefined,
-      },
-      metadata: {
-        special_order_id,
-        payment_method,
-        source: "special_order",
-      },
-      // Default to free shipping unless configured otherwise; admin can add shipping cost later.
-      shipping: 0,
+    if (!Number.isFinite(totalCents) || totalCents <= 0) {
+      return new Response(JSON.stringify({ error: "Invalid order total" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const checkoutPayload = {
+      handle: INFINITEPAY_HANDLE,
+      order_nsu: special_order_id,
+      redirect_url: `${SITE_URL}/pedido/sucesso`,
+      items: items.length > 0 ? items : [{ description: `Encomenda ${special_order_id.slice(0, 8)}`, quantity: 1, price: totalCents }],
     };
 
-    const checkoutRes = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-      },
-      body: JSON.stringify({
-        special_order_id,
-        payment_method,
-        payload,
-      }),
-    });
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (INFINITEPAY_API_KEY) headers["Authorization"] = `Bearer ${INFINITEPAY_API_KEY}`;
 
-    if (!checkoutRes.ok) {
-      const text = await checkoutRes.text();
+    const response = await fetch("https://api.checkout.infinitepay.io/links", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(checkoutPayload),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("InfinitePay special order checkout error", response.status, JSON.stringify(data));
       return new Response(
-        JSON.stringify({ error: "Falha ao gerar pagamento", detail: text }),
+        JSON.stringify({ error: "Payment provider error. Please try again." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const checkoutData = await checkoutRes.json();
+    const checkout_url = data.url ?? data.checkout_url ?? data.link;
+    if (typeof checkout_url !== "string" || !/^https:\/\/[^\s]+$/.test(checkout_url)) {
+      return new Response(
+        JSON.stringify({ error: "O provedor de pagamento não retornou um link válido.", code: "invalid_checkout_url" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     await admin
       .from("special_orders")
-      .update({ payment_method, payment_transaction_id: checkoutData.transaction_id ?? null })
+      .update({ payment_method, payment_transaction_id: data.transaction_id ?? data.id ?? null, status: "pending_payment" })
       .eq("id", special_order_id);
 
     return new Response(
-      JSON.stringify({ success: true, checkout_url: checkoutData.url, transaction_id: checkoutData.transaction_id }),
+      JSON.stringify({ success: true, checkout_url, transaction_id: data.transaction_id ?? data.id ?? null }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
