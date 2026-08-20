@@ -1,7 +1,7 @@
 import useSEO from "@/hooks/use-seo";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell, Mail, Coins } from "lucide-react";
+import { Package, DollarSign, Layers, Sparkles, Loader2, LogOut, Search, BarChart3, Image as ImageIcon, Shield, ShoppingBag, ClipboardList, TrendingUp, Bell, Mail, Coins, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -141,6 +141,17 @@ const Index = () => {
                 </Badge>
               )}
             </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate("/admin/encomendas")}
+              className="glass-card hover:border-primary/40 hover:text-primary transition-all duration-300"
+              title="Encomendas especiais"
+              aria-label="Encomendas especiais"
+            >
+              <Truck className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">Encomendas</span>
+            </Button>
             <Button
               variant="outline"
               size="icon"

@@ -15,6 +15,11 @@ import SingleDetail from "./pages/SingleDetail.tsx";
 import CardVersions from "./pages/CardVersions.tsx";
 import CustomerLogin from "./pages/CustomerLogin.tsx";
 import CustomerDashboard from "./pages/CustomerDashboard.tsx";
+import CustomerSpecialOrders from "./pages/CustomerSpecialOrders.tsx";
+import CustomerSpecialOrderDetail from "./pages/CustomerSpecialOrderDetail.tsx";
+import SpecialOrderRequest from "./pages/SpecialOrderRequest.tsx";
+import AdminSpecialOrders from "./pages/AdminSpecialOrders.tsx";
+import AdminSpecialOrderDetail from "./pages/AdminSpecialOrderDetail.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
 import CollectionManager from "./pages/CollectionManager.tsx";
 import PublicCollection from "./pages/PublicCollection.tsx";
@@ -83,6 +88,8 @@ const App = () => (
             <Route path="/admin/emails" element={<AdminRoute><AdminEmails /></AdminRoute>} />
             <Route path="/admin/pedidos/:orderId" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
             <Route path="/admin/creditos" element={<AdminRoute><AdminStoreCredits /></AdminRoute>} />
+            <Route path="/admin/encomendas" element={<AdminRoute><AdminSpecialOrders /></AdminRoute>} />
+            <Route path="/admin/encomendas/:orderId" element={<AdminRoute><AdminSpecialOrderDetail /></AdminRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
@@ -92,6 +99,9 @@ const App = () => (
             <Route path="/catalogo/carta/:name" element={<CardVersions />} />
             <Route path="/conta/login" element={<CustomerLogin />} />
             <Route path="/conta" element={<CustomerDashboard />} />
+            <Route path="/conta/encomendas" element={<CustomerSpecialOrders />} />
+            <Route path="/conta/encomendas/nova" element={<SpecialOrderRequest />} />
+            <Route path="/conta/encomendas/:orderId" element={<CustomerSpecialOrderDetail />} />
             <Route path="/conta/decks/:deckId" element={<DeckBuilder />} />
             <Route path="/conta/colecoes/:collectionId" element={<CollectionManager />} />
             <Route path="/conta/pedidos/:orderId" element={<OrderDetail />} />

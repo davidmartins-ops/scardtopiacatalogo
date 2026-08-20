@@ -7,6 +7,7 @@ import { useDecks, MTG_FORMATS } from "@/hooks/use-decks";
 import { useCollections } from "@/hooks/use-collections";
 import { useInventory } from "@/hooks/use-inventory";
 import { useOrders, type Order } from "@/hooks/use-orders";
+import { useSpecialOrders } from "@/hooks/use-special-orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +17,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag, Download, ChevronRight, Truck, Mail } from "lucide-react";
+import { ArrowLeft, Heart, Layers, BookOpen, Plus, Trash2, LogOut, Loader2, Globe, Lock, Eye, ShoppingBag, Download, ChevronRight, Truck, Mail, Package } from "lucide-react";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import EmailPreferencesPanel from "@/components/EmailPreferencesPanel";
 import EmailVerificationCard from "@/components/EmailVerificationCard";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-const accountTabs = ["favorites", "decks", "collections", "orders", "preferences"] as const;
+const accountTabs = ["favorites", "decks", "collections", "orders", "special-orders", "preferences"] as const;
 
 const CustomerDashboard = () => {
   useSEO({ title: "Minha conta", canonical: "https://www.spencerscardtopia.com.br/conta", noindex: true });
@@ -35,6 +36,7 @@ const CustomerDashboard = () => {
   const { decks, isLoading: decksLoading, createDeck, deleteDeck, updateDeck } = useDecks();
   const { collections, isLoading: colsLoading, createCollection, deleteCollection, updateCollection } = useCollections();
   const { orders, isLoading: ordersLoading } = useOrders();
+  const { orders: specialOrders, isLoading: specialOrdersLoading } = useSpecialOrders();
 
   const [newDeckOpen, setNewDeckOpen] = useState(false);
   const [newDeckName, setNewDeckName] = useState("");
@@ -107,6 +109,7 @@ const CustomerDashboard = () => {
             <TabsTrigger value="decks" className="gap-1 font-display"><Layers className="h-3.5 w-3.5" /> Decks ({decks.length})</TabsTrigger>
             <TabsTrigger value="collections" className="gap-1 font-display"><BookOpen className="h-3.5 w-3.5" /> Coleções ({collections.length})</TabsTrigger>
             <TabsTrigger value="orders" className="gap-1 font-display"><ShoppingBag className="h-3.5 w-3.5" /> Pedidos ({orders.length})</TabsTrigger>
+            <TabsTrigger value="special-orders" className="gap-1 font-display"><Package className="h-3.5 w-3.5" /> Encomendas ({specialOrders.length})</TabsTrigger>
             <TabsTrigger value="preferences" className="gap-1 font-display"><Mail className="h-3.5 w-3.5" /> Preferências</TabsTrigger>
           </TabsList>
 
@@ -343,6 +346,47 @@ const CustomerDashboard = () => {
                         </div>
                       )}
                     </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* SPECIAL ORDERS */}
+          <TabsContent value="special-orders">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">{specialOrders.length} encomenda(s)</p>
+              <Link to="/conta/encomendas/nova">
+                <Button size="sm" className="gap-1"><Plus className="h-3.5 w-3.5" /> Nova encomenda</Button>
+              </Link>
+            </div>
+            {specialOrdersLoading ? (
+              <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>
+            ) : specialOrders.length === 0 ? (
+              <div className="text-center py-16">
+                <Package className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhuma encomenda solicitada.</p>
+                <Link to="/conta/encomendas/nova"><Button variant="outline" className="mt-4">Solicitar encomenda</Button></Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {specialOrders.map((order) => (
+                  <Link to={`/conta/encomendas/${order.id}`} key={order.id} className="glass-card p-4 block hover:border-primary/40 transition-colors">
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground font-mono">#{order.id.slice(0, 8).toUpperCase()}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-primary font-display">
+                          R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Status: {order.status}</p>
                   </Link>
                 ))}
               </div>
