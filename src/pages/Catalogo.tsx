@@ -749,7 +749,9 @@ const Catalogo = () => {
         items: orderItems as never,
         total,
         credits_applied: Number(meta?.creditsApplied ?? 0),
-        status: isPix ? "pending_payment" : "payment_confirmed",
+        // O status pago é definido apenas no servidor (webhook/conferência de
+        // pagamento ou confirmação do admin) — nunca pelo cliente.
+        status: "pending_payment",
         receipt_url: meta?.receiptUrl ?? null,
         payment_method: (meta?.paymentMethod ?? "whatsapp") as never,
         customer_info: (meta?.customerInfo ?? {}) as never,

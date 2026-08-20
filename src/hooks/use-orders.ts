@@ -72,7 +72,9 @@ export const useOrders = () => {
         user_id: user.id,
         items: order.items as any,
         total: order.total,
-        status: "payment_confirmed" as OrderStatus,
+        // Pedidos criados pelo cliente entram como aguardando pagamento; a
+        // confirmação ocorre no servidor após validação do pagamento.
+        status: "pending_payment" as OrderStatus,
         receipt_url: order.receipt_url ?? null,
       });
       if (error) throw error;
