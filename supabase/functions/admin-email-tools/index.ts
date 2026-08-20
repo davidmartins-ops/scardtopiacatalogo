@@ -136,6 +136,18 @@ Deno.serve(async (req) => {
     return json({ logs: latest })
   }
 
+  // Sender domain configuration health
+  if (action === 'domain-config') {
+    const check = validateEmailDomains(SENDER_DOMAIN, FROM_DOMAIN)
+    return json({
+      siteName: SITE_NAME,
+      senderDomain: SENDER_DOMAIN,
+      fromAddress: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      valid: check.valid,
+      errors: check.errors,
+    })
+  }
+
   // Queue stats (pending + dead-lettered per queue)
   if (action === 'queue-stats') {
     const { data, error } = await admin.rpc('email_queue_stats')
