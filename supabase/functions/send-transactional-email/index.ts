@@ -170,6 +170,44 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // 1b. Fail fast on a misconfigured sender domain — otherwise the email API
+  // rejects every queued message with 403 "no_matching_sender".
+  const domainCheck = validateEmailDomains(SENDER_DOMAIN, FROM_DOMAIN)
+  if (!domainCheck.valid) {
+    const reason = `Configuração de domínio de envio inválida: ${domainCheck.errors.join('; ')}`
+    console.error('Refusing to enqueue email — invalid sender domain config', {
+      senderDomain: SENDER_DOMAIN,
+      fromDomain: FROM_DOMAIN,
+      errors: domainCheck.errors,
+    })
+
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: templateName,
+      recipient_email: effectiveRecipient,
+      status: 'failed',
+      error_message: reason.slice(0, 1000),
+    })
+
+    await supabase.from('admin_notifications').insert({
+      type: 'system',
+      title: 'E-mails bloqueados — domínio do remetente inválido',
+      message: reason,
+      link: '/admin/emails',
+      entity_type: 'email_domain_config',
+      metadata: {
+        sender_domain: SENDER_DOMAIN,
+        from_domain: FROM_DOMAIN,
+        errors: domainCheck.errors,
+      },
+    })
+
+    return new Response(
+      JSON.stringify({ error: reason, code: 'invalid_sender_domain' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')
