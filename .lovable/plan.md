@@ -1,120 +1,76 @@
-# Fase 3 — Operação: Reconciliação, Reembolso e NFe
+# Plano: Setor de Encomendas Especiais
 
-Plano em três frentes independentes, entregues em sequência para validar cada uma antes da próxima. Cada frente tem schema, UI admin e (quando necessário) Edge Function.
+## Resumo
+Criar um módulo de encomendas independente do estoque atual. Clientes logados podem solicitar produtos sem estoque (bonecos, cartas raras, peças importadas) com dois modelos: preço fixo ou cotação manual. O fluxo admin aprova, cota, recebe pagamento e gera etiqueta de envio usando a infraestrutura já existente (pagamento, SuperFrete, notificações, emails).
 
----
+## Escopo aprovado
+- Tipos de produto: bonecos/action figures e cartas/singles.
+- Modelos de preço: preço fixo e cotação manual (ambos).
+- Pagamento: só após aprovação da cotação para produtos sem preço fixo; produtos fixos seguem checkout normal.
+- Visibilidade: produtos fixos podem aparecer no catálogo; produtos sem preço fixo apenas na área logada.
+- Sem interferência no estoque, pedidos padrão e catálogo existente.
 
-## Frente 1 — Reconciliação Financeira
+## Etapas de implementação
 
-Objetivo: cruzar pagamentos recebidos (PIX comprovante, cartão futuro) com pedidos, identificar divergências e fechar caixa por dia.
+### 1. Database schema
+- Criar tabela `special_order_products`: catálogo de produtos de encomenda com preço fixo (separado de `inventory`).
+- Criar tabela `special_orders`: pedido de encomenda do cliente com status, tipo, dados de envio, pagamento e etiqueta.
+- Criar tabela `special_order_items`: itens de cada encomenda (produto fixo ou descrição livre).
+- Criar tabela `special_order_quotes`: cotações enviadas pelo admin para itens sem preço fixo.
+- Criar tabela `special_order_status_history`: histórico de status (auditoria).
+- Criar tabela `special_order_audit_log`: auditoria de ações admin.
+- Criar enum `special_order_status`: requested, quoted, approved, paid, ordered, received, shipped, delivered, cancelled.
+- Criar enum `special_order_item_type`: fixed_price, quotation.
+- GRANT e RLS policies para cada nova tabela.
+- Triggers para `updated_at` e histórico de status.
 
-### Banco
-- Nova tabela `public.payment_reconciliation`:
-  - `id uuid pk`, `order_id uuid fk orders`, `expected_amount numeric`, `received_amount numeric`, `method text` (`pix|credit|other`), `received_at timestamptz`, `bank_reference text`, `status text` (`matched|divergent|unmatched|manual`), `notes text`, `reconciled_by uuid`, `reconciled_at timestamptz`, `created_at`.
-  - GRANTs + RLS: admin lê/escreve via `is_admin()`; `service_role` total.
-- Nova tabela `public.cash_closures` (fechamento diário):
-  - `id`, `closure_date date unique`, `total_orders int`, `total_expected numeric`, `total_received numeric`, `divergence numeric`, `closed_by uuid`, `closed_at`, `notes`.
-- View `v_daily_reconciliation` agregando `orders` + `payment_reconciliation` por dia.
+### 2. Backend
+- Edge Function `create-special-order`: cria encomenda a partir da solicitação do cliente.
+- Edge Function `special-order-quote`: admin envia cotação (validação de permissão).
+- Edge Function `special-order-approve`: cliente aprova cotação.
+- Edge Function `process-special-order-payment`: gera pagamento (reaproveita InfinitePay/SuperFrete checkout).
+- Edge Function `special-order-status-update`: admin atualiza status, com geração automática de etiqueta SuperFrete quando o item chega.
+- Edge Function `notify-special-order`: emails transacionais para cliente e admin.
+- Trigger DB para notificar admin quando nova encomenda for criada.
+- Trigger DB para criar `special_order_status_history` a cada mudança.
 
-### UI Admin (`/admin/reconciliacao`)
-- Tabela diária com filtro por período e status.
-- Para cada pedido pago: cartões "Esperado vs Recebido", botão **Marcar como conciliado** / **Marcar divergência** com campo de nota.
-- Importação opcional de extrato CSV (banco/PIX) → faz match automático por valor+data (±2 dias, tolerância R$0,05).
-- Botão **Fechar caixa do dia** gera `cash_closures` e bloqueia edição retroativa.
+### 3. Admin UI
+- Nova página `/admin/encomendas`: lista todas as encomendas com filtros por status e tipo.
+- Página `/admin/encomendas/:id`: detalhes, cotação, aprovação, status, pagamento, etiqueta e histórico.
+- Página `/admin/produtos-encomenda`: CRUD de produtos de encomenda com preço fixo.
+- Notificações admin para novas encomendas.
+- Botões de ação: enviar cotação, aprovar, marcar como pago, gerar etiqueta, reverter etiqueta, cancelar.
 
-### Notificações
-- Trigger: criar `admin_notifications` tipo `reconciliation_divergence` quando `status='divergent'`.
+### 4. Customer UI
+- Nova página `/conta/encomendas`: lista encomendas do cliente.
+- Página `/conta/encomendas/:id`: detalhes, cotações pendentes de aprovação, histórico.
+- Formulário de solicitação de encomenda em `/conta/encomendas/nova`.
+- Integração com o catálogo para produtos fixos (botão "Encomendar" quando não houver estoque).
 
----
+### 5. Integrações
+- Reutilizar pagamento existente (InfinitePay, PIX, cartão).
+- Reutilizar SuperFrete para etiquetas.
+- Reutilizar sistema de notificações e emails transacionais.
+- Reutilizar sistema de créditos da loja (opcional, se desejado).
 
-## Frente 2 — Reembolso (Refund)
+### 6. Segurança
+- RLS policies: cliente vê apenas suas encomendas; admin vê todas.
+- Validação de permissão admin em todas as Edge Functions.
+- Proteção contra injeção e path traversal em uploads de fotos de referência.
+- Auditoria de ações admin.
 
-Objetivo: fluxo formal de estorno ligado a disputas (`order_disputes` já existe) com registro contábil e reposição de estoque.
+### 7. Testes
+- Testes de integração para criação, cotação, aprovação e pagamento.
+- Testes de controle de acesso (cliente não acessa encomendas de outros).
+- Testes de notificações e histórico de status.
 
-### Banco
-- Nova tabela `public.order_refunds`:
-  - `id`, `order_id fk`, `dispute_id fk order_disputes nullable`, `amount numeric`, `reason text`, `method text` (`pix|reverse_credit|store_credit`), `status text` (`pending|approved|processed|rejected`), `pix_key text nullable`, `proof_url text` (comprovante de estorno), `requested_by uuid`, `approved_by uuid`, `processed_at timestamptz`, `notes`, `created_at`.
-  - GRANTs + RLS: cliente lê seus próprios; admin total.
-- Função `restock_refunded_items(refund_id)`: ao aprovar, repõe `inventory.quantity` dos itens do pedido e grava `inventory_audit` com `source='refund'`.
-- Trigger: ao `status='processed'`, atualizar `orders.status='cancelled'` (se reembolso total) e disparar notificação ao cliente.
+## Fora do escopo inicial
+- Integração com fornecedores externos.
+- Estoque de produtos de encomenda.
+- Recompra automática.
+- Marketplace de encomendas entre usuários.
 
-### UI Admin
-- Aba **Reembolsos** dentro de `OrderDetail` admin (e listagem geral em `/admin/reembolsos`).
-- Fluxo: Solicitar → Aprovar (define método, valor, PIX) → Processar (upload do comprovante via bucket `receipts`) → Concluído.
-- Checkbox "Repor estoque" no momento da aprovação.
-
-### UI Cliente
-- Em `/conta/pedidos/:id`, botão **Solicitar reembolso** (cria refund pendente vinculado a uma disputa).
-- Status do reembolso visível com timeline.
-
-### Email
-- Template app email `refund-status-update.tsx` (solicitado / aprovado / processado / rejeitado), via `send-transactional-email`.
-
----
-
-## Frente 3 — NFe Modelo 55
-
-Objetivo: emitir NFe de produto para cada pedido entregue, com armazenamento de DANFE/XML e reenvio ao cliente.
-
-### Decisão de provedor
-- Como cliente ainda não escolheu, recomendaremos **Focus NFe** (REST simples, sandbox grátis, suporta NFe 55) e estruturaremos o código com camada de adapter (`nfe-provider.ts`) trocável.
-- Secret necessário: `FOCUS_NFE_TOKEN` (sandbox primeiro), `FOCUS_NFE_CNPJ_EMITENTE`. Pediremos via `add_secret` apenas quando frente 3 começar.
-
-### Dados do emitente (configuração única)
-- Nova tabela `public.tax_settings` (singleton, `id=1`):
-  - `cnpj`, `razao_social`, `nome_fantasia`, `ie`, `crt` (regime), `cep`, `logradouro`, `numero`, `bairro`, `municipio`, `uf`, `ambiente` (`homologacao|producao`), `serie`, `proxima_numeracao`, `cfop_padrao`, `ncm_padrao`, `csosn_padrao`.
-- UI em `/admin/configuracoes/fiscal`.
-
-### Schema NFe
-- Nova tabela `public.invoices`:
-  - `id`, `order_id fk unique`, `provider text` (`focus_nfe`), `provider_ref text` (chave NFe), `numero int`, `serie int`, `status text` (`draft|processing|authorized|rejected|cancelled`), `xml_url text`, `danfe_url text`, `protocolo text`, `rejection_reason text`, `emitted_at`, `cancelled_at`, `created_by uuid`, `created_at`.
-  - RLS: cliente lê NFe do próprio pedido; admin total.
-- Adicionar `customer_info` em `orders` deve conter CPF/CNPJ; criar migração para garantir campo `tax_id` nos dados do cliente no checkout (campo opcional no formulário, obrigatório se "Quero NF").
-
-### Edge Functions
-- `emit-nfe` (verify_jwt=true, admin only): monta payload a partir de `orders` + `inventory.ncm` + `tax_settings`, chama Focus NFe, salva em `invoices` com status `processing`.
-- `nfe-webhook` (verify_jwt=false): recebe callback do provedor com autorização/rejeição, atualiza `invoices`, baixa XML/DANFE para storage bucket novo `invoices` (privado), notifica admin e dispara email ao cliente.
-- `cancel-nfe`: cancelamento dentro de 24h com justificativa.
-
-### Storage
-- Novo bucket privado `invoices` para XML e PDF DANFE; políticas: admin read/write, cliente read apenas do próprio pedido.
-
-### Inventário
-- Adicionar colunas em `inventory`: `ncm text`, `cest text`, `origem int default 0`, `unidade text default 'UN'`. Form admin ganha esses campos (opcionais, com default por categoria).
-
-### UI Admin
-- Em `OrderDetail` admin: botão **Emitir NFe** (habilitado quando status ≥ `payment_confirmed`), mostra status, links DANFE/XML, botão **Cancelar NFe**.
-- Listagem `/admin/notas` com filtros por status/período e re-download.
-
-### UI Cliente
-- Em `/conta/pedidos/:id`: bloco "Nota Fiscal" com botão Baixar DANFE / XML quando autorizada.
-
-### Email
-- Template `invoice-issued.tsx` enviado automaticamente ao cliente com link da DANFE.
-
----
-
-## Ordem de entrega sugerida
-
-```text
-Sprint A (esta semana)  → Frente 1: Reconciliação (sem dependências externas)
-Sprint B (próxima)      → Frente 2: Reembolso (depende só de UI + estoque)
-Sprint C (3ª semana)    → Frente 3: NFe (requer escolha de provedor + cadastro fiscal completo)
-```
-
-Antes de iniciar a Sprint C eu vou precisar:
-1. Confirmar provedor NFe (sugiro Focus NFe sandbox para começar sem custo).
-2. CNPJ, IE, regime tributário e certificado/credenciais do emitente.
-3. NCM padrão para cartas colecionáveis (geralmente 4911.99.00) e CFOPs de venda interestadual/intraestadual.
-
-## Detalhes técnicos resumidos
-
-- Todas as novas tabelas seguem o padrão do projeto: `GRANT` → `ENABLE RLS` → `CREATE POLICY` com `is_admin()`.
-- Edge Functions usam `corsHeaders` local conforme memory `tech/edge-functions-cors`.
-- Emails reutilizam a infra de transactional já configurada (`send-transactional-email`).
-- Notificações usam o sistema genérico `admin_notifications` já existente.
-- Nenhum código atual de checkout/WhatsApp/PIX é alterado nesta fase — apenas adicionamos camadas pós-venda.
-
-## Próximo passo
-
-Aprovando este plano, começo pela **Sprint A (Reconciliação)** já no próximo turno: migração + página `/admin/reconciliacao` + importador CSV.
+## Notas técnicas
+- Não criar foreign keys para `auth.users` (conforme regras do projeto); usar `user_id` sem FK ou referenciar `profiles`.
+- Todos os `CREATE TABLE` devem incluir `GRANT`, `ENABLE ROW LEVEL SECURITY` e `CREATE POLICY` na mesma migration.
+- Usar o mesmo padrão de nomenclatura e design do restante do projeto.
