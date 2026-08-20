@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, RefreshCw, Mail, ScrollText } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCw, Mail, ScrollText, Send, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import useSEO from "@/hooks/use-seo";
 import logo from "@/assets/logo.png";
@@ -102,6 +102,62 @@ const AdminEmails = () => {
     return counts;
   }, [logs]);
 
+  // --- Diagnóstico / operações de fila ---
+  const [domainCfg, setDomainCfg] = useState<any>(null);
+  const [queueStats, setQueueStats] = useState<any>(null);
+  const [testEmail, setTestEmail] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const loadDiagnostics = async () => {
+    try {
+      const [cfg, qs] = await Promise.all([
+        callTool({ action: "domain-config" }),
+        callTool({ action: "queue-stats" }),
+      ]);
+      setDomainCfg(cfg);
+      setQueueStats(qs.stats);
+    } catch (e: any) {
+      toast.error(`Falha ao carregar diagnóstico: ${e.message}`);
+    }
+  };
+
+  useEffect(() => { loadDiagnostics(); }, []);
+
+  const sendTest = async () => {
+    if (!testEmail.trim()) return toast.error("Informe um e-mail de destino.");
+    setBusy("test");
+    try {
+      await callTool({ action: "send-test", recipientEmail: testEmail.trim() });
+      toast.success(`E-mail de teste enviado para ${testEmail.trim()}.`);
+      await Promise.all([loadDiagnostics(), loadLogs()]);
+    } catch (e: any) {
+      toast.error(`Falha no envio de teste: ${e.message}`);
+    } finally { setBusy(null); }
+  };
+
+  const reprocessQueue = async () => {
+    setBusy("process");
+    try {
+      const d = await callTool({ action: "process-queue" });
+      toast.success(`Fila reprocessada (${d.result?.processed ?? 0} enviado(s)).`);
+      await Promise.all([loadDiagnostics(), loadLogs()]);
+    } catch (e: any) {
+      toast.error(`Falha ao reprocessar: ${e.message}`);
+    } finally { setBusy(null); }
+  };
+
+  const requeueDlq = async () => {
+    setBusy("requeue");
+    try {
+      const d = await callTool({ action: "requeue-dlq", limit: 500 });
+      const total = Object.values(d.requeued ?? {}).reduce((a: number, b: any) => a + Number(b), 0);
+      toast.success(`${total} e-mail(s) reenfileirado(s) com o remetente corrigido.`);
+      await Promise.all([loadDiagnostics(), loadLogs()]);
+    } catch (e: any) {
+      toast.error(`Falha ao reenviar falhas: ${e.message}`);
+    } finally { setBusy(null); }
+  };
+
   return (
     <div className="min-h-screen bg-background font-body">
       <div className="border-b bg-card sticky top-0 z-20">
@@ -119,7 +175,86 @@ const AdminEmails = () => {
           <TabsList>
             <TabsTrigger value="preview"><Mail className="h-4 w-4 mr-1" /> Preview de templates</TabsTrigger>
             <TabsTrigger value="logs"><ScrollText className="h-4 w-4 mr-1" /> Logs de envio</TabsTrigger>
+            <TabsTrigger value="diagnostico"><Send className="h-4 w-4 mr-1" /> Diagnóstico e fila</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="diagnostico" className="mt-4 space-y-4">
+            <Card className="p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-display text-lg">Configuração do remetente</h2>
+                <Button variant="outline" size="sm" onClick={loadDiagnostics}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Atualizar
+                </Button>
+              </div>
+              {domainCfg ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    {domainCfg.valid ? (
+                      <Badge className="bg-green-500/20 text-green-700 dark:text-green-300">Válido</Badge>
+                    ) : (
+                      <Badge className="bg-red-600/30 text-red-800 dark:text-red-200">Inválido</Badge>
+                    )}
+                    <span className="text-muted-foreground">Envios são bloqueados quando inválido.</span>
+                  </div>
+                  <div className="font-mono text-xs space-y-1">
+                    <div><span className="text-muted-foreground">From: </span>{domainCfg.fromAddress}</div>
+                    <div><span className="text-muted-foreground">sender_domain: </span>{domainCfg.senderDomain}</div>
+                  </div>
+                  {!domainCfg.valid && (
+                    <ul className="list-disc pl-5 text-red-600 text-xs">
+                      {domainCfg.errors?.map((e: string, i: number) => <li key={i}>{e}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ) : <p className="text-sm text-muted-foreground">Carregando…</p>}
+            </Card>
+
+            <Card className="p-4 space-y-3">
+              <h2 className="font-display text-lg">Enviar e-mail de teste</h2>
+              <p className="text-sm text-muted-foreground">
+                Usa o mesmo remetente e a mesma fila dos e-mails reais.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input type="email" placeholder="seu@email.com" value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)} />
+                <Button onClick={sendTest} disabled={busy !== null}>
+                  {busy === "test" ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                  Enviar teste
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-4 space-y-3">
+              <h2 className="font-display text-lg">Fila de envio</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {[
+                  ["Pendentes (transacionais)", queueStats?.transactional_pending],
+                  ["Falhas (transacionais)", queueStats?.transactional_dlq],
+                  ["Pendentes (autenticação)", queueStats?.auth_pending],
+                  ["Falhas (autenticação)", queueStats?.auth_dlq],
+                ].map(([label, v]) => (
+                  <Card key={String(label)} className="p-3 text-center">
+                    <div className="text-xs text-muted-foreground">{label}</div>
+                    <div className="text-2xl font-display">{v ?? "—"}</div>
+                  </Card>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button onClick={reprocessQueue} disabled={busy !== null} variant="outline">
+                  {busy === "process" ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                  Reprocessar fila agora
+                </Button>
+                <Button onClick={requeueDlq} disabled={busy !== null}>
+                  {busy === "requeue" ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <AlertTriangle className="h-4 w-4 mr-1" />}
+                  Reenviar e-mails que falharam
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O reenvio reescreve o remetente das mensagens antigas com a configuração atual antes de recolocá-las na fila.
+              </p>
+            </Card>
+          </TabsContent>
+
 
           <TabsContent value="preview" className="mt-4">
             <div className="grid md:grid-cols-[320px_1fr] gap-4">

@@ -78,6 +78,57 @@ async function moveToDlq(
   }
 }
 
+// Raise a de-duplicated admin alert when the email API returns 403.
+// The most common cause is a sender domain that is no longer valid/verified,
+// which silently breaks every transactional email until someone notices.
+async function alertForbidden(
+  supabase: ReturnType<typeof createClient>,
+  queue: string,
+  payload: Record<string, unknown>,
+  errorMsg: string
+): Promise<void> {
+  try {
+    const senderMismatch = errorMsg.includes('no_matching_sender')
+
+    const { count } = await supabase
+      .from('email_send_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'dlq')
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+
+    const { data: recent } = await supabase
+      .from('admin_notifications')
+      .select('id')
+      .eq('entity_type', 'email_send_403')
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+      .limit(1)
+
+    if (recent?.length) return
+
+    await supabase.from('admin_notifications').insert({
+      type: 'system',
+      title: senderMismatch
+        ? 'E-mails rejeitados — domínio do remetente inválido (403)'
+        : 'E-mails rejeitados pelo provedor (403)',
+      message: senderMismatch
+        ? `O provedor recusou o remetente "${payload.sender_domain ?? '—'}". Nenhum e-mail transacional será entregue até a correção. Falhas nas últimas 24h: ${count ?? 0}.`
+        : `Envio recusado (403) na fila ${queue}. Falhas nas últimas 24h: ${count ?? 0}.`,
+      link: '/admin/emails',
+      entity_type: 'email_send_403',
+      metadata: {
+        queue,
+        sender_domain: payload.sender_domain ?? null,
+        from: payload.from ?? null,
+        recipient: payload.to ?? null,
+        error: errorMsg.slice(0, 500),
+        dlq_last_24h: count ?? 0,
+      },
+    })
+  } catch (err) {
+    console.error('Failed to raise 403 admin alert', { error: String(err) })
+  }
+}
+
 Deno.serve(async (req) => {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -328,6 +379,7 @@ Deno.serve(async (req) => {
         // message, so move straight to DLQ and stop processing the rest of the batch.
         if (isForbidden(error)) {
           await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
+          await alertForbidden(supabase, queue, payload, errorMsg)
           return new Response(
             JSON.stringify({ processed: totalProcessed, stopped: 'forbidden' }),
             { headers: { 'Content-Type': 'application/json' } }
