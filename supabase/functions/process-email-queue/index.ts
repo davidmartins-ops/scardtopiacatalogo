@@ -379,6 +379,7 @@ Deno.serve(async (req) => {
         // message, so move straight to DLQ and stop processing the rest of the batch.
         if (isForbidden(error)) {
           await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
+          await alertForbidden(supabase, queue, payload, errorMsg)
           return new Response(
             JSON.stringify({ processed: totalProcessed, stopped: 'forbidden' }),
             { headers: { 'Content-Type': 'application/json' } }
