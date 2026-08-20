@@ -627,14 +627,15 @@ const Catalogo = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Restore guest cart from localStorage (preserved across login redirects)
+  // Restore cart from localStorage (persisted across page navigations/login redirects)
+  const cartHydrated = useRef(false);
   useEffect(() => {
-    if (inventoryData.length === 0) return;
+    if (inventoryData.length === 0 || cartHydrated.current) return;
     try {
       const raw = localStorage.getItem("spencer_guest_cart");
-      if (!raw) return;
+      if (!raw) { cartHydrated.current = true; return; }
       const parsed = JSON.parse(raw) as { inventory_item_id: string; quantity: number }[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      if (!Array.isArray(parsed) || parsed.length === 0) { cartHydrated.current = true; return; }
       const restored: CartItem[] = [];
       parsed.forEach((g) => {
         const item = inventoryData.find((inv) => inv.id === g.inventory_item_id);
@@ -647,12 +648,23 @@ const Catalogo = () => {
           return merged;
         });
       }
-      // Clear only after we've successfully restored (or had nothing to restore)
-      localStorage.removeItem("spencer_guest_cart");
     } catch {
       localStorage.removeItem("spencer_guest_cart");
     }
+    cartHydrated.current = true;
   }, [inventoryData]);
+
+  // Persist cart locally so navigating to product pages never loses items
+  const persistLocalCart = useCallback((items: CartItem[]) => {
+    try {
+      if (items.length === 0) localStorage.removeItem("spencer_guest_cart");
+      else localStorage.setItem(
+        "spencer_guest_cart",
+        JSON.stringify(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty }))),
+      );
+    } catch {}
+  }, []);
+
 
   useEffect(() => {
     if (!user || savedCartLoading || cartLoadedFromDb.current || inventoryData.length === 0) return;
