@@ -14,6 +14,7 @@ import { template as orderReceived } from './order-received.tsx'
 import { template as pixReceiptReceived } from './pix-receipt-received.tsx'
 import { template as cashClosureReminder } from './cash-closure-reminder.tsx'
 import { template as adminOrderPaid } from './admin-order-paid.tsx'
+import { template as emailTest } from './email-test.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'order-status-update': orderStatusUpdate,
@@ -21,5 +22,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'pix-receipt-received': pixReceiptReceived,
   'cash-closure-reminder': cashClosureReminder,
   'admin-order-paid': adminOrderPaid,
+  'email-test': emailTest,
 }
 
