@@ -679,10 +679,11 @@ const Catalogo = () => {
   }, [user, savedItems, savedCartLoading, inventoryData]);
 
   const syncCartToDb = useCallback((items: CartItem[]) => {
+    persistLocalCart(items);
     if (!user) return;
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     syncTimeoutRef.current = setTimeout(() => { syncCart.mutate(items.map((ci) => ({ inventory_item_id: ci.item.id, quantity: ci.qty }))); }, 1500);
-  }, [user, syncCart]);
+  }, [user, syncCart, persistLocalCart]);
 
   const addToCart = useCallback((item: InventoryItem) => {
     if (item.quantity <= 0) { toast.error("Item esgotado."); return; }
