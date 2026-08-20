@@ -1349,6 +1349,7 @@ export type Database = {
         Returns: boolean
       }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      email_queue_stats: { Args: never; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1381,6 +1382,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      requeue_dlq_emails: {
+        Args: {
+          _limit?: number
+          _new_from?: string
+          _new_sender_domain?: string
+          _queue: string
+        }
+        Returns: number
       }
       restock_refunded_items: {
         Args: { _refund_id: string }
