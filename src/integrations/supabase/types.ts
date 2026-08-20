@@ -1202,6 +1202,322 @@ export type Database = {
           },
         ]
       }
+      special_order_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          special_order_id: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          special_order_id: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          special_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_order_audit_log_special_order_id_fkey"
+            columns: ["special_order_id"]
+            isOneToOne: false
+            referencedRelation: "special_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_order_items: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          item_type: Database["public"]["Enums"]["special_order_item_type"]
+          name: string
+          product_id: string | null
+          quantity: number
+          reference_image_url: string | null
+          reference_links: string[] | null
+          special_order_id: string
+          total_price: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_type?: Database["public"]["Enums"]["special_order_item_type"]
+          name: string
+          product_id?: string | null
+          quantity?: number
+          reference_image_url?: string | null
+          reference_links?: string[] | null
+          special_order_id: string
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_type?: Database["public"]["Enums"]["special_order_item_type"]
+          name?: string
+          product_id?: string | null
+          quantity?: number
+          reference_image_url?: string | null
+          reference_links?: string[] | null
+          special_order_id?: string
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "special_order_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_order_items_special_order_id_fkey"
+            columns: ["special_order_id"]
+            isOneToOne: false
+            referencedRelation: "special_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_order_products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          price_pix: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price: number
+          price_pix?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          price_pix?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      special_order_quotes: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          customer_response: string | null
+          estimated_days: number | null
+          expires_at: string | null
+          id: string
+          item_id: string | null
+          quoted_price: number
+          responded_at: string | null
+          special_order_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_response?: string | null
+          estimated_days?: number | null
+          expires_at?: string | null
+          id?: string
+          item_id?: string | null
+          quoted_price: number
+          responded_at?: string | null
+          special_order_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_response?: string | null
+          estimated_days?: number | null
+          expires_at?: string | null
+          id?: string
+          item_id?: string | null
+          quoted_price?: number
+          responded_at?: string | null
+          special_order_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_order_quotes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "special_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_order_quotes_special_order_id_fkey"
+            columns: ["special_order_id"]
+            isOneToOne: false
+            referencedRelation: "special_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["special_order_status"]
+            | null
+          id: string
+          note: string | null
+          special_order_id: string
+          to_status: Database["public"]["Enums"]["special_order_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["special_order_status"]
+            | null
+          id?: string
+          note?: string | null
+          special_order_id: string
+          to_status: Database["public"]["Enums"]["special_order_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["special_order_status"]
+            | null
+          id?: string
+          note?: string | null
+          special_order_id?: string
+          to_status?: Database["public"]["Enums"]["special_order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_order_status_history_special_order_id_fkey"
+            columns: ["special_order_id"]
+            isOneToOne: false
+            referencedRelation: "special_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_orders: {
+        Row: {
+          created_at: string
+          customer_info: Json
+          id: string
+          notes: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          payment_invoice_slug: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_transaction_id: string | null
+          shipping_address: Json | null
+          shipping_cost: number
+          shipping_label_status: string
+          shipping_label_url: string | null
+          source: string
+          status: Database["public"]["Enums"]["special_order_status"]
+          status_updated_at: string
+          superfrete_order_id: string | null
+          total: number
+          tracking_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_info?: Json
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_invoice_slug?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_transaction_id?: string | null
+          shipping_address?: Json | null
+          shipping_cost?: number
+          shipping_label_status?: string
+          shipping_label_url?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["special_order_status"]
+          status_updated_at?: string
+          superfrete_order_id?: string | null
+          total?: number
+          tracking_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_info?: Json
+          id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_invoice_slug?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_transaction_id?: string | null
+          shipping_address?: Json | null
+          shipping_cost?: number
+          shipping_label_status?: string
+          shipping_label_url?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["special_order_status"]
+          status_updated_at?: string
+          superfrete_order_id?: string | null
+          total?: number
+          tracking_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_notifications: {
         Row: {
           created_at: string
@@ -1416,6 +1732,17 @@ export type Database = {
         | "delivered"
         | "cancelled"
       payment_method: "pix" | "credit" | "debit" | "whatsapp" | "other"
+      special_order_item_type: "fixed_price" | "quotation"
+      special_order_status:
+        | "requested"
+        | "quoted"
+        | "approved"
+        | "paid"
+        | "ordered"
+        | "received"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1563,6 +1890,18 @@ export const Constants = {
         "cancelled",
       ],
       payment_method: ["pix", "credit", "debit", "whatsapp", "other"],
+      special_order_item_type: ["fixed_price", "quotation"],
+      special_order_status: [
+        "requested",
+        "quoted",
+        "approved",
+        "paid",
+        "ordered",
+        "received",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
     },
   },
 } as const
