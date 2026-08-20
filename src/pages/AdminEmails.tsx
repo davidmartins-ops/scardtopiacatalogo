@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, RefreshCw, Mail, ScrollText } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCw, Mail, ScrollText, Send, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import useSEO from "@/hooks/use-seo";
 import logo from "@/assets/logo.png";
