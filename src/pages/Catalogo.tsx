@@ -749,7 +749,9 @@ const Catalogo = () => {
         items: orderItems as never,
         total,
         credits_applied: Number(meta?.creditsApplied ?? 0),
-        status: isPix ? "pending_payment" : "payment_confirmed",
+        // O status pago é definido apenas no servidor (webhook/conferência de
+        // pagamento ou confirmação do admin) — nunca pelo cliente.
+        status: "pending_payment",
         receipt_url: meta?.receiptUrl ?? null,
         payment_method: (meta?.paymentMethod ?? "whatsapp") as never,
         customer_info: (meta?.customerInfo ?? {}) as never,
@@ -782,7 +784,7 @@ const Catalogo = () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       if (user) queryClient.invalidateQueries({ queryKey: ["orders", user.id] });
       clearCart();
-      toast.success("Pedido registrado e estoque atualizado!");
+      toast.success("Pedido registrado! Ele será confirmado após a validação do pagamento.");
       return true;
     } catch (err) {
       console.error("Order error:", err);
