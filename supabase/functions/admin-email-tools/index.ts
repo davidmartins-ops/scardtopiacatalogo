@@ -130,7 +130,79 @@ Deno.serve(async (req) => {
     return json({ logs: latest })
   }
 
+  // Queue stats (pending + dead-lettered per queue)
+  if (action === 'queue-stats') {
+    const { data, error } = await admin.rpc('email_queue_stats')
+    if (error) return json({ error: error.message }, 500)
+    return json({ stats: data })
+  }
+
+  // Send a test transactional email using the exact same FROM/SENDER as the queue
+  if (action === 'send-test') {
+    const recipient = String(body?.recipientEmail ?? '').trim()
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(recipient)) {
+      return json({ error: 'E-mail de destino inválido' }, 400)
+    }
+    const { data, error } = await admin.functions.invoke('send-transactional-email', {
+      body: {
+        templateName: 'email-test',
+        recipientEmail: recipient,
+        idempotencyKey: `email-test-${crypto.randomUUID()}`,
+        templateData: {
+          triggeredBy: (claimsData.claims.email as string) ?? 'admin',
+          sentAt: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+        },
+      },
+    })
+    if (error) {
+      const detail = await safeErrorDetail(error)
+      return json({ error: `Falha ao enfileirar teste: ${detail}` }, 500)
+    }
+    if ((data as any)?.error) return json({ error: (data as any).error }, 500)
+
+    // Kick the queue right away so the admin does not wait for cron
+    await admin.functions.invoke('process-email-queue', { body: {} }).catch(() => {})
+    return json({ success: true, queued: true, recipient })
+  }
+
+  // Reprocess the queue now (also useful right after fixing configuration)
+  if (action === 'process-queue') {
+    const { data, error } = await admin.functions.invoke('process-email-queue', { body: {} })
+    if (error) return json({ error: `Falha ao processar fila: ${await safeErrorDetail(error)}` }, 500)
+    return json({ success: true, result: data })
+  }
+
+  // Re-enqueue dead-lettered messages, rewriting the sender to the current config
+  if (action === 'requeue-dlq') {
+    const queues: string[] = Array.isArray(body?.queues) && body.queues.length
+      ? body.queues.filter((q: string) => q === 'transactional_emails' || q === 'auth_emails')
+      : ['transactional_emails', 'auth_emails']
+    const limit = Math.min(Math.max(Number(body?.limit ?? 200), 1), 500)
+
+    const requeued: Record<string, number> = {}
+    for (const queue of queues) {
+      const { data, error } = await admin.rpc('requeue_dlq_emails', {
+        _queue: queue,
+        _limit: limit,
+        _new_from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        _new_sender_domain: SENDER_DOMAIN,
+      })
+      if (error) return json({ error: `Falha ao reenfileirar (${queue}): ${error.message}` }, 500)
+      requeued[queue] = Number(data ?? 0)
+    }
+
+    await admin.functions.invoke('process-email-queue', { body: {} }).catch(() => {})
+    return json({ success: true, requeued })
+  }
+
   return json({ error: 'Unknown action' }, 400)
+
+  async function safeErrorDetail(error: any): Promise<string> {
+    try {
+      if (error?.context?.text) return String(await error.context.text()).slice(0, 500)
+    } catch { /* ignore */ }
+    return String(error?.message ?? error).slice(0, 500)
+  }
 
   function json(b: unknown, status = 200) {
     return new Response(JSON.stringify(b), {
