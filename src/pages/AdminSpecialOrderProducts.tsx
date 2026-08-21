@@ -427,14 +427,28 @@ const AdminSpecialOrderProducts = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="sop-sku">SKU</Label>
+                <Label htmlFor="sop-sku" className="flex items-center justify-between">
+                  <span>SKU</span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary underline"
+                    onClick={() => setForm((prev) => ({ ...prev, sku: buildAutoSku(prev.name) }))}
+                  >
+                    Gerar novamente
+                  </button>
+                </Label>
                 <Input
                   id="sop-sku"
                   value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  placeholder="AF-CHANDRA-01"
+                  onChange={(e) => setForm({ ...form, sku: sanitizeSku(e.target.value) })}
+                  placeholder="AFCHANDRA01"
+                  className="font-mono text-xs"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Gerado automaticamente a partir do nome, sem hífens ou pontos.
+                </p>
               </div>
+
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
