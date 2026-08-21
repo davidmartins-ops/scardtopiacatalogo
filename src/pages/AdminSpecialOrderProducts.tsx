@@ -509,6 +509,19 @@ const AdminSpecialOrderProducts = () => {
               />
             </div>
             <div>
+              <Label htmlFor="sop-specs">Especificações do produto</Label>
+              <Textarea
+                id="sop-specs"
+                rows={5}
+                placeholder={"Ex.: Material: PVC\nAltura: 30 cm\nEscala: 1/7\nAcessórios: 2 faces intercambiáveis\nFabricante / origem"}
+                value={form.specifications}
+                onChange={(e) => setForm({ ...form, specifications: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Uma informação por linha. Aparece no anúncio do produto.
+              </p>
+            </div>
+            <div>
               <Label>Status</Label>
               <Select
                 value={form.status}
