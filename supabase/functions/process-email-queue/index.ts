@@ -315,7 +315,9 @@ Deno.serve(async (req) => {
           subject: payload.subject,
           html: payload.html,
           text: payload.text,
-          purpose: payload.purpose,
+          // Auth emails are never marketing/transactional: the email API rejects
+          // transactional sends without an unsubscribe_token (400 missing_unsubscribe).
+          purpose: queue === 'auth_emails' ? 'authentication' : payload.purpose,
           label: payload.label,
           idempotency_key: payload.idempotency_key,
           unsubscribe_token: payload.unsubscribe_token,
