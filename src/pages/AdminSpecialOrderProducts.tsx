@@ -142,6 +142,8 @@ const AdminSpecialOrderProducts = () => {
         price_pix: Number(form.price_pix) || 0,
         status: form.status,
         is_active: form.status !== "inactive",
+        shipping_starts_at: form.shipping_starts_at || null,
+        shipping_start_note: form.shipping_start_note.trim() || null,
         image_url: cover ?? null,
         image_urls: rest,
       };
