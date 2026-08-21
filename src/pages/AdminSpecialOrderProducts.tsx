@@ -69,6 +69,18 @@ const emptyVariant = {
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+/** Remove hífens, pontos e qualquer caractere não alfanumérico do SKU. */
+const sanitizeSku = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+/** Gera SKU automático a partir do nome + sufixo curto único (sem hífens/pontos). */
+const buildAutoSku = (name: string, prefix = "") => {
+  const base = sanitizeSku(name).slice(0, 10);
+  if (!base) return "";
+  const suffix = Math.floor(Date.now() / 1000).toString(36).toUpperCase().slice(-4);
+  return `${sanitizeSku(prefix)}${base}${suffix}`;
+};
+
+
 const AdminSpecialOrderProducts = () => {
   useSEO({ title: "Produtos de encomenda | Admin", noindex: true });
   const qc = useQueryClient();
@@ -108,7 +120,7 @@ const AdminSpecialOrderProducts = () => {
         description: form.description.trim() || null,
         specifications: form.specifications.trim() || null,
         category: form.category.trim() || "Outros",
-        sku: form.sku.trim() || null,
+        sku: sanitizeSku(form.sku) || null,
         price: Number(form.price) || 0,
         price_pix: Number(form.price_pix) || 0,
         status: form.status,
@@ -390,7 +402,19 @@ const AdminSpecialOrderProducts = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="sop-name">Nome</Label>
-              <Input id="sop-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                id="sop-name"
+                value={form.name}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    name,
+                    sku: prev.id ? prev.sku : buildAutoSku(name),
+                  }));
+                }}
+              />
+
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -403,14 +427,28 @@ const AdminSpecialOrderProducts = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="sop-sku">SKU</Label>
+                <Label htmlFor="sop-sku" className="flex items-center justify-between">
+                  <span>SKU</span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary underline"
+                    onClick={() => setForm((prev) => ({ ...prev, sku: buildAutoSku(prev.name) }))}
+                  >
+                    Gerar novamente
+                  </button>
+                </Label>
                 <Input
                   id="sop-sku"
                   value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  placeholder="AF-CHANDRA-01"
+                  onChange={(e) => setForm({ ...form, sku: sanitizeSku(e.target.value) })}
+                  placeholder="AFCHANDRA01"
+                  className="font-mono text-xs"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Gerado automaticamente a partir do nome, sem hífens ou pontos.
+                </p>
               </div>
+
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -646,18 +684,48 @@ const AdminSpecialOrderProducts = () => {
                 <Input
                   id="var-label"
                   value={variantForm.label}
-                  onChange={(e) => setVariantForm({ ...variantForm, label: e.target.value })}
+                  onChange={(e) => {
+                    const label = e.target.value;
+                    setVariantForm((prev) => ({
+                      ...prev,
+                      label,
+                      sku: prev.id
+                        ? prev.sku
+                        : buildAutoSku(label, variantProduct?.sku ?? variantProduct?.name ?? ""),
+                    }));
+                  }}
                   placeholder="Deluxe 30cm"
                 />
               </div>
               <div>
-                <Label htmlFor="var-sku">SKU</Label>
+                <Label htmlFor="var-sku" className="flex items-center justify-between">
+                  <span>SKU</span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary underline"
+                    onClick={() =>
+                      setVariantForm((prev) => ({
+                        ...prev,
+                        sku: buildAutoSku(
+                          prev.label,
+                          variantProduct?.sku ?? variantProduct?.name ?? "",
+                        ),
+                      }))
+                    }
+                  >
+                    Gerar novamente
+                  </button>
+                </Label>
                 <Input
                   id="var-sku"
                   value={variantForm.sku}
-                  onChange={(e) => setVariantForm({ ...variantForm, sku: e.target.value })}
+                  onChange={(e) =>
+                    setVariantForm({ ...variantForm, sku: sanitizeSku(e.target.value) })
+                  }
+                  className="font-mono text-xs"
                 />
               </div>
+
               <div>
                 <Label htmlFor="var-price">Preço (cartão)</Label>
                 <Input
@@ -768,7 +836,7 @@ const AdminSpecialOrderProducts = () => {
                       id: variantForm.id || undefined,
                       product_id: variantProduct.id,
                       label: variantForm.label.trim(),
-                      sku: variantForm.sku.trim() || null,
+                      sku: sanitizeSku(variantForm.sku) || null,
                       price: Number(variantForm.price) || 0,
                       price_pix: Number(variantForm.price_pix) || 0,
                       image_url: variantForm.image_url.trim() || null,
