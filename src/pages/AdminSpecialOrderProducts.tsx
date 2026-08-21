@@ -253,7 +253,20 @@ const AdminSpecialOrderProducts = () => {
     setOpen(true);
   };
 
+  // SKU sanitizado + detecção local de duplicidade (o salvamento revalida no banco).
+  const productSkuPreview = sanitizeSku(form.sku);
+  const productSkuDuplicate =
+    !!productSkuPreview &&
+    products.some((p) => (p.sku ?? "") === productSkuPreview && p.id !== form.id);
+
+  const variantSkuPreview = sanitizeSku(variantForm.sku);
+  const variantSkuDuplicate =
+    !!variantSkuPreview &&
+    (variants.some((v) => (v.sku ?? "") === variantSkuPreview && v.id !== variantForm.id) ||
+      products.some((p) => (p.sku ?? "") === variantSkuPreview));
+
   return (
+
     <div className="min-h-screen bg-background font-body">
       <header className="border-b border-brand-header-border bg-brand-header backdrop-blur-xl sticky top-0 z-30 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
