@@ -74,7 +74,7 @@ const EncomendaProduto = () => {
           >
             <ArrowLeft className="h-4 w-4" /> Encomendas
           </Link>
-          <Link to="/catalogo">
+          <Link to="/encomendas">
             <img src={logo} alt="Spencer's Cardtopia" className="h-10 hover:scale-105 transition-transform" />
           </Link>
           <div className="w-16" />

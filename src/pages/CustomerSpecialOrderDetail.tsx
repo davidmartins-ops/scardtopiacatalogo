@@ -80,7 +80,7 @@ const CustomerSpecialOrderDetail = () => {
           <Link to="/conta/encomendas" className="flex items-center gap-2 text-sm text-brand-header-foreground hover:text-brand-gold transition-colors">
             <ArrowLeft className="h-4 w-4" /> Minhas encomendas
           </Link>
-          <Link to="/"><img src={logo} alt="Spencer's Cardtopia" className="h-10 hover:scale-105 transition-transform" /></Link>
+          <Link to="/encomendas"><img src={logo} alt="Spencer's Cardtopia" className="h-10 hover:scale-105 transition-transform" /></Link>
           <div className="w-16" />
         </div>
       </div>
