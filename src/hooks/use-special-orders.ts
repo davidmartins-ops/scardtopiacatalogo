@@ -113,6 +113,7 @@ export const useSpecialOrders = () => {
       items: Array<{
         item_type?: SpecialOrderItemType;
         product_id?: string;
+        variant_id?: string;
         name: string;
         description?: string;
         quantity: number;
