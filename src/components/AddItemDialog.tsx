@@ -33,6 +33,48 @@ const AddItemDialog = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
+
+  // Prevent accidental page navigation while the dialog is open.
+  useEffect(() => {
+    if (!open) return;
+
+    // Capture the current history entry so a back/forward swipe or key does not close the modal.
+    const modalState = { addItemDialogOpen: true };
+    window.history.pushState(modalState, "", window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // If we are still open, push the modal state back so the user stays on the same page.
+      if (!e.state?.addItemDialogOpen) {
+        window.history.pushState(modalState, "", window.location.href);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block browser back/forward shortcuts while typing is not happening in an input.
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement;
+
+      if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "Backspace" && !isTyping) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   // CORREÇÃO 30: multi-upload — primeira imagem vira image_url principal, restante vai para drop_singles_images.
   const [images, setImages] = useState<UploadedImage[]>([]);
 
