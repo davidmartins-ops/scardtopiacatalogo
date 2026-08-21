@@ -46,6 +46,7 @@ const emptyForm = {
   id: "",
   name: "",
   description: "",
+  specifications: "",
   category: "Action Figure",
   sku: "",
   price: "",
