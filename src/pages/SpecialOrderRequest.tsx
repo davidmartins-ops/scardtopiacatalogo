@@ -1,8 +1,9 @@
 import useSEO from "@/hooks/use-seo";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useSpecialOrders } from "@/hooks/use-special-orders";
+import { useSpecialOrderProduct } from "@/hooks/use-special-order-catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,8 +27,29 @@ const SpecialOrderRequest = () => {
   const { user, loading } = useCustomerAuth();
   const { createOrder } = useSpecialOrders();
 
+  const [searchParams] = useSearchParams();
+  const productParam = searchParams.get("produto") ?? undefined;
+  const variantParam = searchParams.get("variacao") ?? undefined;
+  const { data: productData } = useSpecialOrderProduct(productParam);
+
   const [items, setItems] = useState([{ name: "", description: "", category: "card", quantity: 1, referenceLink: "" }]);
   const [notes, setNotes] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
+
+  useEffect(() => {
+    if (prefilled || !productData?.product) return;
+    const variant = productData.variants.find((v) => v.id === variantParam) ?? null;
+    setItems([
+      {
+        name: `${productData.product.name}${variant ? ` — ${variant.label}` : ""}`,
+        description: variant?.sku ? `SKU: ${variant.sku}` : productData.product.description ?? "",
+        category: productData.product.category?.toLowerCase().includes("carta") ? "card" : "action_figure",
+        quantity: 1,
+        referenceLink: "",
+      },
+    ]);
+    setPrefilled(true);
+  }, [productData, variantParam, prefilled]);
 
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -51,9 +73,11 @@ const SpecialOrderRequest = () => {
     }
     try {
       const result = await createOrder.mutateAsync({
-        source: "customer_request",
-        items: items.map((it) => ({
-          item_type: "quotation",
+        source: productData?.product ? "catalog_fixed" : "customer_request",
+        items: items.map((it, idx) => ({
+          item_type: idx === 0 && productData?.product ? "fixed_price" : "quotation",
+          product_id: idx === 0 && productData?.product ? productData.product.id : undefined,
+          variant_id: idx === 0 && productData?.product && variantParam ? variantParam : undefined,
           name: it.name.trim(),
           description: it.description.trim(),
           quantity: Number(it.quantity),
