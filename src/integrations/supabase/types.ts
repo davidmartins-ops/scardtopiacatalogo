@@ -1368,6 +1368,8 @@ export type Database = {
           name: string
           price: number
           price_pix: number
+          shipping_start_note: string | null
+          shipping_starts_at: string | null
           sku: string | null
           sort_order: number
           specifications: string | null
@@ -1385,6 +1387,8 @@ export type Database = {
           name: string
           price: number
           price_pix?: number
+          shipping_start_note?: string | null
+          shipping_starts_at?: string | null
           sku?: string | null
           sort_order?: number
           specifications?: string | null
@@ -1402,6 +1406,8 @@ export type Database = {
           name?: string
           price?: number
           price_pix?: number
+          shipping_start_note?: string | null
+          shipping_starts_at?: string | null
           sku?: string | null
           sort_order?: number
           specifications?: string | null

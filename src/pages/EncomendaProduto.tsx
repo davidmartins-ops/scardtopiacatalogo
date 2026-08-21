@@ -5,11 +5,24 @@ import { useSpecialOrderProduct } from "@/hooks/use-special-order-catalog";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Package, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { ArrowLeft, CalendarClock, Loader2, Package, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const shippingStartLabel = (product: {
+  shipping_starts_at?: string | null;
+  shipping_start_note?: string | null;
+} | null) => {
+  const note = product?.shipping_start_note?.trim();
+  if (note) return note;
+  const date = product?.shipping_starts_at;
+  if (!date) return null;
+  const [y, m, d] = date.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return `Envios a partir de ${new Date(y, m - 1, d).toLocaleDateString("pt-BR")}`;
+};
 
 const EncomendaProduto = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -45,6 +58,7 @@ const EncomendaProduto = () => {
   const price = Number(selectedVariant?.price || product?.price || 0);
   const pricePix = Number(selectedVariant?.price_pix || product?.price_pix || 0);
   const sku = selectedVariant?.sku ?? product?.sku ?? null;
+  const shippingStart = shippingStartLabel(product);
 
   useSEO({
     title: product ? `${product.name} | Encomendas | Spencer's Cardtopia` : "Encomendas Especiais",
@@ -182,6 +196,11 @@ const EncomendaProduto = () => {
                     <Truck className="h-4 w-4" /> Iniciar solicitação
                   </Button>
                 </Link>
+                {shippingStart && (
+                  <p className="text-xs text-primary mt-3 flex items-center gap-1.5">
+                    <CalendarClock className="h-3.5 w-3.5 flex-shrink-0" /> {shippingStart}
+                  </p>
+                )}
                 <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1">
                   <ShieldCheck className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                   Confirmamos disponibilidade, prazo e valor final antes de qualquer pagamento.

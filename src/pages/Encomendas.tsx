@@ -8,13 +8,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Package, Plus, Search, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Plus, Search, Sparkles, CalendarClock} from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 type SortOption = "featured" | "name" | "price_asc" | "price_desc";
+
+const shippingStartLabel = (product: {
+  shipping_starts_at?: string | null;
+  shipping_start_note?: string | null;
+}) => {
+  const note = product.shipping_start_note?.trim();
+  if (note) return note;
+  const date = product.shipping_starts_at;
+  if (!date) return null;
+  const [y, m, d] = date.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return `Envios a partir de ${new Date(y, m - 1, d).toLocaleDateString("pt-BR")}`;
+};
 
 const Encomendas = () => {
   useSEO({
@@ -256,6 +269,12 @@ const Encomendas = () => {
                     {variantCount > 0 && (
                       <p className="text-[11px] text-muted-foreground mt-0.5">
                         {variantCount} variação(ões)
+                      </p>
+                    )}
+                    {shippingStartLabel(product) && (
+                      <p className="text-[11px] text-primary mt-1 flex items-center gap-1">
+                        <CalendarClock className="h-3 w-3 flex-shrink-0" />
+                        {shippingStartLabel(product)}
                       </p>
                     )}
                     <div className="mt-auto pt-3">

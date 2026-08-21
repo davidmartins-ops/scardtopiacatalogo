@@ -52,6 +52,8 @@ const emptyForm = {
   price: "",
   price_pix: "",
   status: "active" as SpecialOrderProductStatus,
+  shipping_starts_at: "",
+  shipping_start_note: "",
   images: [] as string[],
 };
 
@@ -140,6 +142,8 @@ const AdminSpecialOrderProducts = () => {
         price_pix: Number(form.price_pix) || 0,
         status: form.status,
         is_active: form.status !== "inactive",
+        shipping_starts_at: form.shipping_starts_at || null,
+        shipping_start_note: form.shipping_start_note.trim() || null,
         image_url: cover ?? null,
         image_urls: rest,
       };
@@ -245,6 +249,10 @@ const AdminSpecialOrderProducts = () => {
       price: String(product.price ?? ""),
       price_pix: String(product.price_pix ?? ""),
       status: (product.status ?? (product.is_active ? "active" : "inactive")) as SpecialOrderProductStatus,
+      shipping_starts_at:
+        (product as ProductRow & { shipping_starts_at?: string | null }).shipping_starts_at ?? "",
+      shipping_start_note:
+        (product as ProductRow & { shipping_start_note?: string | null }).shipping_start_note ?? "",
       images: [
         ...(product.image_url ? [product.image_url] : []),
         ...((product.image_urls ?? []) as string[]),
@@ -605,6 +613,29 @@ const AdminSpecialOrderProducts = () => {
               <p className="text-xs text-muted-foreground mt-1">
                 Uma informação por linha. Aparece no anúncio do produto.
               </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sop-ship-date">Início dos envios</Label>
+                <Input
+                  id="sop-ship-date"
+                  type="date"
+                  value={form.shipping_starts_at}
+                  onChange={(e) => setForm({ ...form, shipping_starts_at: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Data prevista para começar os envios desta encomenda.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="sop-ship-note">Observação do prazo (opcional)</Label>
+                <Input
+                  id="sop-ship-note"
+                  placeholder="Ex.: envios a partir da 2ª semana de outubro"
+                  value={form.shipping_start_note}
+                  onChange={(e) => setForm({ ...form, shipping_start_note: e.target.value })}
+                />
+              </div>
             </div>
             <div>
               <Label>Status</Label>
