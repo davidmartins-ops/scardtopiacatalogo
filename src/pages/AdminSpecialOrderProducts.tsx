@@ -163,10 +163,13 @@ const AdminSpecialOrderProducts = () => {
     },
     onError: (e: Error) =>
       toast.error(
-        e.message.includes("sku")
-          ? "Este SKU já está em uso por outro produto."
-          : e.message || "Erro ao salvar produto.",
+        e.message.includes("já está em uso")
+          ? e.message
+          : e.message.toLowerCase().includes("sku")
+            ? "Este SKU já está em uso por outro produto."
+            : e.message || "Erro ao salvar produto.",
       ),
+
   });
 
   const updateStatus = useMutation({
