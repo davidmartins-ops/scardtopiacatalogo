@@ -450,6 +450,13 @@ const Login = () => {
             {googleLoading ? "Entrando..." : "Continuar com Google"}
           </Button>
 
+          <Button asChild variant="secondary" className="w-full gap-2 mt-3">
+            <Link to="/encomendas">
+              <Truck className="h-4 w-4" aria-hidden="true" />
+              Encomendas &amp; Action Figures
+            </Link>
+          </Button>
+
           <div className="mt-4 text-center">
             <Link to="/catalogo" className="text-sm text-foreground/80 hover:text-primary transition-colors">
               Continuar como visitante e ver o catálogo
