@@ -106,6 +106,7 @@ const AdminSpecialOrderProducts = () => {
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
+        specifications: form.specifications.trim() || null,
         category: form.category.trim() || "Outros",
         sku: form.sku.trim() || null,
         price: Number(form.price) || 0,
