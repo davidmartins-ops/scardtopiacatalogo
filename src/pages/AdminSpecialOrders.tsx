@@ -257,14 +257,42 @@ const AdminSpecialOrders = () => {
                     </div>
                   </div>
                   {items.length > 0 && (
-                    <ul className="mt-2 space-y-0.5">
+                    <ul className="mt-2 space-y-1.5">
                       {items.map((it: any) => {
                         const sku = skuOf(it.description);
+                        const specLines = String(it.description ?? "")
+                          .split("\n")
+                          .map((l: string) => l.trim())
+                          .filter(Boolean);
                         return (
                           <li key={it.id} className="text-xs text-muted-foreground">
-                            {it.quantity}× {it.name}
-                            {sku && <span className="font-mono"> · SKU {sku}</span>}
-                            {" — "}{it.item_type === "quotation" && !Number(it.total_price) ? "sob cotação" : brl(it.total_price)}
+                            <div className="flex items-start gap-2">
+                              <span className="flex-1">
+                                {it.quantity}× {it.name}
+                                {sku && <span className="font-mono"> · SKU {sku}</span>}
+                                {" — "}{it.item_type === "quotation" && !Number(it.total_price) ? "sob cotação" : brl(it.total_price)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[11px] gap-1"
+                                onClick={() => openSpecEditor(it)}
+                              >
+                                <Pencil className="h-3 w-3" /> Especificações
+                              </Button>
+                            </div>
+                            {specLines.length > 0 && (
+                              <div className="mt-0.5 pl-3 border-l border-border/60 space-y-0.5">
+                                {specLines.map((line: string, i: number) => (
+                                  <p key={i} className="text-[11px] text-muted-foreground/90 whitespace-pre-line">{line}</p>
+                                ))}
+                              </div>
+                            )}
+                            {it.admin_notes && (
+                              <p className="mt-0.5 pl-3 text-[11px] text-brand-gold whitespace-pre-line">
+                                Nota interna: {it.admin_notes}
+                              </p>
+                            )}
                           </li>
                         );
                       })}
