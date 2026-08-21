@@ -40,16 +40,27 @@ const skuOf = (description?: string | null) => {
 
 const AdminSpecialOrders = () => {
   const navigate = useNavigate();
-  const { orders, isLoading, updateStatus } = useAdminSpecialOrders();
+  const { orders, isLoading, updateStatus, updateItemSpecs } = useAdminSpecialOrders();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [specSearch, setSpecSearch] = useState("");
+  const [editItem, setEditItem] = useState<any | null>(null);
+  const [specDraft, setSpecDraft] = useState("");
+  const [notesDraft, setNotesDraft] = useState("");
 
   const filtered = (orders ?? []).filter((o: any) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    const items = o.items ?? [];
+    const spec = specSearch.trim().toLowerCase();
+    if (spec) {
+      const matchesSpec = items.some((it: any) =>
+        `${it.description ?? ""}\n${it.admin_notes ?? ""}`.toLowerCase().includes(spec)
+      );
+      if (!matchesSpec) return false;
+    }
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const info = o.customer_info || {};
-    const items = o.items ?? [];
     return (
       o.id.toLowerCase().includes(q) ||
       (info.email && info.email.toLowerCase().includes(q)) ||
@@ -57,7 +68,8 @@ const AdminSpecialOrders = () => {
       (info.phone && info.phone.toLowerCase().includes(q)) ||
       items.some((it: any) =>
         (it.name ?? "").toLowerCase().includes(q) ||
-        (it.description ?? "").toLowerCase().includes(q)
+        (it.description ?? "").toLowerCase().includes(q) ||
+        (it.admin_notes ?? "").toLowerCase().includes(q)
       )
     );
   });
@@ -68,6 +80,27 @@ const AdminSpecialOrders = () => {
       toast.success("Status atualizado e cliente notificado por e-mail.");
     } catch (err: any) {
       toast.error(err?.message || "Erro ao atualizar status.");
+    }
+  };
+
+  const openSpecEditor = (item: any) => {
+    setEditItem(item);
+    setSpecDraft(item.description ?? "");
+    setNotesDraft(item.admin_notes ?? "");
+  };
+
+  const saveSpecs = async () => {
+    if (!editItem) return;
+    try {
+      await updateItemSpecs.mutateAsync({
+        item_id: editItem.id,
+        description: specDraft.trim() || null,
+        admin_notes: notesDraft.trim() || null,
+      });
+      toast.success("Especificações do item atualizadas.");
+      setEditItem(null);
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao salvar especificações.");
     }
   };
 
