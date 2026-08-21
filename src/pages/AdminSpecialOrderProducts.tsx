@@ -402,7 +402,19 @@ const AdminSpecialOrderProducts = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="sop-name">Nome</Label>
-              <Input id="sop-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                id="sop-name"
+                value={form.name}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    name,
+                    sku: prev.id ? prev.sku : buildAutoSku(name),
+                  }));
+                }}
+              />
+
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
