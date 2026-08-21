@@ -17,7 +17,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Share2, Truck } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
 import { useActiveBanners } from "@/hooks/use-banners";
@@ -25,6 +25,7 @@ import { useActiveBanners } from "@/hooks/use-banners";
 // Allowlist of internal redirect targets (prevents open redirect / phishing).
 const REDIRECT_ALLOWLIST = [
   "/catalogo",
+  "/encomendas",
   "/conta",
   "/tendencias",
   "/sobre",
@@ -447,6 +448,13 @@ const Login = () => {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
             {googleLoading ? "Entrando..." : "Continuar com Google"}
+          </Button>
+
+          <Button asChild variant="secondary" className="w-full gap-2 mt-3">
+            <Link to="/encomendas">
+              <Truck className="h-4 w-4" aria-hidden="true" />
+              Encomendas &amp; Action Figures
+            </Link>
           </Button>
 
           <div className="mt-4 text-center">

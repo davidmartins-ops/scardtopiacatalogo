@@ -10,6 +10,7 @@ import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
+import Encomendas from "./pages/Encomendas.tsx";
 import DropDetail from "./pages/DropDetail.tsx";
 import SingleDetail from "./pages/SingleDetail.tsx";
 import CardVersions from "./pages/CardVersions.tsx";
@@ -20,6 +21,7 @@ import CustomerSpecialOrderDetail from "./pages/CustomerSpecialOrderDetail.tsx";
 import SpecialOrderRequest from "./pages/SpecialOrderRequest.tsx";
 import AdminSpecialOrders from "./pages/AdminSpecialOrders.tsx";
 import AdminSpecialOrderDetail from "./pages/AdminSpecialOrderDetail.tsx";
+import AdminSpecialOrderProducts from "./pages/AdminSpecialOrderProducts.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
 import CollectionManager from "./pages/CollectionManager.tsx";
 import PublicCollection from "./pages/PublicCollection.tsx";
@@ -89,11 +91,13 @@ const App = () => (
             <Route path="/admin/pedidos/:orderId" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
             <Route path="/admin/creditos" element={<AdminRoute><AdminStoreCredits /></AdminRoute>} />
             <Route path="/admin/encomendas" element={<AdminRoute><AdminSpecialOrders /></AdminRoute>} />
+            <Route path="/admin/produtos-encomenda" element={<AdminRoute><AdminSpecialOrderProducts /></AdminRoute>} />
             <Route path="/admin/encomendas/:orderId" element={<AdminRoute><AdminSpecialOrderDetail /></AdminRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
             <Route path="/catalogo" element={<Catalogo />} />
+            <Route path="/encomendas" element={<Encomendas />} />
             <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
             <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
             <Route path="/catalogo/carta/:name" element={<CardVersions />} />
