@@ -131,10 +131,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    await admin
+    // NOTE: special_order_status has no "pending_payment" value — keep the current
+    // status and record the payment attempt so the UI can warn about duplicates.
+    const { error: updErr } = await admin
       .from("special_orders")
-      .update({ payment_method, payment_transaction_id: data.transaction_id ?? data.id ?? null, status: "pending_payment" })
+      .update({
+        payment_method,
+        payment_transaction_id: data.transaction_id ?? data.id ?? special_order_id,
+      })
       .eq("id", special_order_id);
+    if (updErr) {
+      console.error("failed to record special order payment attempt", updErr);
+    }
 
     return new Response(
       JSON.stringify({ success: true, checkout_url, transaction_id: data.transaction_id ?? data.id ?? null }),

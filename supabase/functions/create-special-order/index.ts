@@ -128,7 +128,9 @@ Deno.serve(async (req) => {
 
     // Determine initial status: fixed-only orders can be quoted/approved immediately, mixed goes to requested
     const hasQuotation = normalizedItems.some((i) => i.item_type === "quotation");
-    const initialStatus = hasQuotation ? "requested" : "quoted";
+    // Fixed-price-only orders need no quotation step: they go straight to
+    // "approved" so the customer can pay immediately.
+    const initialStatus = hasQuotation ? "requested" : "approved";
 
     const { data: order, error: orderErr } = await admin
       .from("special_orders")

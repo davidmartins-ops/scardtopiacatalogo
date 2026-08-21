@@ -209,6 +209,12 @@ const CustomerSpecialOrderDetail = () => {
 
                 {order.status === "approved" && (
                   <div className="space-y-2">
+                    {order.payment_transaction_id && (
+                      <p className="text-xs text-warning">
+                        Um checkout já foi gerado para esta encomenda. Se você já pagou, aguarde a confirmação — gerar um novo link pode resultar em pagamento duplicado.
+                      </p>
+                    )}
+
                     <p className="text-xs text-muted-foreground">A cotação foi aprovada. Escolha o método de pagamento:</p>
                     <Button className="w-full gap-1" onClick={() => handlePay("pix")}>
                       <CreditCard className="h-4 w-4" /> Pagar com PIX

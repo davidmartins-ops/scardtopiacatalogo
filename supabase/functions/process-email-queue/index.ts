@@ -252,8 +252,9 @@ Deno.serve(async (req) => {
       // Prefer payload.queued_at when present; fall back to PGMQ's enqueued_at
       // which is always set by the queue.
       const queuedAt = payload.queued_at ?? msg.enqueued_at
+      let ageMs = 0
       if (queuedAt) {
-        const ageMs = Date.now() - new Date(queuedAt).getTime()
+        ageMs = Date.now() - new Date(queuedAt).getTime()
         const maxAgeMs = ttlMinutes[queue] * 60 * 1000
         if (ageMs > maxAgeMs) {
           console.warn('Email expired (TTL exceeded)', {
@@ -266,6 +267,12 @@ Deno.serve(async (req) => {
           continue
         }
       }
+
+      // The Lovable email API rejects a send whose originating run has expired
+      // (HTTP 410 run_expired). run_id is observability metadata only, so drop it
+      // once the message is more than a few minutes old (requeues, retries).
+      const runId = ageMs > 5 * 60 * 1000 ? undefined : payload.run_id
+
 
       // Move to DLQ if max failed send attempts reached.
       if (failedAttempts >= MAX_RETRIES) {
@@ -300,26 +307,39 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendLovableEmail(
-          {
-            run_id: payload.run_id,
-            to: payload.to,
-            from: payload.from,
-            sender_domain: payload.sender_domain,
-            subject: payload.subject,
-            html: payload.html,
-            text: payload.text,
-            purpose: payload.purpose,
-            label: payload.label,
-            idempotency_key: payload.idempotency_key,
-            unsubscribe_token: payload.unsubscribe_token,
-            message_id: payload.message_id,
-          },
-          // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
-          // falls back to the default Lovable API endpoint (https://api.lovable.dev).
-          // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
-          { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
-        )
+        const sendPayload = {
+          run_id: runId,
+          to: payload.to,
+          from: payload.from,
+          sender_domain: payload.sender_domain,
+          subject: payload.subject,
+          html: payload.html,
+          text: payload.text,
+          // Auth emails are never marketing/transactional: the email API rejects
+          // transactional sends without an unsubscribe_token (400 missing_unsubscribe).
+          purpose: queue === 'auth_emails' ? 'authentication' : payload.purpose,
+          label: payload.label,
+          idempotency_key: payload.idempotency_key,
+          unsubscribe_token: payload.unsubscribe_token,
+          message_id: payload.message_id,
+        }
+        // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
+        // falls back to the default Lovable API endpoint (https://api.lovable.dev).
+        // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
+        const sendOptions = { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
+        try {
+          await sendLovableEmail(sendPayload, sendOptions)
+        } catch (sendErr) {
+          const m = sendErr instanceof Error ? sendErr.message : String(sendErr)
+          // Expired run: retry immediately without the stale run_id.
+          if (/410/.test(m) && /run_expired/i.test(m) && sendPayload.run_id) {
+            console.warn('Retrying email without expired run_id', { queue, msg_id: msg.msg_id })
+            await sendLovableEmail({ ...sendPayload, run_id: undefined }, sendOptions)
+          } else {
+            throw sendErr
+          }
+        }
+
 
         // Log success
         await supabase.from('email_send_log').insert({
