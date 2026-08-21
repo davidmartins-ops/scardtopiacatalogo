@@ -307,26 +307,37 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendLovableEmail(
-          {
-            run_id: payload.run_id,
-            to: payload.to,
-            from: payload.from,
-            sender_domain: payload.sender_domain,
-            subject: payload.subject,
-            html: payload.html,
-            text: payload.text,
-            purpose: payload.purpose,
-            label: payload.label,
-            idempotency_key: payload.idempotency_key,
-            unsubscribe_token: payload.unsubscribe_token,
-            message_id: payload.message_id,
-          },
-          // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
-          // falls back to the default Lovable API endpoint (https://api.lovable.dev).
-          // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
-          { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
-        )
+        const sendPayload = {
+          run_id: runId,
+          to: payload.to,
+          from: payload.from,
+          sender_domain: payload.sender_domain,
+          subject: payload.subject,
+          html: payload.html,
+          text: payload.text,
+          purpose: payload.purpose,
+          label: payload.label,
+          idempotency_key: payload.idempotency_key,
+          unsubscribe_token: payload.unsubscribe_token,
+          message_id: payload.message_id,
+        }
+        // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
+        // falls back to the default Lovable API endpoint (https://api.lovable.dev).
+        // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
+        const sendOptions = { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
+        try {
+          await sendLovableEmail(sendPayload, sendOptions)
+        } catch (sendErr) {
+          const m = sendErr instanceof Error ? sendErr.message : String(sendErr)
+          // Expired run: retry immediately without the stale run_id.
+          if (/410/.test(m) && /run_expired/i.test(m) && sendPayload.run_id) {
+            console.warn('Retrying email without expired run_id', { queue, msg_id: msg.msg_id })
+            await sendLovableEmail({ ...sendPayload, run_id: undefined }, sendOptions)
+          } else {
+            throw sendErr
+          }
+        }
+
 
         // Log success
         await supabase.from('email_send_log').insert({
