@@ -198,6 +198,15 @@ const AdminSpecialOrders = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input className="pl-9" placeholder="Cliente, e-mail, produto, SKU..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
+            <div className="relative flex-1 sm:w-64">
+              <ListChecks className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Especificação do item..."
+                value={specSearch}
+                onChange={(e) => setSpecSearch(e.target.value)}
+              />
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
