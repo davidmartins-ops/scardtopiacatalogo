@@ -29,8 +29,28 @@ const CONDITIONS = [
   { value: "D", label: "D - Damaged" },
 ];
 
+const DRAFT_KEY = "addItemDialogDraft";
+
+type DraftShape = {
+  open: boolean;
+  form: Record<string, string>;
+  images: UploadedImage[];
+  idParts: { set: string; num: string };
+  idAutoTouched: boolean;
+};
+
+const readDraft = (): DraftShape | null => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as DraftShape) : null;
+  } catch {
+    return null;
+  }
+};
+
 const AddItemDialog = () => {
-  const [open, setOpen] = useState(false);
+  const draft = readDraft();
+  const [open, setOpen] = useState(draft?.open ?? false);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -76,16 +96,34 @@ const AddItemDialog = () => {
   }, [open]);
 
   // CORREÇÃO 30: multi-upload — primeira imagem vira image_url principal, restante vai para drop_singles_images.
-  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [images, setImages] = useState<UploadedImage[]>(draft?.images ?? []);
 
   const [form, setForm] = useState({
     id: "", name: "", description: "Foil" as string, price: "", price_pix: "", quantity: "1", category: "",
     language: "PT", condition: "NM", status: "none" as string, availability: "pronta_entrega" as string, drop_description: "",
+    ...(draft?.form ?? {}),
   });
   // CORREÇÃO 28.1: build SET-NUM-LANG-F/NF-COND automatically until the admin overrides it manually.
   // Auto-generate SET (from name) and NUM (timestamp-based) so admin doesn't need to fill them.
-  const [idParts, setIdParts] = useState({ set: "", num: "" });
-  const [idAutoTouched, setIdAutoTouched] = useState(false);
+  const [idParts, setIdParts] = useState(draft?.idParts ?? { set: "", num: "" });
+  const [idAutoTouched, setIdAutoTouched] = useState(draft?.idAutoTouched ?? false);
+
+  // Persist the draft so switching pages/tabs (unmount) does not lose the dialog or its content.
+  useEffect(() => {
+    try {
+      if (open) {
+        sessionStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ open, form, images, idParts, idAutoTouched }),
+        );
+      } else {
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
+    } catch {
+      // storage unavailable — ignore
+    }
+  }, [open, form, images, idParts, idAutoTouched]);
+
 
   const deriveSetFromName = (name: string) => {
     const clean = name.toUpperCase().replace(/[^A-Z0-9]/g, "");
