@@ -182,6 +182,11 @@ const EncomendaProduto = () => {
                     <Truck className="h-4 w-4" /> Iniciar solicitação
                   </Button>
                 </Link>
+                {shippingStart && (
+                  <p className="text-xs text-primary mt-3 flex items-center gap-1.5">
+                    <CalendarClock className="h-3.5 w-3.5 flex-shrink-0" /> {shippingStart}
+                  </p>
+                )}
                 <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1">
                   <ShieldCheck className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                   Confirmamos disponibilidade, prazo e valor final antes de qualquer pagamento.
