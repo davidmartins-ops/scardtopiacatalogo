@@ -208,6 +208,7 @@ const AdminSpecialOrderProducts = () => {
       id: product.id,
       name: product.name,
       description: product.description ?? "",
+      specifications: (product as ProductRow & { specifications?: string | null }).specifications ?? "",
       category: product.category ?? "",
       sku: product.sku ?? "",
       price: String(product.price ?? ""),
