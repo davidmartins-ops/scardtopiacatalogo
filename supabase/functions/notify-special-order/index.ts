@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, supabaseServiceKey);
     const { data: order, error: orderErr } = await admin
       .from("special_orders")
-      .select("id, user_id, status, total, customer_info, items:special_order_items(name, quantity, unit_price, total_price)")
+      .select("id, user_id, status, total, tracking_code, customer_info, items:special_order_items(name, description, quantity, unit_price, total_price, item_type)")
       .eq("id", special_order_id)
       .maybeSingle();
     if (orderErr || !order) {
@@ -57,12 +57,21 @@ Deno.serve(async (req) => {
     }
 
     const info = (order.customer_info ?? {}) as Record<string, any>;
-    const items = (order.items ?? []).map((i: any) => ({
-      name: i.name,
-      quantity: Number(i.quantity),
-      unit_price: Number(i.unit_price),
-      total_price: Number(i.total_price),
-    }));
+    const items = (order.items ?? []).map((i: any) => {
+      const desc: string = i.description ?? "";
+      const skuMatch = desc.match(/SKU:\s*([^\n]+)/i);
+      const nameParts = String(i.name ?? "").split(" — ");
+      return {
+        name: nameParts[0],
+        variantLabel: nameParts.length > 1 ? nameParts.slice(1).join(" — ") : null,
+        sku: skuMatch ? skuMatch[1].trim() : null,
+        description: desc.replace(/SKU:\s*[^\n]+\n?/i, "").trim() || null,
+        item_type: i.item_type,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price),
+        total_price: Number(i.total_price),
+      };
+    });
 
     const templateData = {
       orderId: order.id,
@@ -70,9 +79,11 @@ Deno.serve(async (req) => {
       statusLabel: statusLabels[status] ?? status,
       status,
       total: Number(order.total ?? 0),
+      trackingCode: order.tracking_code ?? null,
       items,
       note: note ?? null,
     };
+
 
     const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
       method: "POST",
