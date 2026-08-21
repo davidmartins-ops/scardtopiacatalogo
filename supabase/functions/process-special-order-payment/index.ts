@@ -93,12 +93,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Encomendas: parcelamento limitado a 6x sem juros no checkout InfinitePay.
+    const SPECIAL_ORDER_MAX_INSTALLMENTS = 6;
+
     const checkoutPayload = {
       handle: INFINITEPAY_HANDLE,
       order_nsu: special_order_id,
       redirect_url: `${SITE_URL}/pedido/sucesso`,
+      max_installments: SPECIAL_ORDER_MAX_INSTALLMENTS,
+      installments: SPECIAL_ORDER_MAX_INSTALLMENTS,
       items: items.length > 0 ? items : [{ description: `Encomenda ${special_order_id.slice(0, 8)}`, quantity: 1, price: totalCents }],
     };
+
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (INFINITEPAY_API_KEY) headers["Authorization"] = `Bearer ${INFINITEPAY_API_KEY}`;

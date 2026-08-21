@@ -266,6 +266,7 @@ const Encomendas = () => {
                       {basePix > 0 && (
                         <p className="text-xs text-success">{formatBRL(basePix)} no PIX</p>
                       )}
+                      <p className="text-[11px] text-muted-foreground">ou até 6x sem juros no cartão</p>
                       <Link to={`/encomendas/${product.id}`}>
                         <Button size="sm" className="w-full mt-2">
                           Ver detalhes
