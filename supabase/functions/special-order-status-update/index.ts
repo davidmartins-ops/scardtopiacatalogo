@@ -117,6 +117,20 @@ Deno.serve(async (req) => {
       metadata: { from_status: order.status, to_status: status, note, paid_amount, shipping_cost },
     });
 
+    // Customer status email (never blocks the update)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/notify-special-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({ special_order_id, status, note: note ?? null }),
+      });
+    } catch (e) {
+      console.error("special order status email failed", e);
+    }
+
     // Auto-generate shipping label when item arrives and order is paid
     if (status === "received" && order.status === "paid" && !order.superfrete_order_id) {
       try {
@@ -132,6 +146,7 @@ Deno.serve(async (req) => {
         console.error("auto label for special order failed", e);
       }
     }
+
 
     return new Response(
       JSON.stringify({ success: true, status }),
