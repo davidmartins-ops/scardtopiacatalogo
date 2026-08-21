@@ -164,10 +164,54 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Confirmation email to the customer (never blocks the request)
+    try {
+      const userRes = await admin.auth.admin.getUserById(userId);
+      const email = userRes?.data?.user?.email;
+      if (email) {
+        await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            templateName: "special-order-received",
+            recipientEmail: email,
+            idempotencyKey: `special-order-received-${order.id}`,
+            templateData: {
+              orderId: order.id,
+              customerName: (customer_info as any)?.name ?? (customer_info as any)?.full_name ?? "Cliente",
+              total,
+              notes: notes ?? null,
+              items: normalizedItems.map((i) => {
+                const desc = i.description ?? "";
+                const skuMatch = desc.match(/SKU:\s*([^\n]+)/i);
+                const parts = String(i.name).split(" — ");
+                return {
+                  name: parts[0],
+                  variantLabel: parts.length > 1 ? parts.slice(1).join(" — ") : null,
+                  sku: skuMatch ? skuMatch[1].trim() : null,
+                  description: desc.replace(/SKU:\s*[^\n]+\n?/i, "").trim() || null,
+                  item_type: i.item_type,
+                  quantity: i.quantity,
+                  unit_price: i.unit_price,
+                  total_price: i.total_price,
+                };
+              }),
+            },
+          }),
+        });
+      }
+    } catch (e) {
+      console.error("special order confirmation email failed", e);
+    }
+
     return new Response(
       JSON.stringify({ id: order.id, status: order.status, total }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     console.error("create-special-order error", e);
     return new Response(
