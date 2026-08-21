@@ -836,7 +836,7 @@ const AdminSpecialOrderProducts = () => {
                       id: variantForm.id || undefined,
                       product_id: variantProduct.id,
                       label: variantForm.label.trim(),
-                      sku: variantForm.sku.trim() || null,
+                      sku: sanitizeSku(variantForm.sku) || null,
                       price: Number(variantForm.price) || 0,
                       price_pix: Number(variantForm.price_pix) || 0,
                       image_url: variantForm.image_url.trim() || null,
