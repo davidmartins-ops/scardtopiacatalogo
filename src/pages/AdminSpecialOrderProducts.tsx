@@ -46,6 +46,7 @@ const emptyForm = {
   id: "",
   name: "",
   description: "",
+  specifications: "",
   category: "Action Figure",
   sku: "",
   price: "",
@@ -105,6 +106,7 @@ const AdminSpecialOrderProducts = () => {
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
+        specifications: form.specifications.trim() || null,
         category: form.category.trim() || "Outros",
         sku: form.sku.trim() || null,
         price: Number(form.price) || 0,
@@ -207,6 +209,7 @@ const AdminSpecialOrderProducts = () => {
       id: product.id,
       name: product.name,
       description: product.description ?? "",
+      specifications: (product as ProductRow & { specifications?: string | null }).specifications ?? "",
       category: product.category ?? "",
       sku: product.sku ?? "",
       price: String(product.price ?? ""),
@@ -504,6 +507,19 @@ const AdminSpecialOrderProducts = () => {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
+            </div>
+            <div>
+              <Label htmlFor="sop-specs">Especificações do produto</Label>
+              <Textarea
+                id="sop-specs"
+                rows={5}
+                placeholder={"Ex.: Material: PVC\nAltura: 30 cm\nEscala: 1/7\nAcessórios: 2 faces intercambiáveis\nFabricante / origem"}
+                value={form.specifications}
+                onChange={(e) => setForm({ ...form, specifications: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Uma informação por linha. Aparece no anúncio do produto.
+              </p>
             </div>
             <div>
               <Label>Status</Label>

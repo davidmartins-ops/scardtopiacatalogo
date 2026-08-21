@@ -1370,6 +1370,7 @@ export type Database = {
           price_pix: number
           sku: string | null
           sort_order: number
+          specifications: string | null
           status: string
           updated_at: string
         }
@@ -1386,6 +1387,7 @@ export type Database = {
           price_pix?: number
           sku?: string | null
           sort_order?: number
+          specifications?: string | null
           status?: string
           updated_at?: string
         }
@@ -1402,6 +1404,7 @@ export type Database = {
           price_pix?: number
           sku?: string | null
           sort_order?: number
+          specifications?: string | null
           status?: string
           updated_at?: string
         }
