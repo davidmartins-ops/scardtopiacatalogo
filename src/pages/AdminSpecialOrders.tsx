@@ -313,6 +313,46 @@ const AdminSpecialOrders = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={!!editItem} onOpenChange={(o) => !o && setEditItem(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Especificações do item</DialogTitle>
+            <DialogDescription>
+              {editItem?.name} — {editItem?.quantity}× · visível para o cliente na solicitação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="so-item-specs">Especificações</Label>
+              <Textarea
+                id="so-item-specs"
+                rows={6}
+                placeholder={"Ex.: SKU: ABC-123\nVariação: Versão deluxe\nMaterial: PVC\nAltura: 30 cm"}
+                value={specDraft}
+                onChange={(e) => setSpecDraft(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Uma informação por linha.</p>
+            </div>
+            <div>
+              <Label htmlFor="so-item-notes">Nota interna (só admin)</Label>
+              <Textarea
+                id="so-item-notes"
+                rows={3}
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>Cancelar</Button>
+            <Button onClick={saveSpecs} disabled={updateItemSpecs.isPending}>
+              {updateItemSpecs.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
