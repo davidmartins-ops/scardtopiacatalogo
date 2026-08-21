@@ -52,6 +52,8 @@ const emptyForm = {
   price: "",
   price_pix: "",
   status: "active" as SpecialOrderProductStatus,
+  shipping_starts_at: "",
+  shipping_start_note: "",
   images: [] as string[],
 };
 
