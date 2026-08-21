@@ -252,8 +252,9 @@ Deno.serve(async (req) => {
       // Prefer payload.queued_at when present; fall back to PGMQ's enqueued_at
       // which is always set by the queue.
       const queuedAt = payload.queued_at ?? msg.enqueued_at
+      let ageMs = 0
       if (queuedAt) {
-        const ageMs = Date.now() - new Date(queuedAt).getTime()
+        ageMs = Date.now() - new Date(queuedAt).getTime()
         const maxAgeMs = ttlMinutes[queue] * 60 * 1000
         if (ageMs > maxAgeMs) {
           console.warn('Email expired (TTL exceeded)', {
@@ -266,6 +267,12 @@ Deno.serve(async (req) => {
           continue
         }
       }
+
+      // The Lovable email API rejects a send whose originating run has expired
+      // (HTTP 410 run_expired). run_id is observability metadata only, so drop it
+      // once the message is more than a few minutes old (requeues, retries).
+      const runId = ageMs > 5 * 60 * 1000 ? undefined : payload.run_id
+
 
       // Move to DLQ if max failed send attempts reached.
       if (failedAttempts >= MAX_RETRIES) {
