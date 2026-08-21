@@ -475,9 +475,25 @@ const AdminSpecialOrderProducts = () => {
                   placeholder="AFCHANDRA01"
                   className="font-mono text-xs"
                 />
+                <div
+                  className={`mt-1 text-[10px] font-mono rounded-md border px-2 py-1 ${
+                    !productSkuPreview
+                      ? "text-muted-foreground border-border/60 bg-muted/40"
+                      : productSkuDuplicate
+                        ? "text-destructive border-destructive/40 bg-destructive/5"
+                        : "text-primary border-primary/30 bg-primary/5"
+                  }`}
+                >
+                  <span className="text-muted-foreground mr-1">SKU final:</span>
+                  {productSkuPreview || "—"}
+                  {productSkuDuplicate && (
+                    <span className="block not-italic">Já existe outro produto com este SKU.</span>
+                  )}
+                </div>
                 <p className="text-[10px] text-muted-foreground mt-1">
                   Gerado automaticamente a partir do nome, sem hífens ou pontos.
                 </p>
+
               </div>
 
             </div>
