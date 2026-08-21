@@ -114,7 +114,22 @@ const AdminSpecialOrderProducts = () => {
 
   const saveProduct = useMutation({
     mutationFn: async () => {
+      const skuValue = sanitizeSku(form.sku);
+      if (skuValue) {
+        // Server-side check: no two products may share the same sanitized SKU.
+        const dup = await supabase
+          .from("special_order_products")
+          .select("id, name")
+          .eq("sku", skuValue)
+          .neq("id", form.id || "00000000-0000-0000-0000-000000000000")
+          .limit(1);
+        if (dup.error) throw dup.error;
+        if (dup.data && dup.data.length > 0) {
+          throw new Error(`SKU "${skuValue}" já está em uso pelo produto "${dup.data[0].name}".`);
+        }
+      }
       const [cover, ...rest] = form.images;
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
@@ -148,10 +163,13 @@ const AdminSpecialOrderProducts = () => {
     },
     onError: (e: Error) =>
       toast.error(
-        e.message.includes("sku")
-          ? "Este SKU já está em uso por outro produto."
-          : e.message || "Erro ao salvar produto.",
+        e.message.includes("já está em uso")
+          ? e.message
+          : e.message.toLowerCase().includes("sku")
+            ? "Este SKU já está em uso por outro produto."
+            : e.message || "Erro ao salvar produto.",
       ),
+
   });
 
   const updateStatus = useMutation({
@@ -235,7 +253,20 @@ const AdminSpecialOrderProducts = () => {
     setOpen(true);
   };
 
+  // SKU sanitizado + detecção local de duplicidade (o salvamento revalida no banco).
+  const productSkuPreview = sanitizeSku(form.sku);
+  const productSkuDuplicate =
+    !!productSkuPreview &&
+    products.some((p) => (p.sku ?? "") === productSkuPreview && p.id !== form.id);
+
+  const variantSkuPreview = sanitizeSku(variantForm.sku);
+  const variantSkuDuplicate =
+    !!variantSkuPreview &&
+    (variants.some((v) => (v.sku ?? "") === variantSkuPreview && v.id !== variantForm.id) ||
+      products.some((p) => (p.sku ?? "") === variantSkuPreview));
+
   return (
+
     <div className="min-h-screen bg-background font-body">
       <header className="border-b border-brand-header-border bg-brand-header backdrop-blur-xl sticky top-0 z-30 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -444,9 +475,25 @@ const AdminSpecialOrderProducts = () => {
                   placeholder="AFCHANDRA01"
                   className="font-mono text-xs"
                 />
+                <div
+                  className={`mt-1 text-[10px] font-mono rounded-md border px-2 py-1 ${
+                    !productSkuPreview
+                      ? "text-muted-foreground border-border/60 bg-muted/40"
+                      : productSkuDuplicate
+                        ? "text-destructive border-destructive/40 bg-destructive/5"
+                        : "text-primary border-primary/30 bg-primary/5"
+                  }`}
+                >
+                  <span className="text-muted-foreground mr-1">SKU final:</span>
+                  {productSkuPreview || "—"}
+                  {productSkuDuplicate && (
+                    <span className="block not-italic">Já existe outro produto com este SKU.</span>
+                  )}
+                </div>
                 <p className="text-[10px] text-muted-foreground mt-1">
                   Gerado automaticamente a partir do nome, sem hífens ou pontos.
                 </p>
+
               </div>
 
             </div>
@@ -587,7 +634,12 @@ const AdminSpecialOrderProducts = () => {
                   toast.error("Informe o nome do produto.");
                   return;
                 }
+                if (productSkuDuplicate) {
+                  toast.error("Já existe outro produto com este SKU. Gere um novo SKU.");
+                  return;
+                }
                 saveProduct.mutate();
+
               }}
               disabled={saveProduct.isPending}
             >
@@ -724,6 +776,22 @@ const AdminSpecialOrderProducts = () => {
                   }
                   className="font-mono text-xs"
                 />
+                <div
+                  className={`mt-1 text-[10px] font-mono rounded-md border px-2 py-1 ${
+                    !variantSkuPreview
+                      ? "text-muted-foreground border-border/60 bg-muted/40"
+                      : variantSkuDuplicate
+                        ? "text-destructive border-destructive/40 bg-destructive/5"
+                        : "text-primary border-primary/30 bg-primary/5"
+                  }`}
+                >
+                  <span className="text-muted-foreground mr-1">SKU final:</span>
+                  {variantSkuPreview || "—"}
+                  {variantSkuDuplicate && (
+                    <span className="block">Este SKU já está em uso.</span>
+                  )}
+                </div>
+
               </div>
 
               <div>
@@ -825,13 +893,31 @@ const AdminSpecialOrderProducts = () => {
               <Button
                 className="gap-2"
                 disabled={saveVariant.isPending}
-                onClick={() => {
+                onClick={async () => {
                   if (!variantProduct) return;
                   if (!variantForm.label.trim()) {
                     toast.error("Informe o nome da variação.");
                     return;
                   }
+                  if (variantSkuDuplicate) {
+                    toast.error("Este SKU já está em uso. Gere um novo SKU.");
+                    return;
+                  }
+                  if (variantSkuPreview) {
+                    // Revalida no banco (outras variações de outros produtos).
+                    const dup = await supabase
+                      .from("special_order_product_variants")
+                      .select("id")
+                      .eq("sku", variantSkuPreview)
+                      .neq("id", variantForm.id || "00000000-0000-0000-0000-000000000000")
+                      .limit(1);
+                    if (dup.data && dup.data.length > 0) {
+                      toast.error("Este SKU já está em uso por outra variação.");
+                      return;
+                    }
+                  }
                   saveVariant.mutate(
+
                     {
                       id: variantForm.id || undefined,
                       product_id: variantProduct.id,
