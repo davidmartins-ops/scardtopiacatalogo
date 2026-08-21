@@ -173,7 +173,7 @@ const EncomendaProduto = () => {
 
               <div className="glass-card p-4 mt-5">
                 <p className="text-2xl font-bold text-foreground">{formatBRL(price)}</p>
-                <p className="text-xs text-muted-foreground">no cartão (até 3x sem juros)</p>
+                <p className="text-xs text-muted-foreground">no cartão (até 6x sem juros — exclusivo para encomendas)</p>
                 {pricePix > 0 && (
                   <p className="text-sm text-success mt-2 font-medium">{formatBRL(pricePix)} no PIX</p>
                 )}
