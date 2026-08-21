@@ -5,11 +5,24 @@ import { useSpecialOrderProduct } from "@/hooks/use-special-order-catalog";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Package, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { ArrowLeft, CalendarClock, Loader2, Package, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const shippingStartLabel = (product: {
+  shipping_starts_at?: string | null;
+  shipping_start_note?: string | null;
+} | null) => {
+  const note = product?.shipping_start_note?.trim();
+  if (note) return note;
+  const date = product?.shipping_starts_at;
+  if (!date) return null;
+  const [y, m, d] = date.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return `Envios a partir de ${new Date(y, m - 1, d).toLocaleDateString("pt-BR")}`;
+};
 
 const EncomendaProduto = () => {
   const { productId } = useParams<{ productId: string }>();
