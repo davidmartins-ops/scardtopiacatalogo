@@ -247,6 +247,10 @@ const AdminSpecialOrderProducts = () => {
       price: String(product.price ?? ""),
       price_pix: String(product.price_pix ?? ""),
       status: (product.status ?? (product.is_active ? "active" : "inactive")) as SpecialOrderProductStatus,
+      shipping_starts_at:
+        (product as ProductRow & { shipping_starts_at?: string | null }).shipping_starts_at ?? "",
+      shipping_start_note:
+        (product as ProductRow & { shipping_start_note?: string | null }).shipping_start_note ?? "",
       images: [
         ...(product.image_url ? [product.image_url] : []),
         ...((product.image_urls ?? []) as string[]),
