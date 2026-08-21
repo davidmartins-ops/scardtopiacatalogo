@@ -58,6 +58,7 @@ const EncomendaProduto = () => {
   const price = Number(selectedVariant?.price || product?.price || 0);
   const pricePix = Number(selectedVariant?.price_pix || product?.price_pix || 0);
   const sku = selectedVariant?.sku ?? product?.sku ?? null;
+  const shippingStart = shippingStartLabel(product);
 
   useSEO({
     title: product ? `${product.name} | Encomendas | Spencer's Cardtopia` : "Encomendas Especiais",
