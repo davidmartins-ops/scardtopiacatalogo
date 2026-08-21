@@ -3,8 +3,18 @@ import { useAdminSpecialOrders, SPECIAL_ORDER_STATUS_LABELS } from "@/hooks/use-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ChevronRight, Search, Package, FileDown, Printer } from "lucide-react";
+import { Loader2, ChevronRight, Search, Package, FileDown, Printer, Pencil, ListChecks } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -30,16 +40,27 @@ const skuOf = (description?: string | null) => {
 
 const AdminSpecialOrders = () => {
   const navigate = useNavigate();
-  const { orders, isLoading, updateStatus } = useAdminSpecialOrders();
+  const { orders, isLoading, updateStatus, updateItemSpecs } = useAdminSpecialOrders();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [specSearch, setSpecSearch] = useState("");
+  const [editItem, setEditItem] = useState<any | null>(null);
+  const [specDraft, setSpecDraft] = useState("");
+  const [notesDraft, setNotesDraft] = useState("");
 
   const filtered = (orders ?? []).filter((o: any) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    const items = o.items ?? [];
+    const spec = specSearch.trim().toLowerCase();
+    if (spec) {
+      const matchesSpec = items.some((it: any) =>
+        `${it.description ?? ""}\n${it.admin_notes ?? ""}`.toLowerCase().includes(spec)
+      );
+      if (!matchesSpec) return false;
+    }
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const info = o.customer_info || {};
-    const items = o.items ?? [];
     return (
       o.id.toLowerCase().includes(q) ||
       (info.email && info.email.toLowerCase().includes(q)) ||
@@ -47,7 +68,8 @@ const AdminSpecialOrders = () => {
       (info.phone && info.phone.toLowerCase().includes(q)) ||
       items.some((it: any) =>
         (it.name ?? "").toLowerCase().includes(q) ||
-        (it.description ?? "").toLowerCase().includes(q)
+        (it.description ?? "").toLowerCase().includes(q) ||
+        (it.admin_notes ?? "").toLowerCase().includes(q)
       )
     );
   });
@@ -58,6 +80,27 @@ const AdminSpecialOrders = () => {
       toast.success("Status atualizado e cliente notificado por e-mail.");
     } catch (err: any) {
       toast.error(err?.message || "Erro ao atualizar status.");
+    }
+  };
+
+  const openSpecEditor = (item: any) => {
+    setEditItem(item);
+    setSpecDraft(item.description ?? "");
+    setNotesDraft(item.admin_notes ?? "");
+  };
+
+  const saveSpecs = async () => {
+    if (!editItem) return;
+    try {
+      await updateItemSpecs.mutateAsync({
+        item_id: editItem.id,
+        description: specDraft.trim() || null,
+        admin_notes: notesDraft.trim() || null,
+      });
+      toast.success("Especificações do item atualizadas.");
+      setEditItem(null);
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao salvar especificações.");
     }
   };
 
@@ -155,6 +198,15 @@ const AdminSpecialOrders = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input className="pl-9" placeholder="Cliente, e-mail, produto, SKU..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
+            <div className="relative flex-1 sm:w-64">
+              <ListChecks className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Especificação do item..."
+                value={specSearch}
+                onChange={(e) => setSpecSearch(e.target.value)}
+              />
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -214,14 +266,42 @@ const AdminSpecialOrders = () => {
                     </div>
                   </div>
                   {items.length > 0 && (
-                    <ul className="mt-2 space-y-0.5">
+                    <ul className="mt-2 space-y-1.5">
                       {items.map((it: any) => {
                         const sku = skuOf(it.description);
+                        const specLines = String(it.description ?? "")
+                          .split("\n")
+                          .map((l: string) => l.trim())
+                          .filter(Boolean);
                         return (
                           <li key={it.id} className="text-xs text-muted-foreground">
-                            {it.quantity}× {it.name}
-                            {sku && <span className="font-mono"> · SKU {sku}</span>}
-                            {" — "}{it.item_type === "quotation" && !Number(it.total_price) ? "sob cotação" : brl(it.total_price)}
+                            <div className="flex items-start gap-2">
+                              <span className="flex-1">
+                                {it.quantity}× {it.name}
+                                {sku && <span className="font-mono"> · SKU {sku}</span>}
+                                {" — "}{it.item_type === "quotation" && !Number(it.total_price) ? "sob cotação" : brl(it.total_price)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[11px] gap-1"
+                                onClick={() => openSpecEditor(it)}
+                              >
+                                <Pencil className="h-3 w-3" /> Especificações
+                              </Button>
+                            </div>
+                            {specLines.length > 0 && (
+                              <div className="mt-0.5 pl-3 border-l border-border/60 space-y-0.5">
+                                {specLines.map((line: string, i: number) => (
+                                  <p key={i} className="text-[11px] text-muted-foreground/90 whitespace-pre-line">{line}</p>
+                                ))}
+                              </div>
+                            )}
+                            {it.admin_notes && (
+                              <p className="mt-0.5 pl-3 text-[11px] text-brand-gold whitespace-pre-line">
+                                Nota interna: {it.admin_notes}
+                              </p>
+                            )}
                           </li>
                         );
                       })}
@@ -233,6 +313,46 @@ const AdminSpecialOrders = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={!!editItem} onOpenChange={(o) => !o && setEditItem(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Especificações do item</DialogTitle>
+            <DialogDescription>
+              {editItem?.name} — {editItem?.quantity}× · visível para o cliente na solicitação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="so-item-specs">Especificações</Label>
+              <Textarea
+                id="so-item-specs"
+                rows={6}
+                placeholder={"Ex.: SKU: ABC-123\nVariação: Versão deluxe\nMaterial: PVC\nAltura: 30 cm"}
+                value={specDraft}
+                onChange={(e) => setSpecDraft(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Uma informação por linha.</p>
+            </div>
+            <div>
+              <Label htmlFor="so-item-notes">Nota interna (só admin)</Label>
+              <Textarea
+                id="so-item-notes"
+                rows={3}
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>Cancelar</Button>
+            <Button onClick={saveSpecs} disabled={updateItemSpecs.isPending}>
+              {updateItemSpecs.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

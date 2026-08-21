@@ -265,7 +265,25 @@ export const useAdminSpecialOrders = () => {
     },
   });
 
-  return { orders, isLoading, updateStatus, createQuote };
+  const updateItemSpecs = useMutation({
+    mutationFn: async (input: { item_id: string; description: string | null; admin_notes?: string | null }) => {
+      const { error } = await supabase
+        .from("special_order_items")
+        .update({
+          description: input.description,
+          ...(input.admin_notes !== undefined ? { admin_notes: input.admin_notes } : {}),
+        })
+        .eq("id", input.item_id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-special-orders"] });
+      qc.invalidateQueries({ queryKey: ["special-order-detail"] });
+      qc.invalidateQueries({ queryKey: ["admin-special-order-detail"] });
+    },
+  });
+
+  return { orders, isLoading, updateStatus, createQuote, updateItemSpecs };
 };
 
 export const useSpecialOrderProducts = () => {
