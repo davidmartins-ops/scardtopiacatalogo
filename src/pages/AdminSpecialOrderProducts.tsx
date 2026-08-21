@@ -771,6 +771,22 @@ const AdminSpecialOrderProducts = () => {
                   }
                   className="font-mono text-xs"
                 />
+                <div
+                  className={`mt-1 text-[10px] font-mono rounded-md border px-2 py-1 ${
+                    !variantSkuPreview
+                      ? "text-muted-foreground border-border/60 bg-muted/40"
+                      : variantSkuDuplicate
+                        ? "text-destructive border-destructive/40 bg-destructive/5"
+                        : "text-primary border-primary/30 bg-primary/5"
+                  }`}
+                >
+                  <span className="text-muted-foreground mr-1">SKU final:</span>
+                  {variantSkuPreview || "—"}
+                  {variantSkuDuplicate && (
+                    <span className="block">Este SKU já está em uso.</span>
+                  )}
+                </div>
+
               </div>
 
               <div>
