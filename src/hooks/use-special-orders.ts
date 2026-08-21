@@ -213,10 +213,11 @@ export const useAdminSpecialOrders = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("special_orders")
-        .select("*")
+        .select("*, items:special_order_items(*)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as SpecialOrder[];
+      return (data ?? []) as (SpecialOrder & { items: SpecialOrderItem[] })[];
+
     },
   });
 
