@@ -12,6 +12,7 @@ const BodySchema = z.object({
     z.object({
       item_type: z.enum(["fixed_price", "quotation"]).default("quotation"),
       product_id: z.string().uuid().optional(),
+      variant_id: z.string().uuid().optional(),
       name: z.string().min(1).max(255),
       description: z.string().max(2000).optional(),
       quantity: z.number().int().positive().default(1),
@@ -86,8 +87,25 @@ Deno.serve(async (req) => {
         product = data;
       }
 
-      const unitPrice = item.item_type === "fixed_price" && product
-        ? Number(product.price)
+      let variant = null;
+      if (item.variant_id) {
+        const { data, error } = await admin
+          .from("special_order_product_variants")
+          .select("*")
+          .eq("id", item.variant_id)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (error || !data) {
+          return new Response(
+            JSON.stringify({ error: `Variação não encontrada: ${item.variant_id}` }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        variant = data;
+      }
+
+      const unitPrice = item.item_type === "fixed_price"
+        ? (variant ? Number(variant.price) : product ? Number(product.price) : Number(item.unit_price || 0))
         : Number(item.unit_price || 0);
       const totalPrice = unitPrice * item.quantity;
       total += totalPrice;
@@ -95,8 +113,11 @@ Deno.serve(async (req) => {
       normalizedItems.push({
         item_type: item.item_type,
         product_id: item.product_id ?? null,
-        name: product ? product.name : item.name,
-        description: item.description ?? product?.description ?? null,
+        name: product
+          ? `${product.name}${variant ? ` — ${variant.label}` : ""}`
+          : item.name,
+        description: [item.description, variant?.sku ? `SKU: ${variant.sku}` : null]
+          .filter(Boolean).join("\n") || product?.description || null,
         quantity: item.quantity,
         unit_price: unitPrice,
         total_price: totalPrice,
