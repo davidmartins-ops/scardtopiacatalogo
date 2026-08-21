@@ -21,6 +21,7 @@ import CustomerSpecialOrderDetail from "./pages/CustomerSpecialOrderDetail.tsx";
 import SpecialOrderRequest from "./pages/SpecialOrderRequest.tsx";
 import AdminSpecialOrders from "./pages/AdminSpecialOrders.tsx";
 import AdminSpecialOrderDetail from "./pages/AdminSpecialOrderDetail.tsx";
+import AdminSpecialOrderProducts from "./pages/AdminSpecialOrderProducts.tsx";
 import DeckBuilder from "./pages/DeckBuilder.tsx";
 import CollectionManager from "./pages/CollectionManager.tsx";
 import PublicCollection from "./pages/PublicCollection.tsx";
