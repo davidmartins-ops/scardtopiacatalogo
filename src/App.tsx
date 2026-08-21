@@ -10,6 +10,7 @@ import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import Catalogo from "./pages/Catalogo.tsx";
+import Encomendas from "./pages/Encomendas.tsx";
 import DropDetail from "./pages/DropDetail.tsx";
 import SingleDetail from "./pages/SingleDetail.tsx";
 import CardVersions from "./pages/CardVersions.tsx";
