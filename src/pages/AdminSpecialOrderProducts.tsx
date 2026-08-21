@@ -114,7 +114,22 @@ const AdminSpecialOrderProducts = () => {
 
   const saveProduct = useMutation({
     mutationFn: async () => {
+      const skuValue = sanitizeSku(form.sku);
+      if (skuValue) {
+        // Server-side check: no two products may share the same sanitized SKU.
+        const dup = await supabase
+          .from("special_order_products")
+          .select("id, name")
+          .eq("sku", skuValue)
+          .neq("id", form.id || "00000000-0000-0000-0000-000000000000")
+          .limit(1);
+        if (dup.error) throw dup.error;
+        if (dup.data && dup.data.length > 0) {
+          throw new Error(`SKU "${skuValue}" já está em uso pelo produto "${dup.data[0].name}".`);
+        }
+      }
       const [cover, ...rest] = form.images;
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
