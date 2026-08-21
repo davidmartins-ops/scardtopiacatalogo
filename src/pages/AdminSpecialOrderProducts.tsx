@@ -614,6 +614,29 @@ const AdminSpecialOrderProducts = () => {
                 Uma informação por linha. Aparece no anúncio do produto.
               </p>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sop-ship-date">Início dos envios</Label>
+                <Input
+                  id="sop-ship-date"
+                  type="date"
+                  value={form.shipping_starts_at}
+                  onChange={(e) => setForm({ ...form, shipping_starts_at: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Data prevista para começar os envios desta encomenda.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="sop-ship-note">Observação do prazo (opcional)</Label>
+                <Input
+                  id="sop-ship-note"
+                  placeholder="Ex.: envios a partir da 2ª semana de outubro"
+                  value={form.shipping_start_note}
+                  onChange={(e) => setForm({ ...form, shipping_start_note: e.target.value })}
+                />
+              </div>
+            </div>
             <div>
               <Label>Status</Label>
               <Select
