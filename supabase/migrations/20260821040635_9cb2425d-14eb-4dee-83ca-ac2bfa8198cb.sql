@@ -1,0 +1,1 @@
+ALTER TABLE public.special_order_products ADD COLUMN IF NOT EXISTS specifications text;
