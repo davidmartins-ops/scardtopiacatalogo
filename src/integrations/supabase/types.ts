@@ -1306,6 +1306,56 @@ export type Database = {
           },
         ]
       }
+      special_order_product_variants: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          label: string
+          price: number
+          price_pix: number
+          product_id: string
+          sku: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          label: string
+          price?: number
+          price_pix?: number
+          product_id: string
+          sku?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          label?: string
+          price?: number
+          price_pix?: number
+          product_id?: string
+          sku?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_order_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "special_order_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       special_order_products: {
         Row: {
           category: string
@@ -1313,10 +1363,14 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: string[]
           is_active: boolean
           name: string
           price: number
           price_pix: number
+          sku: string | null
+          sort_order: number
+          status: string
           updated_at: string
         }
         Insert: {
@@ -1325,10 +1379,14 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_active?: boolean
           name: string
           price: number
           price_pix?: number
+          sku?: string | null
+          sort_order?: number
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -1337,10 +1395,14 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_active?: boolean
           name?: string
           price?: number
           price_pix?: number
+          sku?: string | null
+          sort_order?: number
+          status?: string
           updated_at?: string
         }
         Relationships: []
