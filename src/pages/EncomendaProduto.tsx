@@ -194,6 +194,26 @@ const EncomendaProduto = () => {
                   <p className="text-sm text-muted-foreground whitespace-pre-line">{product.description}</p>
                 </div>
               )}
+
+              {(product as typeof product & { specifications?: string | null }).specifications && (
+                <div className="mt-6">
+                  <h2 className="text-sm font-semibold text-foreground mb-2">Especificações</h2>
+                  <ul className="space-y-1">
+                    {String(
+                      (product as typeof product & { specifications?: string | null }).specifications,
+                    )
+                      .split("\n")
+                      .map((line) => line.trim())
+                      .filter(Boolean)
+                      .map((line, i) => (
+                        <li key={i} className="text-sm text-muted-foreground flex gap-2">
+                          <span className="text-brand-gold">•</span>
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}
