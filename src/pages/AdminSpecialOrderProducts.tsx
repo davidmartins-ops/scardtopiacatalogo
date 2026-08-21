@@ -69,6 +69,18 @@ const emptyVariant = {
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+/** Remove hífens, pontos e qualquer caractere não alfanumérico do SKU. */
+const sanitizeSku = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+/** Gera SKU automático a partir do nome + sufixo curto único (sem hífens/pontos). */
+const buildAutoSku = (name: string, prefix = "") => {
+  const base = sanitizeSku(name).slice(0, 10);
+  if (!base) return "";
+  const suffix = Math.floor(Date.now() / 1000).toString(36).toUpperCase().slice(-4);
+  return `${sanitizeSku(prefix)}${base}${suffix}`;
+};
+
+
 const AdminSpecialOrderProducts = () => {
   useSEO({ title: "Produtos de encomenda | Admin", noindex: true });
   const qc = useQueryClient();
