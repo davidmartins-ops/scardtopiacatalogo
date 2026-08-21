@@ -25,6 +25,7 @@ import { useActiveBanners } from "@/hooks/use-banners";
 // Allowlist of internal redirect targets (prevents open redirect / phishing).
 const REDIRECT_ALLOWLIST = [
   "/catalogo",
+  "/encomendas",
   "/conta",
   "/tendencias",
   "/sobre",
