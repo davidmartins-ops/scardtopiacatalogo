@@ -17,7 +17,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Share2, Truck } from "lucide-react";
 import loginBg from "@/assets/login-bg-new.jpg";
 import logo from "@/assets/logo.png";
 import { useActiveBanners } from "@/hooks/use-banners";
