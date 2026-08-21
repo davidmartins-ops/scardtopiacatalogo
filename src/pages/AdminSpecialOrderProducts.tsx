@@ -684,18 +684,48 @@ const AdminSpecialOrderProducts = () => {
                 <Input
                   id="var-label"
                   value={variantForm.label}
-                  onChange={(e) => setVariantForm({ ...variantForm, label: e.target.value })}
+                  onChange={(e) => {
+                    const label = e.target.value;
+                    setVariantForm((prev) => ({
+                      ...prev,
+                      label,
+                      sku: prev.id
+                        ? prev.sku
+                        : buildAutoSku(label, variantProduct?.sku ?? variantProduct?.name ?? ""),
+                    }));
+                  }}
                   placeholder="Deluxe 30cm"
                 />
               </div>
               <div>
-                <Label htmlFor="var-sku">SKU</Label>
+                <Label htmlFor="var-sku" className="flex items-center justify-between">
+                  <span>SKU</span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary underline"
+                    onClick={() =>
+                      setVariantForm((prev) => ({
+                        ...prev,
+                        sku: buildAutoSku(
+                          prev.label,
+                          variantProduct?.sku ?? variantProduct?.name ?? "",
+                        ),
+                      }))
+                    }
+                  >
+                    Gerar novamente
+                  </button>
+                </Label>
                 <Input
                   id="var-sku"
                   value={variantForm.sku}
-                  onChange={(e) => setVariantForm({ ...variantForm, sku: e.target.value })}
+                  onChange={(e) =>
+                    setVariantForm({ ...variantForm, sku: sanitizeSku(e.target.value) })
+                  }
+                  className="font-mono text-xs"
                 />
               </div>
+
               <div>
                 <Label htmlFor="var-price">Preço (cartão)</Label>
                 <Input
