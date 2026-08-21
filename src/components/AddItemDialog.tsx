@@ -246,7 +246,17 @@ const AddItemDialog = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          const hasContent = form.name.trim() !== "" || form.id.trim() !== "" || images.length > 0;
+          if (hasContent && !window.confirm("Descartar o item que está sendo criado?")) return;
+          resetForm();
+        }
+        setOpen(next);
+      }}
+    >
       <DialogTrigger asChild>
         <Button className="gap-2 font-body">
           <Plus className="h-4 w-4" />
@@ -254,7 +264,11 @@ const AddItemDialog = () => {
           <span className="sm:hidden">Novo</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="font-display text-foreground">Adicionar Item</DialogTitle>
         </DialogHeader>
