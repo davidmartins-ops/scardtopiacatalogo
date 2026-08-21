@@ -97,6 +97,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
             <Route path="/catalogo" element={<Catalogo />} />
+            <Route path="/encomendas" element={<Encomendas />} />
             <Route path="/catalogo/drop/:dropId" element={<DropDetail />} />
             <Route path="/catalogo/single/:singleId" element={<SingleDetail />} />
             <Route path="/catalogo/carta/:name" element={<CardVersions />} />
