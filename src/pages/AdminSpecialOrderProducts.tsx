@@ -634,7 +634,12 @@ const AdminSpecialOrderProducts = () => {
                   toast.error("Informe o nome do produto.");
                   return;
                 }
+                if (productSkuDuplicate) {
+                  toast.error("Já existe outro produto com este SKU. Gere um novo SKU.");
+                  return;
+                }
                 saveProduct.mutate();
+
               }}
               disabled={saveProduct.isPending}
             >
