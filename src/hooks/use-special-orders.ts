@@ -213,10 +213,11 @@ export const useAdminSpecialOrders = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("special_orders")
-        .select("*")
+        .select("*, items:special_order_items(*)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as SpecialOrder[];
+      return (data ?? []) as (SpecialOrder & { items: SpecialOrderItem[] })[];
+
     },
   });
 
@@ -230,14 +231,19 @@ export const useAdminSpecialOrders = () => {
       shipping_label_url?: string;
       shipping_cost?: number;
     }) => {
-      const { data, error } = await supabase.functions.invoke("special-order-status-update", { body: input });
+      const { id, ...rest } = input;
+      const { data, error } = await supabase.functions.invoke("special-order-status-update", {
+        body: { special_order_id: id, ...rest },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-special-orders"] });
       qc.invalidateQueries({ queryKey: ["special-order-detail"] });
+      qc.invalidateQueries({ queryKey: ["admin-special-order-detail"] });
     },
+
   });
 
   const createQuote = useMutation({

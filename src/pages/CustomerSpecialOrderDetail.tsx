@@ -1,11 +1,11 @@
 import useSEO from "@/hooks/use-seo";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useSpecialOrderDetail, useSpecialOrders, SPECIAL_ORDER_STATUS_LABELS } from "@/hooks/use-special-orders";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Check, X, CreditCard } from "lucide-react";
+import { ArrowLeft, Loader2, Check, X, CreditCard, CheckCircle2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -26,6 +26,8 @@ const CustomerSpecialOrderDetail = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { user, loading } = useCustomerAuth();
+  const [searchParams] = useSearchParams();
+  const isNew = searchParams.get("novo") === "1";
   const { data, isLoading } = useSpecialOrderDetail(orderId);
   const { approveQuote, createPayment } = useSpecialOrders();
 
@@ -92,6 +94,43 @@ const CustomerSpecialOrderDetail = () => {
             {SPECIAL_ORDER_STATUS_LABELS[order.status]}
           </Badge>
         </div>
+
+        {isNew && (
+          <Card className="mb-6 border-success/40 bg-success/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-display text-lg flex items-center gap-2 text-success">
+                <CheckCircle2 className="h-5 w-5" /> Solicitação registrada
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">
+                Recibo da solicitação <span className="font-mono text-foreground">#{order.id.slice(0, 8).toUpperCase()}</span> —{" "}
+                {new Date(order.created_at).toLocaleString("pt-BR")}. Enviamos uma cópia por e-mail.
+              </p>
+              <ul className="space-y-1">
+                {items.map((item) => (
+                  <li key={item.id} className="flex items-center justify-between gap-3">
+                    <span className="text-foreground">{item.quantity}× {item.name}</span>
+                    <span className="text-muted-foreground">
+                      {item.item_type === "quotation" && !Number(item.total_price)
+                        ? "Sob cotação"
+                        : `R$ ${Number(item.total_price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center justify-between border-t border-border pt-2">
+                <span className="font-semibold text-foreground">Total estimado</span>
+                <span className="font-bold text-primary">
+                  R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => window.print()}>
+                <Printer className="h-4 w-4" /> Imprimir recibo
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">

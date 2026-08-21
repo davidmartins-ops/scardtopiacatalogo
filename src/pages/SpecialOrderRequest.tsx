@@ -85,8 +85,8 @@ const SpecialOrderRequest = () => {
         })),
         notes: notes.trim(),
       });
-      toast.success("Encomenda solicitada!");
-      navigate(`/conta/encomendas/${result.id}`);
+      toast.success("Encomenda solicitada! Enviamos um e-mail de confirmação.");
+      navigate(`/conta/encomendas/${result.id}?novo=1`);
     } catch (err: any) {
       toast.error(err?.message || "Erro ao solicitar encomenda.");
     }
