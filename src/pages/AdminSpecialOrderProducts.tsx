@@ -120,7 +120,7 @@ const AdminSpecialOrderProducts = () => {
         description: form.description.trim() || null,
         specifications: form.specifications.trim() || null,
         category: form.category.trim() || "Outros",
-        sku: form.sku.trim() || null,
+        sku: sanitizeSku(form.sku) || null,
         price: Number(form.price) || 0,
         price_pix: Number(form.price_pix) || 0,
         status: form.status,
