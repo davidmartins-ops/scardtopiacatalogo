@@ -893,13 +893,31 @@ const AdminSpecialOrderProducts = () => {
               <Button
                 className="gap-2"
                 disabled={saveVariant.isPending}
-                onClick={() => {
+                onClick={async () => {
                   if (!variantProduct) return;
                   if (!variantForm.label.trim()) {
                     toast.error("Informe o nome da variação.");
                     return;
                   }
+                  if (variantSkuDuplicate) {
+                    toast.error("Este SKU já está em uso. Gere um novo SKU.");
+                    return;
+                  }
+                  if (variantSkuPreview) {
+                    // Revalida no banco (outras variações de outros produtos).
+                    const dup = await supabase
+                      .from("special_order_product_variants")
+                      .select("id")
+                      .eq("sku", variantSkuPreview)
+                      .neq("id", variantForm.id || "00000000-0000-0000-0000-000000000000")
+                      .limit(1);
+                    if (dup.data && dup.data.length > 0) {
+                      toast.error("Este SKU já está em uso por outra variação.");
+                      return;
+                    }
+                  }
                   saveVariant.mutate(
+
                     {
                       id: variantForm.id || undefined,
                       product_id: variantProduct.id,
