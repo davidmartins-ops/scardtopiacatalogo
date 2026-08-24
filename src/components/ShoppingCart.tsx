@@ -161,6 +161,79 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [cepFound, setCepFound] = useState<boolean | null>(null);
   const [validationIssues, setValidationIssues] = useState<string[]>([]);
 
+  // Acompanhamento do PIX automático (confirmação via webhook)
+  const [pixTrackOrderId, setPixTrackOrderId] = useState<string | null>(null);
+  const [pixTrackUrl, setPixTrackUrl] = useState<string | null>(null);
+  const [pixTrackState, setPixTrackState] = useState<"waiting" | "confirmed" | "timeout" | "mismatch">("waiting");
+  const [pixElapsed, setPixElapsed] = useState(0);
+  const [pixRechecking, setPixRechecking] = useState(false);
+
+  // Contador de tempo enquanto aguardamos a confirmação
+  useEffect(() => {
+    if (!pixTrackOrderId || pixTrackState === "confirmed") return;
+    const t = setInterval(() => setPixElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pixTrackOrderId, pixTrackState]);
+
+  const recheckPix = async (orderId: string) => {
+    setPixRechecking(true);
+    try {
+      const { data } = await supabase.functions.invoke("check-payment-status", {
+        body: { order_id: orderId },
+      });
+      if (data?.status === "payment_confirmed" || data?.paid) {
+        setPixTrackState("confirmed");
+        onClear();
+        return true;
+      }
+      if (data?.status === "amount_mismatch") {
+        setPixTrackState("mismatch");
+        return false;
+      }
+    } catch {
+      /* ignora — tentamos de novo no próximo ciclo */
+    } finally {
+      setPixRechecking(false);
+    }
+    return false;
+  };
+
+  // Escuta o status do pedido; após 60s sem webhook, reconsulta o provedor automaticamente
+  useEffect(() => {
+    if (!pixTrackOrderId || pixTrackState === "confirmed") return;
+    let cancelled = false;
+    let ticks = 0;
+
+    const check = async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", pixTrackOrderId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.status && data.status !== "pending_payment" && data.status !== "cancelled") {
+        setPixTrackState("confirmed");
+        onClear();
+        return;
+      }
+      ticks += 1;
+      // 12 ciclos de 5s = 60s: aciona o fallback de reconsulta automática
+      if (ticks === 12) {
+        setPixTrackState((s) => (s === "waiting" ? "timeout" : s));
+        await recheckPix(pixTrackOrderId);
+      } else if (ticks > 12 && ticks % 3 === 0) {
+        await recheckPix(pixTrackOrderId);
+      }
+    };
+
+    const interval = setInterval(check, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [pixTrackOrderId, pixTrackState]);
+
+
   // Pre-fill cpf/phone from saved profile
   useEffect(() => {
     if (profile) {
