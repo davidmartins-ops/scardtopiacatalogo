@@ -54,11 +54,17 @@ const PIX_KEY = "66.981.664/0001-97";
 
 interface ShippingInfo {
   street: string;
+  number: string;
+  complement: string;
   neighborhood: string;
   city: string;
   state: string;
   cep: string;
-  shippingMethod: "pac" | "sedex" | "transportadora" | "";
+  /** Rótulo do serviço escolhido pelo cliente (ex.: "PAC", "SEDEX"). */
+  shippingMethod: string;
+  /** ID do serviço SuperFrete escolhido pelo cliente. */
+  serviceId?: number;
+  servicePrice?: number;
 }
 
 interface CustomerExtra {
@@ -66,9 +72,16 @@ interface CustomerExtra {
   phone: string;
 }
 
+export interface FreightOption {
+  id: number;
+  name: string;
+  company: string;
+  price: number;
+  deliveryDays: string;
+}
+
 interface FreightEstimate {
-  pac?: { price: string; deadline: string };
-  sedex?: { price: string; deadline: string };
+  options?: FreightOption[];
   loading: boolean;
   error?: string;
 }
@@ -85,30 +98,22 @@ const fetchFreight = async (
       body: { cep: cleanCep, itemCount },
     });
     if (error) return { error: "Erro ao consultar frete" };
-    const options: Array<{ id: number; name: string; price: number; deliveryDays: string }> =
-      data?.options ?? [];
-    // Map SuperFrete services: 1=PAC, 2=SEDEX, 17=Mini Envios
-    const pacOpt = options.find((o) => o.id === 1) ?? options.find((o) => o.id === 17);
-    const sedexOpt = options.find((o) => o.id === 2);
-    const result: Omit<FreightEstimate, "loading"> = {};
-    if (pacOpt) {
-      result.pac = {
-        price: pacOpt.price.toFixed(2),
-        deadline: `${pacOpt.deliveryDays} dias úteis`,
-      };
-    }
-    if (sedexOpt) {
-      result.sedex = {
-        price: sedexOpt.price.toFixed(2),
-        deadline: `${sedexOpt.deliveryDays} dias úteis`,
-      };
-    }
-    if (!result.pac && !result.sedex) return { error: "Sem opções de frete disponíveis" };
-    return result;
+    const options: FreightOption[] = (data?.options ?? []).map((o: any) => ({
+      id: Number(o.id),
+      name: String(o.name ?? "Serviço"),
+      company: String(o.company ?? ""),
+      price: Number(o.price ?? 0),
+      deliveryDays: String(o.deliveryDays ?? "—"),
+    }));
+    // Regra fixa: mais barato primeiro (o primeiro é pré-selecionado).
+    options.sort((a, b) => a.price - b.price);
+    if (!options.length) return { error: "Sem opções de frete disponíveis" };
+    return { options };
   } catch {
     return { error: "Erro ao consultar frete" };
   }
 };
+
 
 
 const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fabsVisible = true }: ShoppingCartProps) => {
