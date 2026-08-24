@@ -744,71 +744,76 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                       <Input value={profile?.display_name ?? ""} disabled className="h-8 text-sm bg-muted/30" />
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">CEP</Label>
+                      <Label className="text-xs text-muted-foreground">CEP *</Label>
                       <Input placeholder="00000-000" value={shippingInfo.cep} onChange={(e) => setShippingInfo((p) => ({ ...p, cep: e.target.value }))} className="h-8 text-sm" />
                       {freight.loading && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Consultando frete...</p>}
                       {freight.error && <p className="text-[10px] text-destructive mt-1">{freight.error}</p>}
+                      {cepFound === false && <p className="text-[10px] text-destructive mt-1">CEP não encontrado nos Correios.</p>}
+                    </div>
+                    <div className="grid grid-cols-[1fr_90px] gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Rua / Logradouro *</Label>
+                        <Input placeholder="Rua / Avenida" value={shippingInfo.street} onChange={(e) => setShippingInfo((p) => ({ ...p, street: e.target.value }))} className="h-8 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Número *</Label>
+                        <Input placeholder="123" value={shippingInfo.number} onChange={(e) => setShippingInfo((p) => ({ ...p, number: e.target.value }))} className="h-8 text-sm" />
+                      </div>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Rua / Endereço</Label>
-                      <Input placeholder="Rua, número, complemento" value={shippingInfo.street} onChange={(e) => setShippingInfo((p) => ({ ...p, street: e.target.value }))} className="h-8 text-sm" />
+                      <Label className="text-xs text-muted-foreground">Complemento</Label>
+                      <Input placeholder="Apto, bloco (opcional)" value={shippingInfo.complement} onChange={(e) => setShippingInfo((p) => ({ ...p, complement: e.target.value }))} className="h-8 text-sm" />
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Bairro</Label>
+                      <Label className="text-xs text-muted-foreground">Bairro *</Label>
                       <Input placeholder="Bairro" value={shippingInfo.neighborhood} onChange={(e) => setShippingInfo((p) => ({ ...p, neighborhood: e.target.value }))} className="h-8 text-sm" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs text-muted-foreground">Cidade</Label>
+                        <Label className="text-xs text-muted-foreground">Cidade *</Label>
                         <Input placeholder="Cidade" value={shippingInfo.city} onChange={(e) => setShippingInfo((p) => ({ ...p, city: e.target.value }))} className="h-8 text-sm" />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Estado</Label>
+                        <Label className="text-xs text-muted-foreground">Estado *</Label>
                         <Input placeholder="SP" maxLength={2} value={shippingInfo.state} onChange={(e) => setShippingInfo((p) => ({ ...p, state: e.target.value.toUpperCase() }))} className="h-8 text-sm" />
                       </div>
                     </div>
 
-                    {/* Freight estimation results */}
-                    {(freight.pac || freight.sedex) && (
+                    {/* Escolha do serviço de frete pelo cliente (mais barato pré-selecionado) */}
+                    {freight.options && freight.options.length > 0 && (
                       <div className="p-2.5 rounded-lg bg-success/5 border border-success/20 space-y-2 mt-1">
                         <p className="text-[11px] font-semibold text-foreground flex items-center gap-1">
-                          <Package className="h-3.5 w-3.5 text-success" /> Estimativa de Frete
+                          <Package className="h-3.5 w-3.5 text-success" /> Forma de envio *
                         </p>
-                        {freight.pac && (
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-muted-foreground">📦 PAC ({freight.pac.deadline})</span>
-                            <span className="font-semibold text-foreground">R$ {freight.pac.price}</span>
-                          </div>
-                        )}
-                        {freight.sedex && (
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-muted-foreground">⚡ SEDEX ({freight.sedex.deadline})</span>
-                            <span className="font-semibold text-foreground">R$ {freight.sedex.price}</span>
-                          </div>
-                        )}
+                        {freight.options.map((o, idx) => {
+                          const selected = shippingInfo.serviceId === o.id;
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() => setShippingInfo((p) => ({ ...p, serviceId: o.id, servicePrice: o.price, shippingMethod: o.name }))}
+                              className={`w-full flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 text-left transition-colors ${selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                            >
+                              <span className="text-[11px] text-foreground">
+                                {o.company ? `${o.company} — ` : ""}{o.name}
+                                <span className="text-muted-foreground"> ({o.deliveryDays} dias úteis)</span>
+                                {idx === 0 && <span className="ml-1 text-success">mais barato</span>}
+                              </span>
+                              <span className="text-[11px] font-semibold text-foreground shrink-0">
+                                R$ {o.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
-
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Forma de Envio</Label>
-                      <Select value={shippingInfo.shippingMethod} onValueChange={(v) => setShippingInfo((p) => ({ ...p, shippingMethod: v as ShippingInfo["shippingMethod"] }))}>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pac">
-                            Correios - PAC {freight.pac ? `(R$ ${freight.pac.price})` : ""}
-                          </SelectItem>
-                          <SelectItem value="sedex">
-                            Correios - SEDEX {freight.sedex ? `(R$ ${freight.sedex.price})` : ""}
-                          </SelectItem>
-                          <SelectItem value="transportadora">Transportadora</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 mt-1">
                       <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. Pequenos ajustes podem ocorrer no ato da postagem.
+                        ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. A etiqueta é emitida no serviço
+                        que você escolher; se ele ficar indisponível na postagem, usamos automaticamente a opção mais barata.
                       </p>
                     </div>
+
                   </div>
                 </div>
               </div>
