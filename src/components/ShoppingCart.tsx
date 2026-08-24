@@ -1070,6 +1070,33 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                         })}
                       </div>
                     )}
+
+                    {/* Fallback manual: cotação indisponível não pode travar o pedido */}
+                    {!freight.loading && !(freight.options && freight.options.length > 0) && isValidCep(shippingInfo.cep) && (
+                      <div className="p-2.5 rounded-lg bg-muted/20 border border-border space-y-2 mt-1">
+                        <p className="text-[11px] font-semibold text-foreground flex items-center gap-1">
+                          <Package className="h-3.5 w-3.5 text-primary" /> Forma de envio *
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Não conseguimos cotar o frete agora. Escolha a forma desejada — o valor é confirmado
+                          com você antes da postagem.
+                        </p>
+                        {["PAC", "SEDEX", "Transportadora"].map((name) => {
+                          const selected = !shippingInfo.serviceId && shippingInfo.shippingMethod === name;
+                          return (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => setShippingInfo((p) => ({ ...p, serviceId: undefined, servicePrice: undefined, shippingMethod: name }))}
+                              className={`w-full rounded-md border px-2.5 py-2 text-left text-[11px] text-foreground transition-colors ${selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                            >
+                              {name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 mt-1">
                       <p className="text-[11px] text-muted-foreground leading-relaxed">
                         ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. A etiqueta é emitida no serviço
