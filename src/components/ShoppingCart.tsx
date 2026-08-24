@@ -116,6 +116,8 @@ const fetchFreight = async (
 
 
 
+type Channel = "whatsapp" | "pix" | "pix_auto" | "card";
+
 const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fabsVisible = true }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
 
@@ -141,8 +143,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
-  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | "card" | null>(null);
-  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+  const [pendingAction, setPendingAction] = useState<Channel | null>(null);
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", number: "", complement: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
   const [customerExtra, setCustomerExtra] = useState<CustomerExtra>({ cpf: "", phone: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
@@ -154,7 +156,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | "card" | null>(null);
+  const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
 
   // Pre-fill cpf/phone from saved profile
   useEffect(() => {
@@ -213,20 +215,19 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const totalItems = items.reduce((s, ci) => s + ci.qty, 0);
 
   // Resolve the amount to charge for the currently selected payment channel.
-  const amountForChannel = (channel: "whatsapp" | "pix" | "card" | null) =>
-    channel === "pix" ? pixTotal : total;
+  const isPixChannel = (channel: Channel | null) => channel === "pix" || channel === "pix_auto";
 
-  const getFreightValue = () => {
-    if (shippingInfo.shippingMethod === "pac" && freight.pac) return parseFloat(freight.pac.price);
-    if (shippingInfo.shippingMethod === "sedex" && freight.sedex) return parseFloat(freight.sedex.price);
-    return 0;
-  };
+  const amountForChannel = (channel: Channel | null) =>
+    isPixChannel(channel) ? pixTotal : total;
+
+  const getFreightValue = () =>
+    deliveryMethod === "shipping" ? Number(shippingInfo.servicePrice ?? 0) : 0;
 
   // Subtotal de drops no canal selecionado (créditos limitados a 50% desse valor).
-  const dropSubtotalFor = (channel: "whatsapp" | "pix" | "card" | null) =>
+  const dropSubtotalFor = (channel: Channel | null) =>
     items.reduce((s, ci) => {
       if ((ci.item.product_type ?? "drop") !== "drop") return s;
-      if (channel === "pix") {
+      if (isPixChannel(channel)) {
         const discount = ci.item.discount ?? 0;
         const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
         return s + base * (1 - discount / 100) * ci.qty;
@@ -235,7 +236,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }, 0);
 
   // Credit to apply: min(balance, allowed). Drops aceitam no máximo 50% em créditos.
-  const creditsToApplyFor = (channel: "whatsapp" | "pix" | "card" | null) => {
+  const creditsToApplyFor = (channel: Channel | null) => {
     if (!useCredits || creditBalance <= 0) return 0;
     const gross = amountForChannel(channel) + getFreightValue();
     const dropSubtotal = dropSubtotalFor(channel);
@@ -244,8 +245,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   };
 
 
-  const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
-    const isPix = channel === "pix";
+  const buildMessage = (channel: Channel | null = pendingChannel) => {
+    const isPix = isPixChannel(channel);
     const channelTotal = amountForChannel(channel);
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
     items.forEach((ci, i) => {
@@ -292,7 +293,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return msg;
   };
 
-  const openDeliveryDialog = (action: "whatsapp" | "pix" | "card") => {
+  const openDeliveryDialog = (action: Channel) => {
     if (!user) {
       setPendingAction(action);
       setLoginPromptOpen(true);
@@ -300,7 +301,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }
     setPendingAction(action);
     setDeliveryMethod(null);
-    setShippingInfo({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+    setShippingInfo({ street: "", number: "", complement: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
     setFreight({ loading: false });
     setDeliveryDialogOpen(true);
   };
