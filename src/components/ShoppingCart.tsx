@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useMyStoreCredit } from "@/hooks/use-store-credits";
 import { friendlyOrderError } from "@/lib/order-errors";
-import { validateCheckout } from "@/lib/checkout-validation";
+import { validateCheckout, isValidCep } from "@/lib/checkout-validation";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coins } from "lucide-react";
@@ -163,6 +163,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
   // Acompanhamento do PIX automático (confirmação via webhook)
   const [pixTrackOrderId, setPixTrackOrderId] = useState<string | null>(null);
+  // Pedido já criado (PIX automático) que receberá o comprovante manual — evita pedido duplicado
+  const [pixReceiptOrderId, setPixReceiptOrderId] = useState<string | null>(null);
   const [pixTrackUrl, setPixTrackUrl] = useState<string | null>(null);
   const [pixTrackState, setPixTrackState] = useState<"waiting" | "confirmed" | "timeout" | "mismatch">("waiting");
   const [pixElapsed, setPixElapsed] = useState(0);
@@ -434,7 +436,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         city: shippingInfo.city,
         state: shippingInfo.state,
       },
-      shippingServiceSelected: !!shippingInfo.serviceId,
+      shippingServiceSelected: !!shippingInfo.serviceId || !!shippingInfo.shippingMethod.trim(),
     });
     if (issues.length > 0) {
       setValidationIssues(issues);
@@ -563,7 +565,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     if (onOrderPlaced) onOrderPlaced(items, amountForChannel("whatsapp"), { paymentMethod: "whatsapp" });
   };
 
-  const handlePixSelect = () => { setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false); };
+  const handlePixSelect = (existingOrderId?: string) => {
+    setPixReceiptOrderId(existingOrderId ?? null);
+    setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false);
+  };
 
   const handleReceiptSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
@@ -589,7 +594,17 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       const urlData = { publicUrl: signed?.signedUrl ?? "" };
       let msg = buildMessage("pix");
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
-      if (onOrderPlaced) {
+      if (pixReceiptOrderId) {
+        // Pedido já existe (PIX automático pendente): anexa o comprovante, sem criar outro pedido
+        const { error: updErr } = await supabase
+          .from("orders")
+          .update({ receipt_url: urlData.publicUrl })
+          .eq("id", pixReceiptOrderId);
+        if (updErr) {
+          toast.error("Não foi possível anexar o comprovante ao pedido. Tente novamente.");
+          return;
+        }
+      } else if (onOrderPlaced) {
         const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
           receiptUrl: urlData.publicUrl,
@@ -604,7 +619,12 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       }
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
       setReceiptSent(true);
-      toast.success("Comprovante enviado e pedido registrado!");
+      toast.success(
+        pixReceiptOrderId
+          ? "Comprovante anexado ao seu pedido! Nossa equipe vai conferir."
+          : "Comprovante enviado e pedido registrado!",
+      );
+      setPixReceiptOrderId(null);
       setPixDialogOpen(false);
     } catch (err) {
       console.error("[PIX] Falha no checkout:", err);
@@ -810,8 +830,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                       variant="ghost"
                       className="gap-2"
                       onClick={() => {
+                        const id = pixTrackOrderId;
                         setPixTrackOrderId(null);
-                        handlePixSelect();
+                        handlePixSelect(id ?? undefined);
                       }}
                     >
                       <Upload className="h-3.5 w-3.5" /> Enviar comprovante
@@ -1070,6 +1091,33 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                         })}
                       </div>
                     )}
+
+                    {/* Fallback manual: cotação indisponível não pode travar o pedido */}
+                    {!freight.loading && !(freight.options && freight.options.length > 0) && isValidCep(shippingInfo.cep) && (
+                      <div className="p-2.5 rounded-lg bg-muted/20 border border-border space-y-2 mt-1">
+                        <p className="text-[11px] font-semibold text-foreground flex items-center gap-1">
+                          <Package className="h-3.5 w-3.5 text-primary" /> Forma de envio *
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Não conseguimos cotar o frete agora. Escolha a forma desejada — o valor é confirmado
+                          com você antes da postagem.
+                        </p>
+                        {["PAC", "SEDEX", "Transportadora"].map((name) => {
+                          const selected = !shippingInfo.serviceId && shippingInfo.shippingMethod === name;
+                          return (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => setShippingInfo((p) => ({ ...p, serviceId: undefined, servicePrice: undefined, shippingMethod: name }))}
+                              className={`w-full rounded-md border px-2.5 py-2 text-left text-[11px] text-foreground transition-colors ${selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                            >
+                              {name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 mt-1">
                       <p className="text-[11px] text-muted-foreground leading-relaxed">
                         ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. A etiqueta é emitida no serviço
