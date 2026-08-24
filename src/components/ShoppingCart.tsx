@@ -594,7 +594,17 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       const urlData = { publicUrl: signed?.signedUrl ?? "" };
       let msg = buildMessage("pix");
       msg += `\n\nPagamento via PIX confirmado!\nComprovante: ${urlData.publicUrl}`;
-      if (onOrderPlaced) {
+      if (pixReceiptOrderId) {
+        // Pedido já existe (PIX automático pendente): anexa o comprovante, sem criar outro pedido
+        const { error: updErr } = await supabase
+          .from("orders")
+          .update({ receipt_url: urlData.publicUrl })
+          .eq("id", pixReceiptOrderId);
+        if (updErr) {
+          toast.error("Não foi possível anexar o comprovante ao pedido. Tente novamente.");
+          return;
+        }
+      } else if (onOrderPlaced) {
         const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
           receiptUrl: urlData.publicUrl,
@@ -609,7 +619,12 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       }
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
       setReceiptSent(true);
-      toast.success("Comprovante enviado e pedido registrado!");
+      toast.success(
+        pixReceiptOrderId
+          ? "Comprovante anexado ao seu pedido! Nossa equipe vai conferir."
+          : "Comprovante enviado e pedido registrado!",
+      );
+      setPixReceiptOrderId(null);
       setPixDialogOpen(false);
     } catch (err) {
       console.error("[PIX] Falha no checkout:", err);
