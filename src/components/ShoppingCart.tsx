@@ -620,7 +620,37 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </SheetContent>
       </Sheet>
 
+      {/* Dados obrigatórios pendentes */}
+      <Dialog open={validationIssues.length > 0} onOpenChange={(o) => { if (!o) setValidationIssues([]); }}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-destructive" /> Dados obrigatórios
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Precisamos destes dados corretos para emitir a etiqueta de envio e concluir o pedido:
+            </p>
+            <ul className="space-y-1.5">
+              {validationIssues.map((issue) => (
+                <li key={issue} className="flex gap-2 text-xs text-foreground">
+                  <span className="text-destructive">•</span>
+                  <span>{issue}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setValidationIssues([])} className="gap-2">
+              <Check className="h-4 w-4" /> Corrigir agora
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Login Required Dialog */}
+
       <Dialog open={loginPromptOpen} onOpenChange={setLoginPromptOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
