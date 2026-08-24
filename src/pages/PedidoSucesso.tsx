@@ -55,6 +55,42 @@ const PedidoSucesso = () => {
     };
   }, [order_nsu, transaction_nsu, slug, receipt_url, capture_method]);
 
+  // Fallback: se o webhook não confirmar, reconsultamos o provedor automaticamente
+  const [rechecking, setRechecking] = useState(false);
+  const [gaveUp, setGaveUp] = useState(false);
+
+  const recheck = async () => {
+    if (!order_nsu) return;
+    setRechecking(true);
+    try {
+      const { data } = await supabase.functions.invoke("check-payment-status", {
+        body: { order_id: order_nsu },
+      });
+      if (data?.paid || data?.status === "payment_confirmed") {
+        setOrderId(order_nsu);
+        setState("confirmed");
+      }
+    } catch {
+      /* segue tentando */
+    } finally {
+      setRechecking(false);
+    }
+  };
+
+  useEffect(() => {
+    if (state !== "unpaid" || !order_nsu) return;
+    let ticks = 0;
+    const interval = setInterval(async () => {
+      ticks += 1;
+      await recheck();
+      if (ticks >= 10) {
+        setGaveUp(true);
+        clearInterval(interval);
+      }
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [state, order_nsu]);
+
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-lg bg-card border rounded-2xl shadow-elegant p-8 text-center">
@@ -62,15 +98,19 @@ const PedidoSucesso = () => {
           <>
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Confirmando seu pagamento...</h1>
-            <p className="text-muted-foreground">Isso leva apenas alguns segundos.</p>
+            <p className="text-muted-foreground">A confirmação é automática e leva apenas alguns segundos.</p>
           </>
         )}
         {state === "confirmed" && (
           <>
             <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Pagamento confirmado!</h1>
-            <p className="text-muted-foreground mb-6">
-              Recebemos seu pagamento. Em breve preparamos seu pedido.
+            <p className="text-muted-foreground mb-2">
+              Seu PIX foi confirmado automaticamente — não é necessário enviar comprovante.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Próximo passo: separamos os itens e emitimos a etiqueta de envio. O código de rastreio
+              aparece no seu pedido e você recebe um e-mail em cada atualização.
             </p>
             <div className="flex flex-col gap-2">
               {orderId && (
@@ -88,13 +128,27 @@ const PedidoSucesso = () => {
           <>
             <AlertTriangle className="h-14 w-14 text-amber-500 mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Pagamento ainda não confirmado</h1>
-            <p className="text-muted-foreground mb-6">
-              Se você acabou de pagar via PIX, pode levar alguns instantes. Atualize esta página
-              em alguns segundos.
+            <p className="text-muted-foreground mb-2">
+              Estamos reconsultando o pagamento automaticamente a cada poucos segundos. Se você acabou
+              de pagar via PIX, esta tela muda sozinha.
             </p>
-            <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+            {gaveUp && (
+              <p className="text-sm text-muted-foreground mb-2">
+                Ainda sem confirmação. Você pode reconsultar manualmente ou enviar o comprovante pelo
+                carrinho para conferência da nossa equipe.
+              </p>
+            )}
+            <div className="flex flex-col gap-2 mt-4">
+              <Button onClick={recheck} disabled={rechecking}>
+                {rechecking ? "Reconsultando..." : "Reconsultar agora"}
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/conta">Meus pedidos</Link>
+              </Button>
+            </div>
           </>
         )}
+
         {state === "missing" && (
           <>
             <AlertTriangle className="h-14 w-14 text-amber-500 mx-auto mb-4" />
