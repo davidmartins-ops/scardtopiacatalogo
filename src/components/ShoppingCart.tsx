@@ -688,9 +688,15 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   <span className="font-display font-semibold text-foreground">Total</span>
                   <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("pix_auto")}>
-                  <QrCode className="h-4 w-4" />Pagar com PIX
-                </Button>
+                <div className="space-y-1.5">
+                  <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("pix_auto")}>
+                    <QrCode className="h-4 w-4" />Pagar com PIX
+                  </Button>
+                  <p className="text-[11px] leading-snug text-muted-foreground text-center">
+                    Confirmação automática: o pagamento é reconhecido em segundos por webhook, sem envio de comprovante.
+                  </p>
+                </div>
+
                 <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão</Button>
                 <Button variant="ghost" className="w-full gap-2 font-body text-xs text-muted-foreground" size="sm" onClick={() => openDeliveryDialog("pix")}>
                   <Upload className="h-3.5 w-3.5" />PIX com envio de comprovante (sujeito a conferência)
