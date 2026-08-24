@@ -163,6 +163,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
   // Acompanhamento do PIX automático (confirmação via webhook)
   const [pixTrackOrderId, setPixTrackOrderId] = useState<string | null>(null);
+  // Pedido já criado (PIX automático) que receberá o comprovante manual — evita pedido duplicado
+  const [pixReceiptOrderId, setPixReceiptOrderId] = useState<string | null>(null);
   const [pixTrackUrl, setPixTrackUrl] = useState<string | null>(null);
   const [pixTrackState, setPixTrackState] = useState<"waiting" | "confirmed" | "timeout" | "mismatch">("waiting");
   const [pixElapsed, setPixElapsed] = useState(0);
