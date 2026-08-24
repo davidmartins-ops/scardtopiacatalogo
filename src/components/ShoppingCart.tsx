@@ -519,8 +519,18 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           return;
         }
         setConfirmOrderOpen(false);
+        if (isAutoPix) {
+          // Abre o checkout PIX em outra aba e acompanha a confirmação aqui
+          window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+          setPixTrackUrl(checkoutUrl);
+          setPixElapsed(0);
+          setPixTrackState("waiting");
+          setPixTrackOrderId(orderRow.id);
+          return;
+        }
         window.location.href = checkoutUrl;
         return;
+
 
       }
 
