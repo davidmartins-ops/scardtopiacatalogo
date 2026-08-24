@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useMyStoreCredit } from "@/hooks/use-store-credits";
 import { friendlyOrderError } from "@/lib/order-errors";
+import { validateCheckout } from "@/lib/checkout-validation";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coins } from "lucide-react";
