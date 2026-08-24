@@ -830,8 +830,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                       variant="ghost"
                       className="gap-2"
                       onClick={() => {
+                        const id = pixTrackOrderId;
                         setPixTrackOrderId(null);
-                        handlePixSelect();
+                        handlePixSelect(id ?? undefined);
                       }}
                     >
                       <Upload className="h-3.5 w-3.5" /> Enviar comprovante
