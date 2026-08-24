@@ -113,9 +113,18 @@ Deno.serve(async (req) => {
     ? { weight: 0.1 + itemCount * 0.005, height: 2, width: 11, length: 16 }
     : { weight: 0.3 + itemCount * 0.005, height: 8, width: 13, length: 18 };
 
-  // Pick service: provided or cheapest available
-  let chosen = serviceId;
-  if (!chosen) {
+  // Serviço escolhido pelo cliente no checkout (orders.shipping_service = "<id>|<nome>")
+  const storedServiceId = (() => {
+    const raw = (order as any).shipping_service;
+    if (!raw) return undefined;
+    const id = Number(String(raw).split("|")[0]);
+    return Number.isFinite(id) && id > 0 ? id : undefined;
+  })();
+
+  // Regra: serviceId explícito > escolha do cliente > mais barato (fallback)
+  let chosen = serviceId ?? storedServiceId;
+  let serviceFallback = false;
+  {
     const calcRes = await fetch(`${baseUrl}/api/v0/calculator`, {
       method: "POST",
       headers: {
@@ -148,7 +157,16 @@ Deno.serve(async (req) => {
     }
     const opts = JSON.parse(calcText).filter((o: any) => !o.error);
     opts.sort((a: any, b: any) => Number(a.price) - Number(b.price));
-    chosen = opts[0]?.id;
+    const available = opts.some((o: any) => Number(o.id) === chosen);
+    if (!chosen || !available) {
+      if (chosen && !available) {
+        serviceFallback = true;
+        console.warn("Serviço escolhido indisponível — usando fallback mais barato", {
+          orderId, chosen, fallback: opts[0]?.id,
+        });
+      }
+      chosen = opts[0]?.id;
+    }
   }
   if (!chosen) {
     return new Response(JSON.stringify({ error: "Nenhum serviço disponível" }), {
@@ -413,6 +431,8 @@ Deno.serve(async (req) => {
       superfrete_order_id: sfOrderId,
       shipping_cost: shippingCost,
       service: chosen,
+      requested_service: serviceId ?? storedServiceId ?? null,
+      service_fallback: serviceFallback,
       checkout: doCheckout,
     },
   });
