@@ -723,6 +723,7 @@ const Catalogo = () => {
       receiptUrl?: string | null;
       creditsApplied?: number;
       customerInfo?: Record<string, unknown>;
+      shipping?: { serviceId: number; serviceName: string; cost: number };
     }
   ): Promise<boolean> => {
     const isPix = meta?.paymentMethod === "pix";
@@ -755,6 +756,12 @@ const Catalogo = () => {
         receipt_url: meta?.receiptUrl ?? null,
         payment_method: (meta?.paymentMethod ?? "whatsapp") as never,
         customer_info: (meta?.customerInfo ?? {}) as never,
+        ...(meta?.shipping
+          ? {
+              shipping_service: `${meta.shipping.serviceId}|${meta.shipping.serviceName}`,
+              shipping_cost: meta.shipping.cost,
+            }
+          : {}),
       } as never).select("id").single();
       if (orderErr) {
         console.error("[CHECKOUT] Falha ao inserir pedido:", orderErr);

@@ -7,13 +7,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type InventoryItem } from "@/data/inventory";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { useMyStoreCredit } from "@/hooks/use-store-credits";
 import { friendlyOrderError } from "@/lib/order-errors";
+import { validateCheckout } from "@/lib/checkout-validation";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coins } from "lucide-react";
@@ -36,6 +36,7 @@ interface ShoppingCartProps {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
       creditsApplied?: number;
+      shipping?: { serviceId: number; serviceName: string; cost: number };
       customerInfo?: {
         name?: string;
         email?: string;
@@ -54,11 +55,17 @@ const PIX_KEY = "66.981.664/0001-97";
 
 interface ShippingInfo {
   street: string;
+  number: string;
+  complement: string;
   neighborhood: string;
   city: string;
   state: string;
   cep: string;
-  shippingMethod: "pac" | "sedex" | "transportadora" | "";
+  /** Rótulo do serviço escolhido pelo cliente (ex.: "PAC", "SEDEX"). */
+  shippingMethod: string;
+  /** ID do serviço SuperFrete escolhido pelo cliente. */
+  serviceId?: number;
+  servicePrice?: number;
 }
 
 interface CustomerExtra {
@@ -66,9 +73,16 @@ interface CustomerExtra {
   phone: string;
 }
 
+export interface FreightOption {
+  id: number;
+  name: string;
+  company: string;
+  price: number;
+  deliveryDays: string;
+}
+
 interface FreightEstimate {
-  pac?: { price: string; deadline: string };
-  sedex?: { price: string; deadline: string };
+  options?: FreightOption[];
   loading: boolean;
   error?: string;
 }
@@ -85,31 +99,25 @@ const fetchFreight = async (
       body: { cep: cleanCep, itemCount },
     });
     if (error) return { error: "Erro ao consultar frete" };
-    const options: Array<{ id: number; name: string; price: number; deliveryDays: string }> =
-      data?.options ?? [];
-    // Map SuperFrete services: 1=PAC, 2=SEDEX, 17=Mini Envios
-    const pacOpt = options.find((o) => o.id === 1) ?? options.find((o) => o.id === 17);
-    const sedexOpt = options.find((o) => o.id === 2);
-    const result: Omit<FreightEstimate, "loading"> = {};
-    if (pacOpt) {
-      result.pac = {
-        price: pacOpt.price.toFixed(2),
-        deadline: `${pacOpt.deliveryDays} dias úteis`,
-      };
-    }
-    if (sedexOpt) {
-      result.sedex = {
-        price: sedexOpt.price.toFixed(2),
-        deadline: `${sedexOpt.deliveryDays} dias úteis`,
-      };
-    }
-    if (!result.pac && !result.sedex) return { error: "Sem opções de frete disponíveis" };
-    return result;
+    const options: FreightOption[] = (data?.options ?? []).map((o: any) => ({
+      id: Number(o.id),
+      name: String(o.name ?? "Serviço"),
+      company: String(o.company ?? ""),
+      price: Number(o.price ?? 0),
+      deliveryDays: String(o.deliveryDays ?? "—"),
+    }));
+    // Regra fixa: mais barato primeiro (o primeiro é pré-selecionado).
+    options.sort((a, b) => a.price - b.price);
+    if (!options.length) return { error: "Sem opções de frete disponíveis" };
+    return { options };
   } catch {
     return { error: "Erro ao consultar frete" };
   }
 };
 
+
+
+type Channel = "whatsapp" | "pix" | "pix_auto" | "card";
 
 const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fabsVisible = true }: ShoppingCartProps) => {
   const [open, setOpen] = useState(false);
@@ -136,8 +144,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
 
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping" | null>(null);
-  const [pendingAction, setPendingAction] = useState<"whatsapp" | "pix" | "card" | null>(null);
-  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+  const [pendingAction, setPendingAction] = useState<Channel | null>(null);
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({ street: "", number: "", complement: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
   const [customerExtra, setCustomerExtra] = useState<CustomerExtra>({ cpf: "", phone: "" });
   const [freight, setFreight] = useState<FreightEstimate>({ loading: false });
 
@@ -149,7 +157,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [pendingChannel, setPendingChannel] = useState<"whatsapp" | "pix" | "card" | null>(null);
+  const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
+  const [cepFound, setCepFound] = useState<boolean | null>(null);
+  const [validationIssues, setValidationIssues] = useState<string[]>([]);
 
   // Pre-fill cpf/phone from saved profile
   useEffect(() => {
@@ -161,13 +171,26 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }
   }, [profile]);
 
-  // Auto-fetch freight when CEP has 8+ digits
+  // Auto-fetch freight when CEP has 8+ digits; pré-seleciona a opção mais barata
   useEffect(() => {
     const cleanCep = shippingInfo.cep.replace(/\D/g, "");
     if (cleanCep.length === 8 && deliveryMethod === "shipping") {
       const itemCount = items.reduce((s, ci) => s + ci.qty, 0) || 1;
       setFreight({ loading: true });
-      fetchFreight(cleanCep, itemCount).then((result) => setFreight({ ...result, loading: false }));
+      fetchFreight(cleanCep, itemCount).then((result) => {
+        setFreight({ ...result, loading: false });
+        const cheapest = result.options?.[0];
+        setShippingInfo((prev) => {
+          const stillValid = result.options?.some((o) => o.id === prev.serviceId);
+          if (stillValid) {
+            const match = result.options?.find((o) => o.id === prev.serviceId)!;
+            return { ...prev, servicePrice: match.price, shippingMethod: match.name };
+          }
+          return cheapest
+            ? { ...prev, serviceId: cheapest.id, servicePrice: cheapest.price, shippingMethod: cheapest.name }
+            : { ...prev, serviceId: undefined, servicePrice: undefined, shippingMethod: "" };
+        });
+      });
     } else {
       setFreight({ loading: false });
     }
@@ -176,23 +199,29 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   // Auto-fill address from ViaCEP
   useEffect(() => {
     const cleanCep = shippingInfo.cep.replace(/\D/g, "");
-    if (cleanCep.length === 8) {
-      fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (!data.erro) {
-            setShippingInfo((prev) => ({
-              ...prev,
-              street: data.logradouro ? `${data.logradouro}` : prev.street,
-              neighborhood: data.bairro || prev.neighborhood,
-              city: data.localidade || prev.city,
-              state: data.uf || prev.state,
-            }));
-          }
-        })
-        .catch(() => {});
+    if (cleanCep.length !== 8) {
+      setCepFound(null);
+      return;
     }
+    fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.erro) {
+          setCepFound(true);
+          setShippingInfo((prev) => ({
+            ...prev,
+            street: data.logradouro ? `${data.logradouro}` : prev.street,
+            neighborhood: data.bairro || prev.neighborhood,
+            city: data.localidade || prev.city,
+            state: data.uf || prev.state,
+          }));
+        } else {
+          setCepFound(false);
+        }
+      })
+      .catch(() => setCepFound(null));
   }, [shippingInfo.cep]);
+
 
   // Total no cartão: SEM desconto (o desconto vale apenas para PIX).
   const total = items.reduce((s, ci) => s + ci.item.price * ci.qty, 0);
@@ -208,20 +237,19 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const totalItems = items.reduce((s, ci) => s + ci.qty, 0);
 
   // Resolve the amount to charge for the currently selected payment channel.
-  const amountForChannel = (channel: "whatsapp" | "pix" | "card" | null) =>
-    channel === "pix" ? pixTotal : total;
+  const isPixChannel = (channel: Channel | null) => channel === "pix" || channel === "pix_auto";
 
-  const getFreightValue = () => {
-    if (shippingInfo.shippingMethod === "pac" && freight.pac) return parseFloat(freight.pac.price);
-    if (shippingInfo.shippingMethod === "sedex" && freight.sedex) return parseFloat(freight.sedex.price);
-    return 0;
-  };
+  const amountForChannel = (channel: Channel | null) =>
+    isPixChannel(channel) ? pixTotal : total;
+
+  const getFreightValue = () =>
+    deliveryMethod === "shipping" ? Number(shippingInfo.servicePrice ?? 0) : 0;
 
   // Subtotal de drops no canal selecionado (créditos limitados a 50% desse valor).
-  const dropSubtotalFor = (channel: "whatsapp" | "pix" | "card" | null) =>
+  const dropSubtotalFor = (channel: Channel | null) =>
     items.reduce((s, ci) => {
       if ((ci.item.product_type ?? "drop") !== "drop") return s;
-      if (channel === "pix") {
+      if (isPixChannel(channel)) {
         const discount = ci.item.discount ?? 0;
         const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
         return s + base * (1 - discount / 100) * ci.qty;
@@ -230,7 +258,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }, 0);
 
   // Credit to apply: min(balance, allowed). Drops aceitam no máximo 50% em créditos.
-  const creditsToApplyFor = (channel: "whatsapp" | "pix" | "card" | null) => {
+  const creditsToApplyFor = (channel: Channel | null) => {
     if (!useCredits || creditBalance <= 0) return 0;
     const gross = amountForChannel(channel) + getFreightValue();
     const dropSubtotal = dropSubtotalFor(channel);
@@ -239,8 +267,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   };
 
 
-  const buildMessage = (channel: "whatsapp" | "pix" | "card" | null = pendingChannel) => {
-    const isPix = channel === "pix";
+  const buildMessage = (channel: Channel | null = pendingChannel) => {
+    const isPix = isPixChannel(channel);
     const channelTotal = amountForChannel(channel);
     let msg = "Lista de Interesse - Spencer's Cardtopia\n\n";
     items.forEach((ci, i) => {
@@ -262,13 +290,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += `\n📦 Entrega: RETIRADA NO LOCAL\n`;
       msg += `Total: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     } else if (deliveryMethod === "shipping") {
-      const methodLabel = shippingInfo.shippingMethod === "pac" ? "PAC" : shippingInfo.shippingMethod === "sedex" ? "SEDEX" : "Transportadora";
+      const methodLabel = shippingInfo.shippingMethod || "A definir";
       const freightVal = getFreightValue();
       msg += `\n📦 Entrega: ENVIO - ${methodLabel}\n`;
       msg += `👤 Nome: ${profile?.display_name ?? "—"}\n`;
-      msg += `📍 Endereço: ${shippingInfo.street}, ${shippingInfo.neighborhood}\n`;
+      msg += `📍 Endereço: ${shippingInfo.street}, ${shippingInfo.number}${shippingInfo.complement ? ` - ${shippingInfo.complement}` : ""} — ${shippingInfo.neighborhood}\n`;
       msg += `🏙️ ${shippingInfo.city} - ${shippingInfo.state}\n`;
       msg += `📮 CEP: ${shippingInfo.cep}\n`;
+
       if (freightVal > 0) {
         msg += `🚚 Frete estimado: R$ ${freightVal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
         msg += `Total (com frete): R$ ${(channelTotal + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
@@ -287,7 +316,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     return msg;
   };
 
-  const openDeliveryDialog = (action: "whatsapp" | "pix" | "card") => {
+  const openDeliveryDialog = (action: Channel) => {
     if (!user) {
       setPendingAction(action);
       setLoginPromptOpen(true);
@@ -295,7 +324,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }
     setPendingAction(action);
     setDeliveryMethod(null);
-    setShippingInfo({ street: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
+    setShippingInfo({ street: "", number: "", complement: "", neighborhood: "", city: "", state: "", cep: "", shippingMethod: "" });
     setFreight({ loading: false });
     setDeliveryDialogOpen(true);
   };
@@ -307,18 +336,36 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     phone: customerExtra.phone.trim(),
     address: deliveryMethod === "shipping" ? { ...shippingInfo } : undefined,
     deliveryMethod: deliveryMethod ?? undefined,
+    shippingService:
+      deliveryMethod === "shipping" && shippingInfo.serviceId
+        ? { id: shippingInfo.serviceId, name: shippingInfo.shippingMethod, price: shippingInfo.servicePrice ?? 0 }
+        : undefined,
   });
 
+  const shippingMeta = () =>
+    deliveryMethod === "shipping" && shippingInfo.serviceId
+      ? { serviceId: shippingInfo.serviceId, serviceName: shippingInfo.shippingMethod, cost: shippingInfo.servicePrice ?? 0 }
+      : undefined;
+
   const confirmDeliveryAndProceed = () => {
-    if (!customerExtra.cpf.trim() || !customerExtra.phone.trim()) {
-      toast.error("Informe seu CPF e telefone para concluir o pedido.");
+    const issues = validateCheckout({
+      cpf: customerExtra.cpf,
+      phone: customerExtra.phone,
+      deliveryMethod,
+      cepFound: cepFound ?? undefined,
+      address: {
+        cep: shippingInfo.cep,
+        street: shippingInfo.street,
+        number: shippingInfo.number,
+        neighborhood: shippingInfo.neighborhood,
+        city: shippingInfo.city,
+        state: shippingInfo.state,
+      },
+      shippingServiceSelected: !!shippingInfo.serviceId,
+    });
+    if (issues.length > 0) {
+      setValidationIssues(issues);
       return;
-    }
-    if (deliveryMethod === "shipping") {
-      if (!shippingInfo.street || !shippingInfo.neighborhood || !shippingInfo.city || !shippingInfo.state || !shippingInfo.cep || !shippingInfo.shippingMethod) {
-        toast.error("Preencha todos os campos de endereço.");
-        return;
-      }
     }
     setDeliveryDialogOpen(false);
     setPendingChannel(pendingAction);
@@ -331,31 +378,38 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     setSubmittingOrder(true);
     setOrderError(null);
     try {
-      // For PIX, defer order creation until receipt is uploaded in handleConfirmPix
+      // PIX com comprovante manual: pedido criado depois do upload em handleConfirmPix
       if (pendingChannel === "pix") {
         setConfirmOrderOpen(false);
         handlePixSelect();
         return;
       }
 
-      // Card via InfinitePay: create order in DB, then call create-checkout edge function
-      if (pendingChannel === "card") {
+      // Cartão ou PIX automático via InfinitePay: cria o pedido e abre o checkout
+      if (pendingChannel === "card" || pendingChannel === "pix_auto") {
+        const isAutoPix = pendingChannel === "pix_auto";
         if (!user) {
-          setOrderError("Faça login para pagar com cartão.");
+          setOrderError("Faça login para pagar pelo checkout.");
           return;
         }
-        const orderItems = items.map((ci) => ({
-          id: ci.item.id,
-          name: ci.item.name,
-          description: ci.item.description,
-          language: ci.item.language ?? null,
-          condition: ci.item.condition ?? null,
-          quantity: ci.qty,
-          unit_price: ci.item.price, // cartão usa preço cheio
-          total_price: ci.item.price * ci.qty,
-        }));
-        const cardTotal = amountForChannel("card");
-        const cardCredits = creditsToApplyFor("card");
+        const orderItems = items.map((ci) => {
+          const discount = ci.item.discount ?? 0;
+          const pixBase = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+          const unitPrice = isAutoPix ? pixBase * (1 - discount / 100) : ci.item.price;
+          return {
+            id: ci.item.id,
+            name: ci.item.name,
+            description: ci.item.description,
+            language: ci.item.language ?? null,
+            condition: ci.item.condition ?? null,
+            quantity: ci.qty,
+            unit_price: unitPrice,
+            total_price: unitPrice * ci.qty,
+          };
+        });
+        const cardTotal = amountForChannel(pendingChannel);
+        const cardCredits = creditsToApplyFor(pendingChannel);
+        const meta = shippingMeta();
         const { data: orderRow, error: orderErr } = await supabase
           .from("orders")
           .insert({
@@ -364,11 +418,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             total: cardTotal,
             credits_applied: cardCredits,
             status: "pending_payment" as any,
-            payment_method: "credit" as any,
+            payment_method: (isAutoPix ? "pix" : "credit") as any,
             customer_info: buildCustomerInfo() as any,
+            ...(meta ? { shipping_service: `${meta.serviceId}|${meta.serviceName}`, shipping_cost: meta.cost } : {}),
           })
           .select("id")
           .single();
+
         if (orderErr || !orderRow) {
           setOrderError(friendlyOrderError(orderErr, "Falha ao criar pedido."));
           return;
@@ -400,6 +456,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           paymentMethod: "whatsapp",
           creditsApplied: creditsToApplyFor("whatsapp"),
           customerInfo: buildCustomerInfo(),
+          shipping: shippingMeta(),
         });
         if (result === false) {
           setOrderError("Não foi possível confirmar a baixa de estoque do servidor. Tente reenviar ou volte ao carrinho.");
@@ -455,6 +512,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           receiptUrl: urlData.publicUrl,
           creditsApplied: creditsToApplyFor("pix"),
           customerInfo: buildCustomerInfo(),
+          shipping: shippingMeta(),
         });
         if (result === false) {
           toast.error("Não foi possível registrar o pedido. Tente novamente.");
@@ -547,9 +605,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   <span className="font-display font-semibold text-foreground">Total</span>
                   <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão</Button>
-                
-                <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("pix")}><QrCode className="h-4 w-4" />Pagar com PIX</Button>
+                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("pix_auto")}>
+                  <QrCode className="h-4 w-4" />Pagar com PIX (confirmação automática)
+                </Button>
+                <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão</Button>
+                <Button variant="ghost" className="w-full gap-2 font-body text-xs text-muted-foreground" size="sm" onClick={() => openDeliveryDialog("pix")}>
+                  <Upload className="h-3.5 w-3.5" />PIX com envio de comprovante (sujeito a conferência)
+                </Button>
                 <Button variant="outline" className="w-full gap-2 font-body text-xs" size="sm" onClick={onClear}><Trash2 className="h-3.5 w-3.5" />Limpar carrinho</Button>
               </div>
             </>
@@ -557,7 +619,37 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </SheetContent>
       </Sheet>
 
+      {/* Dados obrigatórios pendentes */}
+      <Dialog open={validationIssues.length > 0} onOpenChange={(o) => { if (!o) setValidationIssues([]); }}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-destructive" /> Dados obrigatórios
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Precisamos destes dados corretos para emitir a etiqueta de envio e concluir o pedido:
+            </p>
+            <ul className="space-y-1.5">
+              {validationIssues.map((issue) => (
+                <li key={issue} className="flex gap-2 text-xs text-foreground">
+                  <span className="text-destructive">•</span>
+                  <span>{issue}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setValidationIssues([])} className="gap-2">
+              <Check className="h-4 w-4" /> Corrigir agora
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Login Required Dialog */}
+
       <Dialog open={loginPromptOpen} onOpenChange={setLoginPromptOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
@@ -602,8 +694,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix_auto" ? "PIX automático" : pendingChannel === "pix" ? "PIX (comprovante)" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{isPixChannel(pendingChannel) ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
               {deliveryMethod === "shipping" && getFreightValue() > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium text-foreground">R$ {getFreightValue().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
               )}
@@ -717,71 +809,76 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                       <Input value={profile?.display_name ?? ""} disabled className="h-8 text-sm bg-muted/30" />
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">CEP</Label>
+                      <Label className="text-xs text-muted-foreground">CEP *</Label>
                       <Input placeholder="00000-000" value={shippingInfo.cep} onChange={(e) => setShippingInfo((p) => ({ ...p, cep: e.target.value }))} className="h-8 text-sm" />
                       {freight.loading && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Consultando frete...</p>}
                       {freight.error && <p className="text-[10px] text-destructive mt-1">{freight.error}</p>}
+                      {cepFound === false && <p className="text-[10px] text-destructive mt-1">CEP não encontrado nos Correios.</p>}
+                    </div>
+                    <div className="grid grid-cols-[1fr_90px] gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Rua / Logradouro *</Label>
+                        <Input placeholder="Rua / Avenida" value={shippingInfo.street} onChange={(e) => setShippingInfo((p) => ({ ...p, street: e.target.value }))} className="h-8 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Número *</Label>
+                        <Input placeholder="123" value={shippingInfo.number} onChange={(e) => setShippingInfo((p) => ({ ...p, number: e.target.value }))} className="h-8 text-sm" />
+                      </div>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Rua / Endereço</Label>
-                      <Input placeholder="Rua, número, complemento" value={shippingInfo.street} onChange={(e) => setShippingInfo((p) => ({ ...p, street: e.target.value }))} className="h-8 text-sm" />
+                      <Label className="text-xs text-muted-foreground">Complemento</Label>
+                      <Input placeholder="Apto, bloco (opcional)" value={shippingInfo.complement} onChange={(e) => setShippingInfo((p) => ({ ...p, complement: e.target.value }))} className="h-8 text-sm" />
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Bairro</Label>
+                      <Label className="text-xs text-muted-foreground">Bairro *</Label>
                       <Input placeholder="Bairro" value={shippingInfo.neighborhood} onChange={(e) => setShippingInfo((p) => ({ ...p, neighborhood: e.target.value }))} className="h-8 text-sm" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs text-muted-foreground">Cidade</Label>
+                        <Label className="text-xs text-muted-foreground">Cidade *</Label>
                         <Input placeholder="Cidade" value={shippingInfo.city} onChange={(e) => setShippingInfo((p) => ({ ...p, city: e.target.value }))} className="h-8 text-sm" />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Estado</Label>
+                        <Label className="text-xs text-muted-foreground">Estado *</Label>
                         <Input placeholder="SP" maxLength={2} value={shippingInfo.state} onChange={(e) => setShippingInfo((p) => ({ ...p, state: e.target.value.toUpperCase() }))} className="h-8 text-sm" />
                       </div>
                     </div>
 
-                    {/* Freight estimation results */}
-                    {(freight.pac || freight.sedex) && (
+                    {/* Escolha do serviço de frete pelo cliente (mais barato pré-selecionado) */}
+                    {freight.options && freight.options.length > 0 && (
                       <div className="p-2.5 rounded-lg bg-success/5 border border-success/20 space-y-2 mt-1">
                         <p className="text-[11px] font-semibold text-foreground flex items-center gap-1">
-                          <Package className="h-3.5 w-3.5 text-success" /> Estimativa de Frete
+                          <Package className="h-3.5 w-3.5 text-success" /> Forma de envio *
                         </p>
-                        {freight.pac && (
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-muted-foreground">📦 PAC ({freight.pac.deadline})</span>
-                            <span className="font-semibold text-foreground">R$ {freight.pac.price}</span>
-                          </div>
-                        )}
-                        {freight.sedex && (
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-muted-foreground">⚡ SEDEX ({freight.sedex.deadline})</span>
-                            <span className="font-semibold text-foreground">R$ {freight.sedex.price}</span>
-                          </div>
-                        )}
+                        {freight.options.map((o, idx) => {
+                          const selected = shippingInfo.serviceId === o.id;
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() => setShippingInfo((p) => ({ ...p, serviceId: o.id, servicePrice: o.price, shippingMethod: o.name }))}
+                              className={`w-full flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 text-left transition-colors ${selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                            >
+                              <span className="text-[11px] text-foreground">
+                                {o.company ? `${o.company} — ` : ""}{o.name}
+                                <span className="text-muted-foreground"> ({o.deliveryDays} dias úteis)</span>
+                                {idx === 0 && <span className="ml-1 text-success">mais barato</span>}
+                              </span>
+                              <span className="text-[11px] font-semibold text-foreground shrink-0">
+                                R$ {o.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
-
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Forma de Envio</Label>
-                      <Select value={shippingInfo.shippingMethod} onValueChange={(v) => setShippingInfo((p) => ({ ...p, shippingMethod: v as ShippingInfo["shippingMethod"] }))}>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pac">
-                            Correios - PAC {freight.pac ? `(R$ ${freight.pac.price})` : ""}
-                          </SelectItem>
-                          <SelectItem value="sedex">
-                            Correios - SEDEX {freight.sedex ? `(R$ ${freight.sedex.price})` : ""}
-                          </SelectItem>
-                          <SelectItem value="transportadora">Transportadora</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 mt-1">
                       <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. Pequenos ajustes podem ocorrer no ato da postagem.
+                        ✓ Valores cotados em tempo real via <strong>SuperFrete</strong>. A etiqueta é emitida no serviço
+                        que você escolher; se ele ficar indisponível na postagem, usamos automaticamente a opção mais barata.
                       </p>
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -816,6 +913,12 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
               <p className="text-xs text-muted-foreground">Valor a transferir</p>
               <p className="text-2xl font-bold text-primary font-display">R$ {pixTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+            </div>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Este é o PIX manual: o pagamento passa por <strong>conferência da nossa equipe</strong> antes da
+                confirmação. Para aprovação imediata, use a opção <strong>PIX com confirmação automática</strong> no carrinho.
+              </p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Anexar comprovante de pagamento</p>
