@@ -737,7 +737,116 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </DialogContent>
       </Dialog>
 
+      {/* Acompanhamento do PIX em tempo real */}
+      <Dialog
+        open={!!pixTrackOrderId}
+        onOpenChange={(o) => {
+          if (!o) {
+            setPixTrackOrderId(null);
+            setPixTrackUrl(null);
+            setPixElapsed(0);
+            setPixTrackState("waiting");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display text-foreground flex items-center gap-2">
+              {pixTrackState === "confirmed" ? (
+                <><Check className="h-5 w-5 text-success" /> Pagamento confirmado</>
+              ) : (
+                <><QrCode className="h-5 w-5 text-primary" /> Acompanhando seu PIX</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {pixTrackState === "confirmed" ? (
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                Seu PIX foi confirmado automaticamente e o pedido já entrou em preparação. A etiqueta de
+                envio é emitida em seguida e o código de rastreio aparece no pedido assim que sair.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Você também recebe um e-mail com o resumo do pedido e cada atualização de status.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span>
+                  {pixTrackState === "waiting"
+                    ? "Aguardando a confirmação automática do PIX…"
+                    : pixTrackState === "mismatch"
+                      ? "Recebemos um pagamento com valor diferente do pedido."
+                      : "A confirmação está demorando mais que o normal — reconsultando o pagamento."}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Tempo aguardando: {pixElapsed}s. Assim que o pagamento cair, esta tela muda sozinha —
+                pode manter aberta.
+              </p>
+
+              {pixTrackState !== "waiting" && (
+                <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2 text-xs text-muted-foreground">
+                  <p>
+                    {pixTrackState === "mismatch"
+                      ? "Nossa equipe vai conferir a divergência de valor. Você pode falar com a gente pelo WhatsApp informando o número do pedido."
+                      : "Já pagou e nada mudou? Use a reconsulta manual abaixo ou envie o comprovante para conferência da nossa equipe."}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2"
+                      disabled={pixRechecking}
+                      onClick={() => pixTrackOrderId && recheckPix(pixTrackOrderId)}
+                    >
+                      {pixRechecking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                      Reconsultar agora
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="gap-2"
+                      onClick={() => {
+                        setPixTrackOrderId(null);
+                        handlePixSelect();
+                      }}
+                    >
+                      <Upload className="h-3.5 w-3.5" /> Enviar comprovante
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            {pixTrackState !== "confirmed" && pixTrackUrl && (
+              <Button variant="outline" className="gap-2" onClick={() => window.open(pixTrackUrl, "_blank", "noopener,noreferrer")}>
+                <QrCode className="h-4 w-4" /> Reabrir pagamento
+              </Button>
+            )}
+            {pixTrackOrderId && (
+              <Button
+                className="gap-2"
+                onClick={() => {
+                  const id = pixTrackOrderId;
+                  setPixTrackOrderId(null);
+                  setOpen(false);
+                  navigate(`/conta/pedidos/${id}`);
+                }}
+              >
+                <Package className="h-4 w-4" /> Ver pedido
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Login Required Dialog */}
+
 
       <Dialog open={loginPromptOpen} onOpenChange={setLoginPromptOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border">
