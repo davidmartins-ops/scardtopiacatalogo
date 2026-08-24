@@ -563,7 +563,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     if (onOrderPlaced) onOrderPlaced(items, amountForChannel("whatsapp"), { paymentMethod: "whatsapp" });
   };
 
-  const handlePixSelect = () => { setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false); };
+  const handlePixSelect = (existingOrderId?: string) => {
+    setPixReceiptOrderId(existingOrderId ?? null);
+    setPixDialogOpen(true); setReceiptFile(null); setReceiptPreview(null); setReceiptSent(false);
+  };
 
   const handleReceiptSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
