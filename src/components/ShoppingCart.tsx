@@ -434,7 +434,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         city: shippingInfo.city,
         state: shippingInfo.state,
       },
-      shippingServiceSelected: !!shippingInfo.serviceId,
+      shippingServiceSelected: !!shippingInfo.serviceId || !!shippingInfo.shippingMethod.trim(),
     });
     if (issues.length > 0) {
       setValidationIssues(issues);
