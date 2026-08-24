@@ -37,6 +37,7 @@ interface ShoppingCartProps {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
       creditsApplied?: number;
+      shipping?: { serviceId: number; serviceName: string; cost: number };
       customerInfo?: {
         name?: string;
         email?: string;
@@ -456,6 +457,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           paymentMethod: "whatsapp",
           creditsApplied: creditsToApplyFor("whatsapp"),
           customerInfo: buildCustomerInfo(),
+          shipping: shippingMeta(),
         });
         if (result === false) {
           setOrderError("Não foi possível confirmar a baixa de estoque do servidor. Tente reenviar ou volte ao carrinho.");
@@ -511,6 +513,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           receiptUrl: urlData.publicUrl,
           creditsApplied: creditsToApplyFor("pix"),
           customerInfo: buildCustomerInfo(),
+          shipping: shippingMeta(),
         });
         if (result === false) {
           toast.error("Não foi possível registrar o pedido. Tente novamente.");
@@ -603,9 +606,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   <span className="font-display font-semibold text-foreground">Total</span>
                   <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
-                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão</Button>
-                
-                <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("pix")}><QrCode className="h-4 w-4" />Pagar com PIX</Button>
+                <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("pix_auto")}>
+                  <QrCode className="h-4 w-4" />Pagar com PIX (confirmação automática)
+                </Button>
+                <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão</Button>
+                <Button variant="ghost" className="w-full gap-2 font-body text-xs text-muted-foreground" size="sm" onClick={() => openDeliveryDialog("pix")}>
+                  <Upload className="h-3.5 w-3.5" />PIX com envio de comprovante (sujeito a conferência)
+                </Button>
                 <Button variant="outline" className="w-full gap-2 font-body text-xs" size="sm" onClick={onClear}><Trash2 className="h-3.5 w-3.5" />Limpar carrinho</Button>
               </div>
             </>
@@ -658,8 +665,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
               <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix" ? "PIX" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{pendingChannel === "pix" ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix_auto" ? "PIX automático" : pendingChannel === "pix" ? "PIX (comprovante)" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{isPixChannel(pendingChannel) ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
               {deliveryMethod === "shipping" && getFreightValue() > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium text-foreground">R$ {getFreightValue().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
               )}
