@@ -157,6 +157,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
+  const [cepFound, setCepFound] = useState<boolean | null>(null);
+  const [validationIssues, setValidationIssues] = useState<string[]>([]);
 
   // Pre-fill cpf/phone from saved profile
   useEffect(() => {
@@ -168,13 +170,26 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     }
   }, [profile]);
 
-  // Auto-fetch freight when CEP has 8+ digits
+  // Auto-fetch freight when CEP has 8+ digits; pré-seleciona a opção mais barata
   useEffect(() => {
     const cleanCep = shippingInfo.cep.replace(/\D/g, "");
     if (cleanCep.length === 8 && deliveryMethod === "shipping") {
       const itemCount = items.reduce((s, ci) => s + ci.qty, 0) || 1;
       setFreight({ loading: true });
-      fetchFreight(cleanCep, itemCount).then((result) => setFreight({ ...result, loading: false }));
+      fetchFreight(cleanCep, itemCount).then((result) => {
+        setFreight({ ...result, loading: false });
+        const cheapest = result.options?.[0];
+        setShippingInfo((prev) => {
+          const stillValid = result.options?.some((o) => o.id === prev.serviceId);
+          if (stillValid) {
+            const match = result.options?.find((o) => o.id === prev.serviceId)!;
+            return { ...prev, servicePrice: match.price, shippingMethod: match.name };
+          }
+          return cheapest
+            ? { ...prev, serviceId: cheapest.id, servicePrice: cheapest.price, shippingMethod: cheapest.name }
+            : { ...prev, serviceId: undefined, servicePrice: undefined, shippingMethod: "" };
+        });
+      });
     } else {
       setFreight({ loading: false });
     }
@@ -183,23 +198,29 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   // Auto-fill address from ViaCEP
   useEffect(() => {
     const cleanCep = shippingInfo.cep.replace(/\D/g, "");
-    if (cleanCep.length === 8) {
-      fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (!data.erro) {
-            setShippingInfo((prev) => ({
-              ...prev,
-              street: data.logradouro ? `${data.logradouro}` : prev.street,
-              neighborhood: data.bairro || prev.neighborhood,
-              city: data.localidade || prev.city,
-              state: data.uf || prev.state,
-            }));
-          }
-        })
-        .catch(() => {});
+    if (cleanCep.length !== 8) {
+      setCepFound(null);
+      return;
     }
+    fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.erro) {
+          setCepFound(true);
+          setShippingInfo((prev) => ({
+            ...prev,
+            street: data.logradouro ? `${data.logradouro}` : prev.street,
+            neighborhood: data.bairro || prev.neighborhood,
+            city: data.localidade || prev.city,
+            state: data.uf || prev.state,
+          }));
+        } else {
+          setCepFound(false);
+        }
+      })
+      .catch(() => setCepFound(null));
   }, [shippingInfo.cep]);
+
 
   // Total no cartão: SEM desconto (o desconto vale apenas para PIX).
   const total = items.reduce((s, ci) => s + ci.item.price * ci.qty, 0);
