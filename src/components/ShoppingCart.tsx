@@ -335,18 +335,36 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     phone: customerExtra.phone.trim(),
     address: deliveryMethod === "shipping" ? { ...shippingInfo } : undefined,
     deliveryMethod: deliveryMethod ?? undefined,
+    shippingService:
+      deliveryMethod === "shipping" && shippingInfo.serviceId
+        ? { id: shippingInfo.serviceId, name: shippingInfo.shippingMethod, price: shippingInfo.servicePrice ?? 0 }
+        : undefined,
   });
 
+  const shippingMeta = () =>
+    deliveryMethod === "shipping" && shippingInfo.serviceId
+      ? { serviceId: shippingInfo.serviceId, serviceName: shippingInfo.shippingMethod, cost: shippingInfo.servicePrice ?? 0 }
+      : undefined;
+
   const confirmDeliveryAndProceed = () => {
-    if (!customerExtra.cpf.trim() || !customerExtra.phone.trim()) {
-      toast.error("Informe seu CPF e telefone para concluir o pedido.");
+    const issues = validateCheckout({
+      cpf: customerExtra.cpf,
+      phone: customerExtra.phone,
+      deliveryMethod,
+      cepFound: cepFound ?? undefined,
+      address: {
+        cep: shippingInfo.cep,
+        street: shippingInfo.street,
+        number: shippingInfo.number,
+        neighborhood: shippingInfo.neighborhood,
+        city: shippingInfo.city,
+        state: shippingInfo.state,
+      },
+      shippingServiceSelected: !!shippingInfo.serviceId,
+    });
+    if (issues.length > 0) {
+      setValidationIssues(issues);
       return;
-    }
-    if (deliveryMethod === "shipping") {
-      if (!shippingInfo.street || !shippingInfo.neighborhood || !shippingInfo.city || !shippingInfo.state || !shippingInfo.cep || !shippingInfo.shippingMethod) {
-        toast.error("Preencha todos os campos de endereço.");
-        return;
-      }
     }
     setDeliveryDialogOpen(false);
     setPendingChannel(pendingAction);
@@ -359,31 +377,38 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     setSubmittingOrder(true);
     setOrderError(null);
     try {
-      // For PIX, defer order creation until receipt is uploaded in handleConfirmPix
+      // PIX com comprovante manual: pedido criado depois do upload em handleConfirmPix
       if (pendingChannel === "pix") {
         setConfirmOrderOpen(false);
         handlePixSelect();
         return;
       }
 
-      // Card via InfinitePay: create order in DB, then call create-checkout edge function
-      if (pendingChannel === "card") {
+      // Cartão ou PIX automático via InfinitePay: cria o pedido e abre o checkout
+      if (pendingChannel === "card" || pendingChannel === "pix_auto") {
+        const isAutoPix = pendingChannel === "pix_auto";
         if (!user) {
-          setOrderError("Faça login para pagar com cartão.");
+          setOrderError("Faça login para pagar pelo checkout.");
           return;
         }
-        const orderItems = items.map((ci) => ({
-          id: ci.item.id,
-          name: ci.item.name,
-          description: ci.item.description,
-          language: ci.item.language ?? null,
-          condition: ci.item.condition ?? null,
-          quantity: ci.qty,
-          unit_price: ci.item.price, // cartão usa preço cheio
-          total_price: ci.item.price * ci.qty,
-        }));
-        const cardTotal = amountForChannel("card");
-        const cardCredits = creditsToApplyFor("card");
+        const orderItems = items.map((ci) => {
+          const discount = ci.item.discount ?? 0;
+          const pixBase = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+          const unitPrice = isAutoPix ? pixBase * (1 - discount / 100) : ci.item.price;
+          return {
+            id: ci.item.id,
+            name: ci.item.name,
+            description: ci.item.description,
+            language: ci.item.language ?? null,
+            condition: ci.item.condition ?? null,
+            quantity: ci.qty,
+            unit_price: unitPrice,
+            total_price: unitPrice * ci.qty,
+          };
+        });
+        const cardTotal = amountForChannel(pendingChannel);
+        const cardCredits = creditsToApplyFor(pendingChannel);
+        const meta = shippingMeta();
         const { data: orderRow, error: orderErr } = await supabase
           .from("orders")
           .insert({
@@ -392,11 +417,13 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             total: cardTotal,
             credits_applied: cardCredits,
             status: "pending_payment" as any,
-            payment_method: "credit" as any,
+            payment_method: (isAutoPix ? "pix" : "credit") as any,
             customer_info: buildCustomerInfo() as any,
+            ...(meta ? { shipping_service: `${meta.serviceId}|${meta.serviceName}`, shipping_cost: meta.cost } : {}),
           })
           .select("id")
           .single();
+
         if (orderErr || !orderRow) {
           setOrderError(friendlyOrderError(orderErr, "Falha ao criar pedido."));
           return;
