@@ -196,6 +196,8 @@ Deno.serve(async (req) => {
       email: customer.email ?? undefined,
       document: customer.cpf ?? customer.document ?? undefined,
       address: address.street ?? address.address ?? "",
+      number: String(address.number ?? address.numero ?? "S/N"),
+      complement: address.complement ?? address.complemento ?? undefined,
       district: address.neighborhood ?? address.district ?? "",
       city: address.city ?? "",
       state_abbr: address.state ?? address.uf ?? "",

@@ -914,6 +914,12 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <p className="text-xs text-muted-foreground">Valor a transferir</p>
               <p className="text-2xl font-bold text-primary font-display">R$ {pixTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Este é o PIX manual: o pagamento passa por <strong>conferência da nossa equipe</strong> antes da
+                confirmação. Para aprovação imediata, use a opção <strong>PIX com confirmação automática</strong> no carrinho.
+              </p>
+            </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Anexar comprovante de pagamento</p>
               {receiptPreview ? (
