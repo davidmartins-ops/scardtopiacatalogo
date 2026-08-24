@@ -606,7 +606,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("pix_auto")}>
-                  <QrCode className="h-4 w-4" />Pagar com PIX (confirmação automática)
+                  <QrCode className="h-4 w-4" />Pagar com PIX
                 </Button>
                 <Button variant="outline" className="w-full gap-2 font-body border-primary/30 hover:border-primary/60" size="lg" onClick={() => openDeliveryDialog("card")}><CreditCard className="h-4 w-4" />Pagar com Cartão</Button>
                 <Button variant="ghost" className="w-full gap-2 font-body text-xs text-muted-foreground" size="sm" onClick={() => openDeliveryDialog("pix")}>
