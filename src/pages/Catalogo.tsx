@@ -882,6 +882,12 @@ const Catalogo = () => {
                 <span className="hidden sm:inline">Tendências</span>
               </Button>
             </Link>
+<Link to="/encomendas">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-brand-header-foreground hover:bg-white/10 hover:text-brand-gold transition-colors duration-200">
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Encomendas</span>
+              </Button>
+            </Link>
             <AdminPanelButton />
             {user ? (
               <>

@@ -167,7 +167,12 @@ const SiteFooter = () => {
             >
               Institucional
             </h2>
-            <ul className="space-y-1">
+<ul className="space-y-1">
+              <li>
+                <Link to="/encomendas" className={linkClass} aria-label="Encomendas Especiais">
+                  Encomendas Especiais
+                </Link>
+              </li>
               <li>
                 <Link to="/sobre" className={linkClass} aria-label="Sobre a Spencer's Cardtopia">
                   Sobre
