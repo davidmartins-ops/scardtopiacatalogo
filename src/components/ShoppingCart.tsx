@@ -289,13 +289,14 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += `\n📦 Entrega: RETIRADA NO LOCAL\n`;
       msg += `Total: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     } else if (deliveryMethod === "shipping") {
-      const methodLabel = shippingInfo.shippingMethod === "pac" ? "PAC" : shippingInfo.shippingMethod === "sedex" ? "SEDEX" : "Transportadora";
+      const methodLabel = shippingInfo.shippingMethod || "A definir";
       const freightVal = getFreightValue();
       msg += `\n📦 Entrega: ENVIO - ${methodLabel}\n`;
       msg += `👤 Nome: ${profile?.display_name ?? "—"}\n`;
-      msg += `📍 Endereço: ${shippingInfo.street}, ${shippingInfo.neighborhood}\n`;
+      msg += `📍 Endereço: ${shippingInfo.street}, ${shippingInfo.number}${shippingInfo.complement ? ` - ${shippingInfo.complement}` : ""} — ${shippingInfo.neighborhood}\n`;
       msg += `🏙️ ${shippingInfo.city} - ${shippingInfo.state}\n`;
       msg += `📮 CEP: ${shippingInfo.cep}\n`;
+
       if (freightVal > 0) {
         msg += `🚚 Frete estimado: R$ ${freightVal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
         msg += `Total (com frete): R$ ${(channelTotal + freightVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
