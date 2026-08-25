@@ -1202,6 +1202,54 @@ export type Database = {
           },
         ]
       }
+      special_order_attachments: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          item_id: string | null
+          special_order_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          item_id?: string | null
+          special_order_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          item_id?: string | null
+          special_order_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_order_attachments_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "special_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_order_attachments_special_order_id_fkey"
+            columns: ["special_order_id"]
+            isOneToOne: false
+            referencedRelation: "special_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       special_order_audit_log: {
         Row: {
           action: string
