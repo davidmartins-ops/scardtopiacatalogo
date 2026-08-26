@@ -75,13 +75,35 @@ const Encomendas = () => {
     canonical: "https://www.spencerscardtopia.com.br/encomendas",
   });
 
-  const { user } = useCustomerAuth();
+  const { user, loading: authLoading } = useCustomerAuth();
+  const location = useLocation();
   const { products, isLoading } = useSpecialOrderProducts();
   const { data: variants = [] } = useSpecialOrderVariantsIndex();
+  const { orders, isLoading: ordersLoading } = useSpecialOrders();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [onlyFeatured, setOnlyFeatured] = useState(false);
   const [sort, setSort] = useState<SortOption>("featured");
+  const [showForm, setShowForm] = useState(false);
+
+  const statusAlerts = useMemo(() => {
+    if (!user) return [];
+    const seen = readSeen();
+    return orders.filter((o) => seen[o.id] && seen[o.id] !== o.status);
+  }, [orders, user]);
+
+  useEffect(() => {
+    if (!user || orders.length === 0) return;
+    const seen = readSeen();
+    const next = { ...seen };
+    orders.forEach((o) => {
+      next[o.id] = o.status;
+    });
+    const timer = window.setTimeout(() => {
+      localStorage.setItem(SEEN_KEY, JSON.stringify(next));
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [orders, user]);
 
   const variantsByProduct = useMemo(() => {
     const map = new Map<string, typeof variants>();
