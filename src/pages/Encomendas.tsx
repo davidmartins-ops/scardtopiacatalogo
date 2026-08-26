@@ -162,6 +162,23 @@ const Encomendas = () => {
     return sorted;
   }, [products, search, category, onlyFeatured, sort, variantsByProduct]);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Navigate
+        to={`/conta/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background font-body">
       <header className="border-b border-brand-header-border bg-brand-header backdrop-blur-xl sticky top-0 z-30 shadow-md">
