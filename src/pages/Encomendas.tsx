@@ -1,15 +1,53 @@
 import useSEO from "@/hooks/use-seo";
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useSpecialOrderProducts } from "@/hooks/use-special-orders";
+import { useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import {
+  useSpecialOrderProducts,
+  useSpecialOrders,
+  SPECIAL_ORDER_STATUS_LABELS,
+} from "@/hooks/use-special-orders";
 import { useSpecialOrderVariantsIndex } from "@/hooks/use-special-order-catalog";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Package, Plus, Search, Sparkles, CalendarClock} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SpecialOrderRequestForm from "@/components/SpecialOrderRequestForm";
+import {
+  ArrowLeft,
+  Bell,
+  ChevronRight,
+  Loader2,
+  Package,
+  Plus,
+  Search,
+  Sparkles,
+  CalendarClock,
+} from "lucide-react";
 import logo from "@/assets/logo.png";
+
+const SEEN_KEY = "encomendas-status-vistos";
+
+const statusBadgeVariant: Record<string, string> = {
+  requested: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  quoted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  approved: "bg-green-500/10 text-green-500 border-green-500/20",
+  paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  ordered: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  received: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  shipped: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  delivered: "bg-success/10 text-success border-success/20",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+const readSeen = (): Record<string, string> => {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+};
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
