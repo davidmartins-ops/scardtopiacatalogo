@@ -1,15 +1,53 @@
 import useSEO from "@/hooks/use-seo";
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useSpecialOrderProducts } from "@/hooks/use-special-orders";
+import { useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import {
+  useSpecialOrderProducts,
+  useSpecialOrders,
+  SPECIAL_ORDER_STATUS_LABELS,
+} from "@/hooks/use-special-orders";
 import { useSpecialOrderVariantsIndex } from "@/hooks/use-special-order-catalog";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Package, Plus, Search, Sparkles, CalendarClock} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SpecialOrderRequestForm from "@/components/SpecialOrderRequestForm";
+import {
+  ArrowLeft,
+  Bell,
+  ChevronRight,
+  Loader2,
+  Package,
+  Plus,
+  Search,
+  Sparkles,
+  CalendarClock,
+} from "lucide-react";
 import logo from "@/assets/logo.png";
+
+const SEEN_KEY = "encomendas-status-vistos";
+
+const statusBadgeVariant: Record<string, string> = {
+  requested: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  quoted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  approved: "bg-green-500/10 text-green-500 border-green-500/20",
+  paid: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  ordered: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  received: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  shipped: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  delivered: "bg-success/10 text-success border-success/20",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+const readSeen = (): Record<string, string> => {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+};
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -37,13 +75,35 @@ const Encomendas = () => {
     canonical: "https://www.spencerscardtopia.com.br/encomendas",
   });
 
-  const { user } = useCustomerAuth();
+  const { user, loading: authLoading } = useCustomerAuth();
+  const location = useLocation();
   const { products, isLoading } = useSpecialOrderProducts();
   const { data: variants = [] } = useSpecialOrderVariantsIndex();
+  const { orders, isLoading: ordersLoading } = useSpecialOrders();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [onlyFeatured, setOnlyFeatured] = useState(false);
   const [sort, setSort] = useState<SortOption>("featured");
+  const [showForm, setShowForm] = useState(false);
+
+  const statusAlerts = useMemo(() => {
+    if (!user) return [];
+    const seen = readSeen();
+    return orders.filter((o) => seen[o.id] && seen[o.id] !== o.status);
+  }, [orders, user]);
+
+  useEffect(() => {
+    if (!user || orders.length === 0) return;
+    const seen = readSeen();
+    const next = { ...seen };
+    orders.forEach((o) => {
+      next[o.id] = o.status;
+    });
+    const timer = window.setTimeout(() => {
+      localStorage.setItem(SEEN_KEY, JSON.stringify(next));
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [orders, user]);
 
   const variantsByProduct = useMemo(() => {
     const map = new Map<string, typeof variants>();
@@ -102,6 +162,23 @@ const Encomendas = () => {
     return sorted;
   }, [products, search, category, onlyFeatured, sort, variantsByProduct]);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Navigate
+        to={`/conta/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background font-body">
       <header className="border-b border-brand-header-border bg-brand-header backdrop-blur-xl sticky top-0 z-30 shadow-md">
@@ -132,20 +209,92 @@ const Encomendas = () => {
             com preço fixo ou solicite uma cotação personalizada.
           </p>
           <div className="mt-4 flex flex-wrap gap-2 justify-center">
-            <Link to={user ? "/conta/encomendas/nova" : "/conta/login?redirect=/conta/encomendas/nova"}>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" /> Solicitar encomenda
+            <Button className="gap-2" onClick={() => setShowForm((v) => !v)}>
+              <Plus className="h-4 w-4" /> {showForm ? "Fechar formulário" : "Solicitar encomenda"}
+            </Button>
+            <Link to="/conta/encomendas">
+              <Button variant="outline" className="gap-2">
+                <Package className="h-4 w-4" /> Minhas encomendas
               </Button>
             </Link>
-            {user && (
-              <Link to="/conta/encomendas">
-                <Button variant="outline" className="gap-2">
-                  <Package className="h-4 w-4" /> Minhas encomendas
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
+
+        {statusAlerts.length > 0 && (
+          <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 p-4">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Bell className="h-4 w-4 text-primary" /> Atualizações nas suas encomendas
+            </p>
+            <ul className="mt-2 space-y-1">
+              {statusAlerts.map((o) => (
+                <li key={o.id} className="text-sm">
+                  <Link
+                    to={`/conta/encomendas/${o.id}`}
+                    className="text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    #{o.id.slice(0, 8)} — agora {SPECIAL_ORDER_STATUS_LABELS[o.status]}
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {showForm && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="font-display text-lg">Nova solicitação de encomenda</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SpecialOrderRequestForm onDone={() => setShowForm(false)} />
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="font-display text-lg flex items-center gap-2">
+              <Package className="h-4 w-4" /> Histórico das suas solicitações
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {ordersLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            ) : orders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Você ainda não tem solicitações. Clique em “Solicitar encomenda” para começar.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {orders.map((o) => (
+                  <li key={o.id}>
+                    <Link
+                      to={`/conta/encomendas/${o.id}`}
+                      className="flex items-center justify-between gap-3 py-3 hover:opacity-80 transition-opacity"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">#{o.id.slice(0, 8)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Criada em {new Date(o.created_at).toLocaleDateString("pt-BR")}
+                          {o.status_updated_at &&
+                            ` • atualizada em ${new Date(o.status_updated_at).toLocaleDateString("pt-BR")}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={statusBadgeVariant[o.status] ?? ""}>
+                          {SPECIAL_ORDER_STATUS_LABELS[o.status]}
+                        </Badge>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
 
         <div className="glass-card p-4 mb-6 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
