@@ -209,20 +209,92 @@ const Encomendas = () => {
             com preço fixo ou solicite uma cotação personalizada.
           </p>
           <div className="mt-4 flex flex-wrap gap-2 justify-center">
-            <Link to={user ? "/conta/encomendas/nova" : "/conta/login?redirect=/conta/encomendas/nova"}>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" /> Solicitar encomenda
+            <Button className="gap-2" onClick={() => setShowForm((v) => !v)}>
+              <Plus className="h-4 w-4" /> {showForm ? "Fechar formulário" : "Solicitar encomenda"}
+            </Button>
+            <Link to="/conta/encomendas">
+              <Button variant="outline" className="gap-2">
+                <Package className="h-4 w-4" /> Minhas encomendas
               </Button>
             </Link>
-            {user && (
-              <Link to="/conta/encomendas">
-                <Button variant="outline" className="gap-2">
-                  <Package className="h-4 w-4" /> Minhas encomendas
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
+
+        {statusAlerts.length > 0 && (
+          <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 p-4">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Bell className="h-4 w-4 text-primary" /> Atualizações nas suas encomendas
+            </p>
+            <ul className="mt-2 space-y-1">
+              {statusAlerts.map((o) => (
+                <li key={o.id} className="text-sm">
+                  <Link
+                    to={`/conta/encomendas/${o.id}`}
+                    className="text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    #{o.id.slice(0, 8)} — agora {SPECIAL_ORDER_STATUS_LABELS[o.status]}
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {showForm && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="font-display text-lg">Nova solicitação de encomenda</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SpecialOrderRequestForm onDone={() => setShowForm(false)} />
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="font-display text-lg flex items-center gap-2">
+              <Package className="h-4 w-4" /> Histórico das suas solicitações
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {ordersLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            ) : orders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Você ainda não tem solicitações. Clique em “Solicitar encomenda” para começar.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {orders.map((o) => (
+                  <li key={o.id}>
+                    <Link
+                      to={`/conta/encomendas/${o.id}`}
+                      className="flex items-center justify-between gap-3 py-3 hover:opacity-80 transition-opacity"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">#{o.id.slice(0, 8)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Criada em {new Date(o.created_at).toLocaleDateString("pt-BR")}
+                          {o.status_updated_at &&
+                            ` • atualizada em ${new Date(o.status_updated_at).toLocaleDateString("pt-BR")}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={statusBadgeVariant[o.status] ?? ""}>
+                          {SPECIAL_ORDER_STATUS_LABELS[o.status]}
+                        </Badge>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
 
         <div className="glass-card p-4 mb-6 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
