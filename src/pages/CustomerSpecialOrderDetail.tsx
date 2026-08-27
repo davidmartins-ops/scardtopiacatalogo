@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2, Check, X, CreditCard, CheckCircle2, Printer } from "lucide-react";
 import { toast } from "sonner";
+import SpecialOrderAttachmentsPanel from "@/components/SpecialOrderAttachmentsPanel";
 import logo from "@/assets/logo.png";
 
 const statusBadgeVariant: Record<string, string> = {
