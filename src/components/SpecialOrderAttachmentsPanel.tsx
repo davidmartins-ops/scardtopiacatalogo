@@ -40,7 +40,7 @@ const SpecialOrderAttachmentsPanel = ({
   specialOrderId?: string;
   readOnly?: boolean;
 }) => {
-  const { attachments, isLoading, addAttachment, removeAttachment } =
+  const { attachments, isLoading, isError, refetch, addAttachment, removeAttachment } =
     useSpecialOrderAttachments(specialOrderId);
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -109,6 +109,15 @@ const SpecialOrderAttachmentsPanel = ({
 
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        ) : isError ? (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">
+              Não foi possível carregar os anexos desta encomenda.
+            </p>
+            <Button size="sm" variant="outline" onClick={() => refetch()}>
+              Tentar novamente
+            </Button>
+          </div>
         ) : attachments.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum detalhe adicional enviado.</p>
         ) : (

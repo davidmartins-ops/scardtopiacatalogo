@@ -101,6 +101,9 @@ export const useSpecialOrderAttachments = (specialOrderId?: string) => {
   return {
     attachments: query.data ?? [],
     isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error as Error | null,
+    refetch: query.refetch,
     addAttachment,
     removeAttachment,
   };
