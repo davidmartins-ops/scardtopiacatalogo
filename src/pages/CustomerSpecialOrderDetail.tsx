@@ -169,6 +169,8 @@ const CustomerSpecialOrderDetail = () => {
                 ))}
               </CardContent>
             </Card>
+
+            <SpecialOrderAttachmentsPanel specialOrderId={id} />
           </div>
 
           <div className="space-y-6">
