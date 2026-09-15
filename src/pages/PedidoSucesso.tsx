@@ -10,6 +10,7 @@ const PedidoSucesso = () => {
   const [params] = useSearchParams();
   const [state, setState] = useState<State>("loading");
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [isSpecialOrder, setIsSpecialOrder] = useState(false);
   const [message, setMessage] = useState<string>("");
 
   const order_nsu = params.get("order_nsu");
