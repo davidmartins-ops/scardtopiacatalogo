@@ -256,11 +256,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         setFreight({ ...result, loading: false });
         const cheapest = result.options?.[0];
         setShippingInfo((prev) => {
-          const stillValid = result.options?.some((o) => o.id === prev.serviceId);
-          if (stillValid) {
-            const match = result.options?.find((o) => o.id === prev.serviceId)!;
+          const match = result.options?.find((o) => o.id === prev.serviceId);
+          if (match) {
             return { ...prev, servicePrice: match.price, shippingMethod: match.name };
           }
+
           return cheapest
             ? { ...prev, serviceId: cheapest.id, servicePrice: cheapest.price, shippingMethod: cheapest.name }
             : { ...prev, serviceId: undefined, servicePrice: undefined, shippingMethod: "" };
