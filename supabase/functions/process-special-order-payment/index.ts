@@ -86,11 +86,33 @@ Deno.serve(async (req) => {
       price: Math.round((Number(i.unit_price) || 0) * 100),
     }));
 
-    const totalCents = Math.round(Number(order.total) * 100);
+    let totalCents = Math.round(Number(order.total) * 100);
+
+    // Fallback: encomendas aprovadas antes da correção podem ter total 0;
+    // nesse caso usamos o valor da última cotação.
     if (!Number.isFinite(totalCents) || totalCents <= 0) {
-      return new Response(JSON.stringify({ error: "Invalid order total" }), {
+      const { data: quoteRows } = await admin
+        .from("special_order_quotes")
+        .select("quoted_price")
+        .eq("special_order_id", special_order_id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const quoted = Number(quoteRows?.[0]?.quoted_price ?? 0);
+      if (quoted > 0) {
+        totalCents = Math.round(quoted * 100);
+        await admin.from("special_orders").update({ total: quoted }).eq("id", special_order_id);
+      }
+    }
+
+    if (!Number.isFinite(totalCents) || totalCents <= 0) {
+      return new Response(JSON.stringify({ error: "O valor da encomenda ainda não foi definido. Fale com a loja." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const itemsSum = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
+    if (itemsSum !== totalCents) {
+      items.length = 0;
     }
 
     // Encomendas: parcelamento limitado a 6x sem juros no checkout InfinitePay.
