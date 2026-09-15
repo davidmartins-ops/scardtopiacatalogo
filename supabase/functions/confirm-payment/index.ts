@@ -162,6 +162,12 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (!order) {
+      return new Response(JSON.stringify({ error: "Order not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Ownership check: an order tied to a customer can only be confirmed by
     // that customer (or a service-role caller). Guest orders skip this check.
     if (order.user_id && order.user_id !== callerUserId) {
