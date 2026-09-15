@@ -10,6 +10,7 @@ const PedidoSucesso = () => {
   const [params] = useSearchParams();
   const [state, setState] = useState<State>("loading");
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [isSpecialOrder, setIsSpecialOrder] = useState(false);
   const [message, setMessage] = useState<string>("");
 
   const order_nsu = params.get("order_nsu");
@@ -37,6 +38,7 @@ const PedidoSucesso = () => {
         }
         if (data?.ok) {
           setOrderId(data.order_id ?? order_nsu);
+          setIsSpecialOrder(data.kind === "special_order");
           setState("confirmed");
         } else if (data?.status === "unpaid") {
           setState("unpaid");
@@ -115,7 +117,9 @@ const PedidoSucesso = () => {
             <div className="flex flex-col gap-2">
               {orderId && (
                 <Button asChild>
-                  <Link to={`/conta/pedidos/${orderId}`}>Ver detalhes do pedido</Link>
+                  <Link to={isSpecialOrder ? `/conta/encomendas/${orderId}` : `/conta/pedidos/${orderId}`}>
+                    Ver detalhes do pedido
+                  </Link>
                 </Button>
               )}
               <Button asChild variant="outline">
