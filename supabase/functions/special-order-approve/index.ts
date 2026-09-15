@@ -98,9 +98,44 @@ Deno.serve(async (req) => {
         .eq("id", quote_id);
     }
 
+    // Ao aprovar, o preço cotado passa a ser o total da encomenda. Sem isso o
+    // total fica R$ 0,00 e o checkout falha com "Invalid order total".
+    let quoteQuery = admin
+      .from("special_order_quotes")
+      .select("id, quoted_price")
+      .eq("special_order_id", special_order_id);
+    quoteQuery = quote_id
+      ? quoteQuery.eq("id", quote_id)
+      : quoteQuery.order("created_at", { ascending: false }).limit(1);
+    const { data: quoteRows } = await quoteQuery;
+    const quotedPrice = Number(quoteRows?.[0]?.quoted_price ?? 0);
+
+    const orderUpdate: Record<string, unknown> = { status: "approved" };
+    if (Number.isFinite(quotedPrice) && quotedPrice > 0) {
+      orderUpdate.total = quotedPrice;
+
+      // Itens "sob cotação" ainda sem preço recebem o valor cotado (rateado).
+      const { data: quotationItems } = await admin
+        .from("special_order_items")
+        .select("id, quantity, unit_price")
+        .eq("special_order_id", special_order_id)
+        .eq("item_type", "quotation");
+      const pending = (quotationItems ?? []).filter((i: any) => !Number(i.unit_price));
+      if (pending.length > 0) {
+        const share = quotedPrice / pending.length;
+        for (const item of pending) {
+          const qty = Number(item.quantity) || 1;
+          await admin
+            .from("special_order_items")
+            .update({ unit_price: share / qty, total_price: share })
+            .eq("id", item.id);
+        }
+      }
+    }
+
     await admin
       .from("special_orders")
-      .update({ status: "approved" })
+      .update(orderUpdate)
       .eq("id", special_order_id);
 
     return new Response(
