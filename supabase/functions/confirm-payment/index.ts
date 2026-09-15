@@ -63,16 +63,103 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch order
-    const { data: order, error: orderErr } = await supabase
+    // Fetch order. The same redirect flow is used by catalog orders and by
+    // special orders (encomendas), so fall back to special_orders.
+    const { data: order } = await supabase
       .from("orders")
       .select("id, total, status, user_id")
       .eq("id", order_nsu)
       .maybeSingle();
-    if (orderErr || !order) {
+
+    let specialOrder: { id: string; total: number; status: string; user_id: string | null } | null = null;
+    if (!order) {
+      const { data: so } = await supabase
+        .from("special_orders")
+        .select("id, total, status, user_id")
+        .eq("id", order_nsu)
+        .maybeSingle();
+      specialOrder = so ?? null;
+    }
+
+    if (!order && !specialOrder) {
       return new Response(JSON.stringify({ error: "Order not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ---- Special order (encomenda) flow ----
+    if (specialOrder) {
+      if (specialOrder.user_id && specialOrder.user_id !== callerUserId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (["paid", "ordered", "received", "shipped", "delivered"].includes(specialOrder.status)) {
+        return new Response(
+          JSON.stringify({ ok: true, status: "already_confirmed", order_id: specialOrder.id, kind: "special_order" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+
+      const soCheckRes = await fetch("https://api.checkout.infinitepay.io/payment_check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: INFINITEPAY_HANDLE, order_nsu, transaction_nsu, slug }),
+      });
+      const soCheck = await soCheckRes.json().catch(() => ({}));
+
+      if (!soCheckRes.ok || !soCheck?.success || !soCheck?.paid) {
+        return new Response(
+          JSON.stringify({ ok: false, status: "unpaid", kind: "special_order", details: soCheck }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
+        );
+      }
+
+      const soExpected = Math.round(Number(specialOrder.total) * 100);
+      const soAmount = Number(soCheck.amount);
+      if (soExpected > 0 && Number.isFinite(soAmount) && Math.abs(soAmount - soExpected) > 2) {
+        console.error("Special order amount mismatch", { id: specialOrder.id, soExpected, soAmount });
+        return new Response(
+          JSON.stringify({ ok: false, status: "amount_mismatch", kind: "special_order" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
+        );
+      }
+
+      const { error: soUpdErr } = await supabase
+        .from("special_orders")
+        .update({
+          status: "paid",
+          payment_transaction_id: transaction_nsu,
+          payment_invoice_slug: slug ?? null,
+          paid_amount: Number(soCheck.paid_amount ?? soCheck.amount) / 100,
+          paid_at: new Date().toISOString(),
+        })
+        .eq("id", specialOrder.id);
+      if (soUpdErr) {
+        console.error("Special order update failed", soUpdErr);
+        return new Response(JSON.stringify({ error: "Failed to update order" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/notify-special-order`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({ special_order_id: specialOrder.id, status: "paid" }),
+        });
+      } catch (e) {
+        console.warn("notify-special-order failed", e);
+      }
+
+      return new Response(
+        JSON.stringify({ ok: true, status: "confirmed", order_id: specialOrder.id, kind: "special_order" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
     }
 
     // Ownership check: an order tied to a customer can only be confirmed by
