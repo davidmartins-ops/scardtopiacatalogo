@@ -34,6 +34,35 @@ function getRetryAfterSeconds(error: unknown): number {
   return 60
 }
 
+// Generate a cryptographically random 32-byte hex token
+function generateToken(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// SHA-256 hex digest used to store tokens at rest.
+async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// Issue (and persist the hash of) a fresh unsubscribe token for a recipient.
+async function issueUnsubscribeToken(
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+): Promise<string> {
+  const token = generateToken()
+  const token_hash = await hashToken(token)
+  const { error } = await supabase
+    .from('email_unsubscribe_tokens')
+    .upsert({ token_hash, email: email.trim().toLowerCase() }, { onConflict: 'email' })
+  if (error) {
+    console.error('Failed to create unsubscribe token', { error })
+  }
+  return token
+}
+
 function parseJwtClaims(token: string): Record<string, unknown> | null {
   const parts = token.split('.')
   if (parts.length < 2) {
@@ -307,6 +336,13 @@ Deno.serve(async (req) => {
       }
 
       try {
+        // The email API only accepts purpose "transactional" and requires an
+        // unsubscribe token. Auth emails are enqueued without one, so mint it here.
+        let unsubscribeToken = payload.unsubscribe_token as string | undefined
+        if (!unsubscribeToken) {
+          unsubscribeToken = await issueUnsubscribeToken(supabase, String(payload.to))
+        }
+
         const sendPayload = {
           run_id: runId,
           to: payload.to,
@@ -315,12 +351,10 @@ Deno.serve(async (req) => {
           subject: payload.subject,
           html: payload.html,
           text: payload.text,
-          // Auth emails are never marketing/transactional: the email API rejects
-          // transactional sends without an unsubscribe_token (400 missing_unsubscribe).
-          purpose: queue === 'auth_emails' ? 'authentication' : payload.purpose,
+          purpose: 'transactional',
           label: payload.label,
           idempotency_key: payload.idempotency_key,
-          unsubscribe_token: payload.unsubscribe_token,
+          unsubscribe_token: unsubscribeToken,
           message_id: payload.message_id,
         }
         // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
