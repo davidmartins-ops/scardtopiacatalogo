@@ -98,20 +98,32 @@ Deno.serve(async (req) => {
         .eq("id", quote_id);
     }
 
-    // Ao aprovar, o preço cotado passa a ser o total da encomenda. Sem isso o
-    // total fica R$ 0,00 e o checkout falha com "Invalid order total".
+    // O total já calculado pela cotação (soma dos itens × quantidade + frete)
+    // é preservado. Só usamos o valor cotado quando o total ainda está zerado
+    // e a cotação foi da encomenda inteira (sem item específico).
+    const { data: current } = await admin
+      .from("special_orders")
+      .select("total")
+      .eq("id", special_order_id)
+      .maybeSingle();
+    const currentTotal = Number(current?.total ?? 0);
+
     let quoteQuery = admin
       .from("special_order_quotes")
-      .select("id, quoted_price")
+      .select("id, quoted_price, item_id")
       .eq("special_order_id", special_order_id);
     quoteQuery = quote_id
       ? quoteQuery.eq("id", quote_id)
       : quoteQuery.order("created_at", { ascending: false }).limit(1);
     const { data: quoteRows } = await quoteQuery;
-    const quotedPrice = Number(quoteRows?.[0]?.quoted_price ?? 0);
+    const quoteRow = quoteRows?.[0];
+    const quotedPrice = Number(quoteRow?.quoted_price ?? 0);
 
     const orderUpdate: Record<string, unknown> = { status: "approved" };
-    if (Number.isFinite(quotedPrice) && quotedPrice > 0) {
+    if (
+      !(currentTotal > 0) && !quoteRow?.item_id &&
+      Number.isFinite(quotedPrice) && quotedPrice > 0
+    ) {
       orderUpdate.total = quotedPrice;
 
       // Itens "sob cotação" ainda sem preço recebem o valor cotado (rateado).
