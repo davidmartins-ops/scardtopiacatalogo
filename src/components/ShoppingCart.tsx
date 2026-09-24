@@ -911,7 +911,30 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           </DialogHeader>
           <div className="space-y-3 text-sm">
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
-              <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
+              {/* Resumo detalhado: quantidade, preço unitário e subtotal por item */}
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {items.map((ci) => {
+                  const isPix = isPixChannel(pendingChannel);
+                  const discount = ci.item.discount ?? 0;
+                  const pixBase = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+                  const unitPrice = isPix ? pixBase * (1 - discount / 100) : ci.item.price;
+                  const lineTotal = unitPrice * ci.qty;
+                  return (
+                    <div key={ci.item.id} className="flex justify-between gap-2 text-xs">
+                      <span className="text-foreground min-w-0">
+                        <span className="font-medium">{ci.qty}×</span> {ci.item.name}
+                        <span className="block text-[10px] text-muted-foreground">
+                          R$ {unitPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} cada
+                        </span>
+                      </span>
+                      <span className="font-medium text-foreground shrink-0">
+                        R$ {lineTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between border-t border-border pt-1.5"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix_auto" ? "PIX automático" : pendingChannel === "pix" ? "PIX (comprovante)" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{isPixChannel(pendingChannel) ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
