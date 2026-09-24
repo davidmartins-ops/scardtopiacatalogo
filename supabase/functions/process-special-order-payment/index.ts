@@ -93,12 +93,12 @@ Deno.serve(async (req) => {
     if (!Number.isFinite(totalCents) || totalCents <= 0) {
       const { data: quoteRows } = await admin
         .from("special_order_quotes")
-        .select("quoted_price")
+        .select("quoted_price, item_id")
         .eq("special_order_id", special_order_id)
         .order("created_at", { ascending: false })
         .limit(1);
       const quoted = Number(quoteRows?.[0]?.quoted_price ?? 0);
-      if (quoted > 0) {
+      if (quoted > 0 && !quoteRows?.[0]?.item_id) {
         totalCents = Math.round(quoted * 100);
         await admin.from("special_orders").update({ total: quoted }).eq("id", special_order_id);
       }
