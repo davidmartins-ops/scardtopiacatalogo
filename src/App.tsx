@@ -50,6 +50,7 @@ import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AdminRoute from "./components/AdminRoute";
+import TwoFactorPrompt from "./components/TwoFactorPrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -90,6 +91,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <TwoFactorPrompt />
         {/* WCAG 2.4.1 Bypass Blocks */}
         <a href="#main-content" className="skip-link">
           Pular para o conteúdo principal
