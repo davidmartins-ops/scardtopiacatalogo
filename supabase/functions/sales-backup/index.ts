@@ -58,14 +58,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = Deno.env.get("SUPABASE_URL")!;
-  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
-  if (!token) return json({ error: "unauthorized" }, 401);
-
-  // Only privileged (service) keys may run the backup: verify by attempting an admin-only call.
-  const caller = createClient(url, token, { auth: { persistSession: false } });
-  const probe = await caller.auth.admin.listUsers({ page: 1, perPage: 1 });
-  if (probe.error) return json({ error: "forbidden" }, 403);
-  const admin = caller;
+  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const token = req.headers.get("x-backup-token") ?? "";
+  const { data: runner } = await admin.from("backup_runner").select("token").eq("id", 1).maybeSingle();
+  if (!token || !runner?.token || token !== runner.token) return json({ error: "forbidden" }, 403);
 
   try {
     const now = new Date();
@@ -111,6 +107,7 @@ Deno.serve(async (req) => {
     const old = daily.filter((p) => (p.split("/")[1] ?? "9999") < cutoffDay);
     if (old.length) await admin.storage.from(BUCKET).remove(old);
 
+    await admin.from("backup_runner").update({ last_run_at: now.toISOString(), last_result: { summary, copied, removed: old.length } }).eq("id", 1);
     return json({ ok: true, day, summary, receipts_copied: copied, removed_old: old.length });
   } catch (e) {
     console.error("sales-backup failed:", e);
