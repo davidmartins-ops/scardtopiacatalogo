@@ -53,6 +53,8 @@ const TwoFactorPrompt = () => {
   const [busy, setBusy] = useState(false);
 
   const maybePrompt = useCallback(async (uid: string) => {
+    // O cofre de backups tem seu próprio fluxo de 2FA; não sobrepor.
+    if (window.location.pathname.startsWith("/admin/backups")) return;
     if (dismissedRecently(uid)) return;
     const { data, error } = await supabase.auth.mfa.listFactors();
     if (error) return;
