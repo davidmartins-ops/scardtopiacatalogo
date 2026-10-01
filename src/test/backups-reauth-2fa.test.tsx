@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-const listeners: Array<(e: string, s: unknown) => void> = [];
-const session = { user: { id: "admin-1", email: "a@x.com" } };
-
-const mfa = {
+const { listeners, session, mfa } = vi.hoisted(() => ({
+  listeners: [] as Array<(e: string, s: unknown) => void>,
+  session: { user: { id: "admin-1", email: "a@x.com" } },
+  mfa: {
   listFactors: vi.fn(async () => ({
     data: { totp: [{ id: "f-verified", status: "verified" }], all: [{ id: "f-verified", status: "verified" }] },
     error: null,
@@ -13,7 +13,8 @@ const mfa = {
   unenroll: vi.fn(async () => ({ error: null })),
   enroll: vi.fn(),
   challengeAndVerify: vi.fn(async () => ({ error: null })),
-};
+  },
+}));
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
