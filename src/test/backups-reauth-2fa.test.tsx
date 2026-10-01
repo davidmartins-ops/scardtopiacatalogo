@@ -64,6 +64,8 @@ describe("Backups re-authentication vs global 2FA prompt", () => {
 
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(mfa.unenroll).not.toHaveBeenCalled();
+    // Only the vault page queried factors; the global prompt ignored SIGNED_IN here.
+    expect(mfa.listFactors).toHaveBeenCalledTimes(1);
 
     fireEvent.change(screen.getByLabelText("Código"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: /^entrar$/i }));
