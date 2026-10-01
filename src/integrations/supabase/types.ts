@@ -145,6 +145,27 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_runner: {
+        Row: {
+          id: number
+          last_result: Json | null
+          last_run_at: string | null
+          token: string
+        }
+        Insert: {
+          id?: number
+          last_result?: Json | null
+          last_run_at?: string | null
+          token?: string
+        }
+        Update: {
+          id?: number
+          last_result?: Json | null
+          last_run_at?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           alt: string

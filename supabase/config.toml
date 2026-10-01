@@ -49,3 +49,5 @@ project_id = "uonzprmsnctldppgrcxo"
     verify_jwt = false
 
 
+  [functions.sales-backup]
+    verify_jwt = false

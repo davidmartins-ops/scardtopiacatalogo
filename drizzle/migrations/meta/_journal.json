@@ -8,6 +8,13 @@
       "when": 1790646503150,
       "tag": "0000_purge_cron_history",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790813918640,
+      "tag": "0001_sales_backups_vault",
+      "breakpoints": true
     }
   ]
 }

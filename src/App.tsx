@@ -41,6 +41,7 @@ import AdminNotifications from "./pages/AdminNotifications.tsx";
 import AdminReconciliation from "./pages/AdminReconciliation.tsx";
 import AdminRefunds from "./pages/AdminRefunds.tsx";
 import AdminEmails from "./pages/AdminEmails.tsx";
+import AdminBackups from "./pages/AdminBackups.tsx";
 import AdminOrderDetail from "./pages/AdminOrderDetail.tsx";
 import AdminStoreCredits from "./pages/AdminStoreCredits.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
@@ -102,6 +103,7 @@ const App = () => (
             <Route path="/admin/reconciliacao" element={<AdminRoute><AdminReconciliation /></AdminRoute>} />
             <Route path="/admin/reembolsos" element={<AdminRoute><AdminRefunds /></AdminRoute>} />
             <Route path="/admin/emails" element={<AdminRoute><AdminEmails /></AdminRoute>} />
+            <Route path="/admin/backups" element={<AdminRoute><AdminBackups /></AdminRoute>} />
             <Route path="/admin/pedidos/:orderId" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
             <Route path="/admin/creditos" element={<AdminRoute><AdminStoreCredits /></AdminRoute>} />
             <Route path="/admin/encomendas" element={<AdminRoute><AdminSpecialOrders /></AdminRoute>} />
