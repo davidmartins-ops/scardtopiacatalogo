@@ -90,6 +90,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <TwoFactorPrompt />
         {/* WCAG 2.4.1 Bypass Blocks */}
         <a href="#main-content" className="skip-link">
           Pular para o conteúdo principal
