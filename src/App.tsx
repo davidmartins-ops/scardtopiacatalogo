@@ -50,6 +50,7 @@ import CookieBanner from "./components/CookieBanner";
 import SiteFooter from "./components/SiteFooter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AdminRoute from "./components/AdminRoute";
+import TwoFactorPrompt from "./components/TwoFactorPrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
