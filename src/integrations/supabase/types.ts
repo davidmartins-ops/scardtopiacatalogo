@@ -145,6 +145,36 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_attempts: {
+        Row: {
+          details: Json | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          ok: boolean | null
+          source: string
+          started_at: string
+        }
+        Insert: {
+          details?: Json | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          ok?: boolean | null
+          source?: string
+          started_at?: string
+        }
+        Update: {
+          details?: Json | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          ok?: boolean | null
+          source?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       backup_runner: {
         Row: {
           id: number
@@ -718,6 +748,48 @@ export type Database = {
           quantity_delta?: number
           source?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      inventory_price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          inventory_id: string
+          item_name: string
+          new_discount: number | null
+          new_price: number | null
+          new_price_pix: number | null
+          old_discount: number | null
+          old_price: number | null
+          old_price_pix: number | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          inventory_id: string
+          item_name: string
+          new_discount?: number | null
+          new_price?: number | null
+          new_price_pix?: number | null
+          old_discount?: number | null
+          old_price?: number | null
+          old_price_pix?: number | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          inventory_id?: string
+          item_name?: string
+          new_discount?: number | null
+          new_price?: number | null
+          new_price_pix?: number | null
+          old_discount?: number | null
+          old_price?: number | null
+          old_price_pix?: number | null
         }
         Relationships: []
       }
