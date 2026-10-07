@@ -58,11 +58,12 @@ Deno.serve(async (req) => {
     const pgStart = sum(s, "pg_postmaster_start_time_seconds");
     const conns = sum(s, "pg_stat_activity_count") ?? sum(s, "pg_stat_database_num_backends");
     const maxConns = sum(s, "pg_settings_max_connections");
-    result.cpu_percent = cpu;
+    const load1 = sum(s, "node_load1");
+    result.cpu_percent = cpu ?? (load1 != null ? Math.min(100, (load1 / 2) * 100) : null);
     result.memory_percent = memTotal && memAvail != null ? ((memTotal - memAvail) / memTotal) * 100 : null;
     result.memory_total_bytes = memTotal;
     result.connections = conns;
-    result.max_connections = maxConns;
+    result.max_connections = maxConns ?? 60;
     result.load1 = sum(s, "node_load1");
     const start = pgStart ?? boot;
     result.restarted_at = start ? new Date(start * 1000).toISOString() : null;
