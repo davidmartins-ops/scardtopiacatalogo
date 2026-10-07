@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { logAdminAction } from "@/lib/admin-audit";
 import BackupAdminTools from "@/components/BackupAdminTools";
+import BackupAttemptsLog from "@/components/BackupAttemptsLog";
 
 type Step = "loading" | "password" | "enroll" | "verify" | "ready";
 const BUCKET = "sales-backups";
@@ -175,6 +176,7 @@ const AdminBackups = () => {
                 ))}
               </ul>
             )}
+            <BackupAttemptsLog />
             <BackupAdminTools />
           </div>
         )}

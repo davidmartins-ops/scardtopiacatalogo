@@ -15,6 +15,13 @@
       "when": 1790813918640,
       "tag": "0001_sales_backups_vault",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791387310340,
+      "tag": "0002_migration",
+      "breakpoints": true
     }
   ]
 }
