@@ -129,6 +129,17 @@ Deno.serve(async (req) => {
       if (logs.length > 30000) return json({ error: "Logs muito longos (máx. 30.000 caracteres)." }, 400);
       return await diagnose(req, logs);
     }
+    if (body?.action === "run") {
+      const { data: runner } = await admin.from("backup_runner").select("token").eq("id", 1).maybeSingle();
+      if (!runner?.token) return json({ error: "Backup não configurado" }, 500);
+      const r = await fetch(`${url}/functions/v1/sales-backup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-backup-token": runner.token, "x-backup-source": "manual" },
+        body: "{}",
+      });
+      const out = await r.json().catch(() => ({}));
+      return json(out, r.status);
+    }
     return json({ error: "Ação inválida" }, 400);
   } catch (e) {
     if (req.signal.aborted) return new Response(null, { status: 499, headers: corsHeaders });
