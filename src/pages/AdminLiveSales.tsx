@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Radio, ShoppingBag, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import OrderStatusBadge from "@/components/OrderStatusBadge";
+import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
 interface Order { id: string; created_at: string; status: string; total: number; payment_method: string; paid_at: string | null; customer_info: { name?: string } | null }
 interface Payment { id: string; created_at: string; status: string; amount: number | null; paid_amount: number | null; order_id: string | null; provider: string }
