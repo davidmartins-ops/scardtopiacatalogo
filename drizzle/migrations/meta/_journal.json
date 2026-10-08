@@ -22,6 +22,20 @@
       "when": 1791387310340,
       "tag": "0002_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791478021979,
+      "tag": "0003_coupons_system",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791478262110,
+      "tag": "0004_special_order_coupon_approved_only",
+      "breakpoints": true
     }
   ]
 }

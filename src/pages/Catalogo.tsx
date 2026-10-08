@@ -1,3 +1,4 @@
+import CouponShowcase from "@/components/CouponShowcase";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { DollarSign, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -722,6 +723,7 @@ const Catalogo = () => {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
       creditsApplied?: number;
+      couponCode?: string | null;
       customerInfo?: Record<string, unknown>;
       shipping?: { serviceId: number; serviceName: string; cost: number };
     }
@@ -750,6 +752,7 @@ const Catalogo = () => {
         items: orderItems as never,
         total,
         credits_applied: Number(meta?.creditsApplied ?? 0),
+        coupon_code: meta?.couponCode ?? null,
         // O status pago é definido apenas no servidor (webhook/conferência de
         // pagamento ou confirmação do admin) — nunca pelo cliente.
         status: "pending_payment",
@@ -927,6 +930,7 @@ const Catalogo = () => {
       <CatalogBanner />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 relative z-20 pb-12 space-y-6">
+        <CouponShowcase />
         <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
 
         <Tabs defaultValue="drops" className="w-full">

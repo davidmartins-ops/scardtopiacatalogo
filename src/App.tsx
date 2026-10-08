@@ -45,6 +45,7 @@ import AdminBackups from "./pages/AdminBackups.tsx";
 import AdminServerStatus from "./pages/AdminServerStatus.tsx";
 import AdminLiveSales from "./pages/AdminLiveSales.tsx";
 import AdminStockPrices from "./pages/AdminStockPrices.tsx";
+import AdminCoupons from "./pages/AdminCoupons.tsx";
 import AdminOrderDetail from "./pages/AdminOrderDetail.tsx";
 import AdminStoreCredits from "./pages/AdminStoreCredits.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
@@ -111,6 +112,7 @@ const App = () => (
             <Route path="/admin/backups" element={<AdminRoute><AdminBackups /></AdminRoute>} />
             <Route path="/admin/status" element={<AdminRoute><AdminServerStatus /></AdminRoute>} />
             <Route path="/admin/vendas-ao-vivo" element={<AdminRoute><AdminLiveSales /></AdminRoute>} />
+            <Route path="/admin/cupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
             <Route path="/admin/estoque-precos" element={<AdminRoute><AdminStockPrices /></AdminRoute>} />
             <Route path="/admin/pedidos/:orderId" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
             <Route path="/admin/creditos" element={<AdminRoute><AdminStoreCredits /></AdminRoute>} />

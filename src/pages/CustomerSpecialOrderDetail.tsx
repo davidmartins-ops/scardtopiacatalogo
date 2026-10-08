@@ -1,3 +1,4 @@
+import SpecialOrderCouponBox from "@/components/SpecialOrderCouponBox";
 import useSEO from "@/hooks/use-seo";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
@@ -182,6 +183,7 @@ const CustomerSpecialOrderDetail = () => {
                   <span className="text-muted-foreground">Total estimado</span>
                   <span className="font-bold text-primary">R$ {Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
+                <SpecialOrderCouponBox order={order as never} />
                 {order.notes && (
                   <div>
                     <p className="text-xs text-muted-foreground font-semibold">Observações</p>

@@ -413,6 +413,142 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          code: string
+          coupon_id: string
+          cpf: string | null
+          created_at: string
+          discount_amount: number
+          id: string
+          order_id: string | null
+          special_order_id: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          coupon_id: string
+          cpf?: string | null
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          order_id?: string | null
+          special_order_id?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          coupon_id?: string
+          cpf?: string | null
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          order_id?: string | null
+          special_order_id?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_special_order_id_fkey"
+            columns: ["special_order_id"]
+            isOneToOne: false
+            referencedRelation: "special_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          allowed_categories: string[]
+          applies_to_catalog: boolean
+          applies_to_special_orders: boolean
+          blocked_categories: string[]
+          blocked_cpfs: string[]
+          blocked_emails: string[]
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_purchase: number
+          per_cpf_limit: number
+          show_in_catalog: boolean
+          starts_at: string | null
+          updated_at: string
+          uses_count: number
+        }
+        Insert: {
+          allowed_categories?: string[]
+          applies_to_catalog?: boolean
+          applies_to_special_orders?: boolean
+          blocked_categories?: string[]
+          blocked_cpfs?: string[]
+          blocked_emails?: string[]
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_purchase?: number
+          per_cpf_limit?: number
+          show_in_catalog?: boolean
+          starts_at?: string | null
+          updated_at?: string
+          uses_count?: number
+        }
+        Update: {
+          allowed_categories?: string[]
+          applies_to_catalog?: boolean
+          applies_to_special_orders?: boolean
+          blocked_categories?: string[]
+          blocked_cpfs?: string[]
+          blocked_emails?: string[]
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_purchase?: number
+          per_cpf_limit?: number
+          show_in_catalog?: boolean
+          starts_at?: string | null
+          updated_at?: string
+          uses_count?: number
+        }
+        Relationships: []
+      }
       customer_profiles: {
         Row: {
           address: Json | null
@@ -982,6 +1118,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          coupon_code: string | null
+          coupon_discount: number
           created_at: string
           credits_applied: number
           customer_info: Json
@@ -1012,6 +1150,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_discount?: number
           created_at?: string
           credits_applied?: number
           customer_info?: Json
@@ -1042,6 +1182,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          coupon_code?: string | null
+          coupon_discount?: number
           created_at?: string
           credits_applied?: number
           customer_info?: Json
@@ -1660,6 +1802,8 @@ export type Database = {
       }
       special_orders: {
         Row: {
+          coupon_code: string | null
+          coupon_discount: number
           created_at: string
           customer_info: Json
           id: string
@@ -1683,6 +1827,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_discount?: number
           created_at?: string
           customer_info?: Json
           id?: string
@@ -1706,6 +1852,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          coupon_code?: string | null
+          coupon_discount?: number
           created_at?: string
           customer_info?: Json
           id?: string
@@ -1867,6 +2015,10 @@ export type Database = {
         Args: { _amount: number; _note?: string; _user_id: string }
         Returns: number
       }
+      apply_special_order_coupon: {
+        Args: { _code: string; _special_order_id: string }
+        Returns: Json
+      }
       check_orphan_stock_debits: { Args: never; Returns: number }
       decrement_inventory_stock: {
         Args: { _item_id: string; _qty: number }
@@ -1881,6 +2033,34 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      evaluate_coupon: {
+        Args: {
+          _code: string
+          _context: string
+          _cpf: string
+          _lines: Json
+          _lock?: boolean
+          _user_id: string
+        }
+        Returns: {
+          code: string
+          coupon_id: string
+          discount: number
+          eligible_subtotal: number
+        }[]
+      }
+      get_showcase_coupons: {
+        Args: never
+        Returns: {
+          allowed_categories: string[]
+          blocked_categories: string[]
+          code: string
+          description: string
+          discount_type: string
+          discount_value: number
+          expires_at: string
+        }[]
       }
       has_role: {
         Args: {
@@ -1902,6 +2082,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      preview_coupon: {
+        Args: { _code: string; _context?: string; _cpf: string; _lines: Json }
+        Returns: Json
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
