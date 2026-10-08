@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, user_id, total, items, credits_applied")
+      .select("id, user_id, total, items, credits_applied, coupon_discount, coupon_code")
       .eq("id", order_id)
       .maybeSingle();
     if (orderErr || !order) {
@@ -88,7 +88,10 @@ Deno.serve(async (req) => {
       price: Math.round((Number(i.unit_price) || 0) * 100),
     }));
 
-    const grossCents = rawItems.reduce((s, it) => s + it.price * it.quantity, 0);
+    const couponCents = Math.round((Number((order as any).coupon_discount) || 0) * 100);
+    const grossCents = couponCents > 0
+      ? Math.round(Number(order.total) * 100)
+      : rawItems.reduce((s, it) => s + it.price * it.quantity, 0);
 
     // Regra de créditos: em drops, os créditos cobrem no máximo 50% do valor dos drops.
     const itemIds = items.map((i: any) => String(i.id)).filter(Boolean);
@@ -114,8 +117,8 @@ Deno.serve(async (req) => {
 
     // When credits are applied, collapse to a single consolidated line so the
     // payable amount matches order.total minus credits.
-    const itemsPayload = creditsCents > 0
-      ? [{ description: `Pedido ${order_id.slice(0, 8)} (créditos aplicados)`, quantity: 1, price: netCents }]
+    const itemsPayload = creditsCents > 0 || couponCents > 0
+      ? [{ description: `Pedido ${order_id.slice(0, 8)}${couponCents > 0 ? ` (cupom ${(order as any).coupon_code})` : ""}${creditsCents > 0 ? " (créditos aplicados)" : ""}`, quantity: 1, price: netCents }]
       : rawItems;
 
 
