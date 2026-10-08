@@ -146,6 +146,8 @@ interface ProductCardProps {
   versionsHref?: string;
 }
 
+import { useAppliedCoupon, priceWithCoupon } from "@/hooks/use-coupon";
+
 const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId, versionsCount, versionsHref }: ProductCardProps) => {
   const hasMultipleVersions = (versionsCount ?? 0) > 1 && !!versionsHref;
   const config = descriptionConfig[item.description];
@@ -157,6 +159,9 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
   const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
   const hasPixHighlight = pixFinal < cardPrice;
   const isOutOfStock = item.quantity <= 0;
+  const { coupon } = useAppliedCoupon();
+  const couponPix = priceWithCoupon(coupon, pixFinal, item.category);
+  const couponCard = priceWithCoupon(coupon, cardPrice, item.category);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Track product view once per session per item using IntersectionObserver
@@ -281,6 +286,11 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
               {hasMultipleVersions && (
                 <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
                   A partir de
+                </p>
+              )}
+              {coupon && couponPix !== null && couponCard !== null && (
+                <p className="mb-1 inline-flex flex-wrap items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
+                  🏷️ {coupon.code}: PIX R$ {couponPix.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Cartão R$ {couponCard.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
               )}
               {hasPixHighlight ? (
