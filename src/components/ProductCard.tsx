@@ -110,16 +110,16 @@ const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isL
 /* Skeleton Loading */
 export const ProductCardSkeleton = ({ isSingle = false }: { isSingle?: boolean }) => (
   <div className="glass-card overflow-hidden">
-    <div className="px-3 pt-3">
-      <Skeleton className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"} rounded-xl`} />
+    <div className="px-2 pt-2 sm:px-3 sm:pt-3">
+      <Skeleton className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-28 sm:h-48"} rounded-xl`} />
     </div>
-    <div className="p-3 pt-2.5 space-y-2.5">
-      <div className="min-h-[42px]">
+    <div className="p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-2.5">
+      <div className="min-h-[34px] sm:min-h-[42px]">
         <Skeleton className="h-4 w-full rounded" />
         <Skeleton className="h-4 w-3/4 rounded mt-1.5" />
       </div>
       <Skeleton className="h-5 w-16 rounded-full" />
-      <div className="min-h-[110px] flex flex-col justify-start gap-2">
+      <div className="min-h-[64px] sm:min-h-[110px] flex flex-col justify-start gap-2">
         <Skeleton className="h-7 w-28 rounded" />
         <Skeleton className="h-4 w-20 rounded" />
         <Skeleton className="h-3 w-32 rounded" />
@@ -226,8 +226,8 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
       </button>
 
       {/* Image - fixed height for consistent alignment */}
-      <div className="relative z-10 px-3 pt-3">
-        <div className={`overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative ${isSingle ? "aspect-[2.5/3.5]" : "h-44 sm:h-48"}`}>
+      <div className="relative z-10 px-2 pt-2 sm:px-3 sm:pt-3">
+        <div className={`overflow-hidden rounded-xl border border-border/40 bg-muted/20 relative ${isSingle ? "aspect-[2.5/3.5]" : "h-28 sm:h-48"}`}>
           {item.image_url ? (
             <ImageZoom
               src={item.image_url}
@@ -247,10 +247,10 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
       </div>
 
       {/* Card Info - flex column with anchored bottom actions */}
-      <div className="relative z-10 p-3 pt-2.5 space-y-1.5 flex flex-col flex-1">
+      <div className="relative z-10 p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-1.5 flex flex-col flex-1">
         {/* Title */}
-        <div className="min-h-[42px]">
-          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[16px] sm:text-[17px] md:text-[18px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
+        <div className="min-h-[34px] sm:min-h-[42px]">
+          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
             {item.name}
           </h3>
         </div>
@@ -276,7 +276,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
 
         {/* Info block - standardized height */}
-        <div className="min-h-[110px] flex flex-col justify-start pt-1">
+        <div className="min-h-[64px] sm:min-h-[110px] flex flex-col justify-start pt-1">
           {isOutOfStock ? (
             <div className="flex-1 flex flex-col justify-center">
               <p className="text-[13px] sm:text-[14px] text-muted-foreground font-medium">Indisponível</p>
@@ -289,34 +289,34 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                 </p>
               )}
               {coupon && couponPix !== null && couponCard !== null && (
-                <p className="mb-1 inline-flex flex-wrap items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
+                <p className="mb-1 hidden sm:inline-flex flex-wrap items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
                   🏷️ {coupon.code}: PIX R$ {couponPix.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Cartão R$ {couponCard.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
               )}
               {hasPixHighlight ? (
                 <div className="space-y-0.5">
-                  <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-success font-display leading-none block">
+                  <span className="text-[17px] sm:text-[26px] md:text-[28px] font-bold text-success font-display leading-none block">
                     R$ {pixFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                   <p className="text-[11px] sm:text-[12px] font-semibold text-success/90 uppercase tracking-wide">
                     💰 no PIX{discount > 0 ? ` · -${discount}%` : ""}
                   </p>
-                  <p className="text-[13px] sm:text-[14px] text-muted-foreground">
+                  <p className="text-[11px] sm:text-[14px] text-muted-foreground">
                     💳 Cartão: R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                   {!isSingle && cardPrice >= 50 && (
-                    <p className="text-[11px] sm:text-[12px] text-muted-foreground">
+                    <p className="hidden sm:block text-[11px] sm:text-[12px] text-muted-foreground">
                       até 3x de R$ {(cardPrice / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s/ juros
                     </p>
                   )}
                 </div>
               ) : (
                 <div className="space-y-0.5">
-                  <span className="text-[24px] sm:text-[26px] md:text-[28px] font-bold text-primary font-display leading-none block">
+                  <span className="text-[17px] sm:text-[26px] md:text-[28px] font-bold text-primary font-display leading-none block">
                     R$ {cardPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                   {!isSingle && cardPrice >= 50 && (
-                    <p className="text-[12px] sm:text-[13px] text-muted-foreground">
+                    <p className="hidden sm:block text-[12px] sm:text-[13px] text-muted-foreground">
                       💳 até 3x de R$ {(cardPrice / 3).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s/ juros
                     </p>
                   )}
@@ -327,7 +327,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                   📦 {versionsCount} versões disponíveis
                 </p>
               ) : (
-                <p className="text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
+                <p className="hidden sm:block text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
                   {item.quantity === 1 ? "🔥 Última unidade!" : `📦 ${item.quantity} em estoque`}
                 </p>
               )}
@@ -347,7 +347,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                   <Button
                     size="sm"
                     variant="default"
-                    className="w-full h-10 px-2 text-[13px] sm:text-[14px] gap-1 font-semibold whitespace-normal leading-tight transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+                    className="w-full h-9 sm:h-10 px-2 text-[12px] sm:text-[14px] gap-1 font-semibold whitespace-normal leading-tight transition-all duration-150 active:scale-[0.98] hover:shadow-md"
                   >
                     <Plus className="h-4 w-4 shrink-0" /> Ver versões ({versionsCount})
                   </Button>
@@ -356,7 +356,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                 <Button
                   size="sm"
                   variant="default"
-                  className="flex-1 min-w-0 h-10 px-2 text-[13px] sm:text-[14px] gap-1 font-semibold whitespace-normal leading-tight transition-all duration-150 active:scale-[0.98] hover:shadow-md"
+                  className="flex-1 min-w-0 h-9 sm:h-10 px-2 text-[12px] sm:text-[14px] gap-1 font-semibold whitespace-normal leading-tight transition-all duration-150 active:scale-[0.98] hover:shadow-md"
                   onClick={() => onAddToCart(item)}
                 >
                   <Plus className="h-4 w-4 shrink-0" /> Adicionar
@@ -368,7 +368,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                     size="icon"
                     variant="outline"
                     aria-label="Compartilhar"
-                    className="h-10 w-10 shrink-0 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
+                    className="hidden sm:inline-flex h-10 w-10 shrink-0 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
                   >
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -396,7 +396,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
             isSingle ? (
               <Link
                 to={`/catalogo/single/${encodeURIComponent(item.id)}`}
-                className="block w-full"
+                className="hidden sm:block w-full"
                 onClick={() => trackEvent("more_info_click", item)}
               >
                 <Button
@@ -408,7 +408,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                 </Button>
               </Link>
             ) : (
-              <Link to={`/catalogo/drop/${item.id}`} className="block w-full" onClick={() => trackEvent("drop_content_click", item)}>
+              <Link to={`/catalogo/drop/${item.id}`} className="hidden sm:block w-full" onClick={() => trackEvent("drop_content_click", item)}>
                 <Button
                   size="sm"
                   variant="outline"
