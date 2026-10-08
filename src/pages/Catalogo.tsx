@@ -722,6 +722,7 @@ const Catalogo = () => {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
       creditsApplied?: number;
+      couponCode?: string | null;
       customerInfo?: Record<string, unknown>;
       shipping?: { serviceId: number; serviceName: string; cost: number };
     }
@@ -750,6 +751,7 @@ const Catalogo = () => {
         items: orderItems as never,
         total,
         credits_applied: Number(meta?.creditsApplied ?? 0),
+        coupon_code: meta?.couponCode ?? null,
         // O status pago é definido apenas no servidor (webhook/conferência de
         // pagamento ou confirmação do admin) — nunca pelo cliente.
         status: "pending_payment",

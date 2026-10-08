@@ -583,6 +583,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           return;
         }
         setConfirmOrderOpen(false);
+        if (coupon) clearCoupon();
         if (isAutoPix) {
           // Abre o checkout PIX em outra aba e acompanha a confirmação aqui
           window.open(checkoutUrl, "_blank", "noopener,noreferrer");
@@ -613,6 +614,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       }
       setConfirmOrderOpen(false);
       const msg = buildMessage("whatsapp");
+      if (coupon) clearCoupon();
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     } catch (err: any) {
       setOrderError(friendlyOrderError(err));
@@ -689,6 +691,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
           : "Comprovante enviado e pedido registrado!",
       );
       setPixReceiptOrderId(null);
+      if (coupon) clearCoupon();
       setPixDialogOpen(false);
     } catch (err) {
       console.error("[PIX] Falha no checkout:", err);
