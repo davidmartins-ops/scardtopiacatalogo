@@ -1,0 +1,1 @@
+- Coupons are validated and applied server-side (orders BEFORE INSERT trigger after price validation; `apply_special_order_coupon` RPC for encomendas); client math is preview only — why: clients can't be trusted with discounts.

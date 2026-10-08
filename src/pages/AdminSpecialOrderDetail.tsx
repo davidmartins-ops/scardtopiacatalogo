@@ -1,3 +1,4 @@
+import SpecialOrderCouponBox from "@/components/SpecialOrderCouponBox";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAdminSpecialOrderDetail, useAdminSpecialOrders, SPECIAL_ORDER_STATUS_LABELS, SpecialOrderStatus } from "@/hooks/use-special-orders";
 import { Button } from "@/components/ui/button";
@@ -163,6 +164,7 @@ const AdminSpecialOrderDetail = () => {
                     <p className="text-xs text-muted-foreground">{quotes[quotes.length - 1].admin_notes}</p>
                   </div>
                 )}
+                <SpecialOrderCouponBox order={order as never} />
                 <div>
                   <Label>Valor total (R$)</Label>
                   <Input type="number" min={0} step={0.01} value={quotePrice} onChange={(e) => setQuotePrice(e.target.value)} />
