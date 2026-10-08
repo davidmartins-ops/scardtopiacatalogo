@@ -16,7 +16,8 @@ import { friendlyOrderError } from "@/lib/order-errors";
 import { validateCheckout, isValidCep } from "@/lib/checkout-validation";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { Coins } from "lucide-react";
+import { Coins, Tag } from "lucide-react";
+import { useAppliedCoupon, computeCouponDiscount, previewCoupon, formatCouponValue } from "@/hooks/use-coupon";
 
 export interface CartItem {
   item: InventoryItem;
@@ -36,6 +37,7 @@ interface ShoppingCartProps {
       paymentMethod?: "pix" | "whatsapp";
       receiptUrl?: string | null;
       creditsApplied?: number;
+      couponCode?: string | null;
       shipping?: { serviceId: number; serviceName: string; cost: number };
       customerInfo?: {
         name?: string;
@@ -152,6 +154,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const { profile, user } = useCustomerAuth();
   const { balance: creditBalance } = useMyStoreCredit();
   const [useCredits, setUseCredits] = useState(false);
+  const { coupon, setCoupon, clearCoupon } = useAppliedCoupon();
+  const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponChecking, setCouponChecking] = useState(false);
   const navigate = useNavigate();
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
@@ -314,8 +320,60 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   // Resolve the amount to charge for the currently selected payment channel.
   const isPixChannel = (channel: Channel | null) => channel === "pix" || channel === "pix_auto";
 
-  const amountForChannel = (channel: Channel | null) =>
+  const subtotalForChannel = (channel: Channel | null) =>
     isPixChannel(channel) ? pixTotal : total;
+
+  const unitPriceFor = (ci: CartItem, channel: Channel | null) => {
+    if (!isPixChannel(channel)) return ci.item.price;
+    const discount = ci.item.discount ?? 0;
+    const base = (ci.item.price_pix ?? 0) > 0 ? (ci.item.price_pix as number) : ci.item.price;
+    return base * (1 - discount / 100);
+  };
+
+  const couponLinesFor = (channel: Channel | null) =>
+    items.map((ci) => ({ category: ci.item.category ?? "", amount: unitPriceFor(ci, channel) * ci.qty }));
+
+  // Cupom (não acumulativo: apenas um por pedido). O servidor recalcula e valida.
+  const couponDiscountFor = (channel: Channel | null) =>
+    Math.min(subtotalForChannel(channel), computeCouponDiscount(coupon, couponLinesFor(channel)));
+
+  const amountForChannel = (channel: Channel | null) =>
+    Math.max(0, subtotalForChannel(channel) - couponDiscountFor(channel));
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    if (!user) { setCouponError("Faça login para usar cupom."); return; }
+    if (coupon && coupon.code !== code) { setCouponError("Cupons não são acumulativos. Remova o atual para usar outro."); return; }
+    setCouponChecking(true); setCouponError(null);
+    const cpf = customerExtra.cpf || profile?.cpf || "";
+    const res = await previewCoupon(code, cpf, couponLinesFor(pendingChannel ?? "card"));
+    setCouponChecking(false);
+    if (!res.ok) { setCouponError(res.error); return; }
+    setCoupon(res.coupon);
+    setCouponInput("");
+    toast.success(`Cupom ${res.coupon.code} aplicado!`);
+  };
+
+  const couponBox = (
+    <div className="space-y-1.5">
+      {coupon ? (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-success/40 bg-success/5 px-3 py-2 text-xs">
+          <span className="flex items-center gap-1.5 text-foreground"><Tag className="h-3.5 w-3.5 text-success" /><strong>{coupon.code}</strong> · {formatCouponValue(coupon)}</span>
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { clearCoupon(); setCouponError(null); }}>Remover</Button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Input value={couponInput} onChange={(e) => setCouponInput(e.target.value.toUpperCase())} placeholder="Cupom de desconto" maxLength={40} className="h-9 text-sm uppercase" onKeyDown={(e) => { if (e.key === "Enter") applyCoupon(); }} />
+          <Button size="sm" variant="outline" className="h-9 gap-1" onClick={applyCoupon} disabled={couponChecking || !couponInput.trim()}>
+            {couponChecking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Tag className="h-3.5 w-3.5" />} Aplicar
+          </Button>
+        </div>
+      )}
+      {couponError && <p className="text-[11px] text-destructive">{couponError}</p>}
+      {coupon && <p className="text-[11px] text-muted-foreground">Válido para PIX e cartão. 1 uso por CPF; o desconto é confirmado ao finalizar.</p>}
+    </div>
+  );
 
   const getFreightValue = () =>
     deliveryMethod === "shipping" ? Number(shippingInfo.servicePrice ?? 0) : 0;
@@ -359,6 +417,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       msg += `\n   Qtd: ${ci.qty} x R$ ${finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} = R$ ${(finalPrice * ci.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n\n`;
     });
     msg += `Forma de pagamento: ${isPix ? "PIX" : "Cartão / WhatsApp"}\n`;
+    if (coupon && couponDiscountFor(channel) > 0) {
+      msg += `Cupom ${coupon.code}: - R$ ${couponDiscountFor(channel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
+    }
     msg += `Subtotal: R$ ${channelTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\n`;
 
     if (deliveryMethod === "pickup") {
@@ -482,7 +543,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             total_price: unitPrice * ci.qty,
           };
         });
-        const cardTotal = amountForChannel(pendingChannel);
+        const cardTotal = subtotalForChannel(pendingChannel);
         const cardCredits = creditsToApplyFor(pendingChannel);
         const meta = shippingMeta();
         const { data: orderRow, error: orderErr } = await supabase
@@ -492,6 +553,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             items: orderItems as any,
             total: cardTotal,
             credits_applied: cardCredits,
+            coupon_code: coupon?.code ?? null,
             status: "pending_payment" as any,
             payment_method: (isAutoPix ? "pix" : "credit") as any,
             customer_info: buildCustomerInfo() as any,
@@ -537,8 +599,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       }
 
       if (onOrderPlaced) {
-        const result = await onOrderPlaced(items, amountForChannel("whatsapp"), {
+        const result = await onOrderPlaced(items, subtotalForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
+          couponCode: coupon?.code ?? null,
           creditsApplied: creditsToApplyFor("whatsapp"),
           customerInfo: buildCustomerInfo(),
           shipping: shippingMeta(),
@@ -562,7 +625,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const handleBuyWhatsApp = () => {
     const msg = buildMessage("whatsapp");
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-    if (onOrderPlaced) onOrderPlaced(items, amountForChannel("whatsapp"), { paymentMethod: "whatsapp" });
+    if (onOrderPlaced) onOrderPlaced(items, subtotalForChannel("whatsapp"), { paymentMethod: "whatsapp", couponCode: coupon?.code ?? null });
   };
 
   const handlePixSelect = (existingOrderId?: string) => {
@@ -607,6 +670,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       } else if (onOrderPlaced) {
         const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
+          couponCode: coupon?.code ?? null,
           receiptUrl: urlData.publicUrl,
           creditsApplied: creditsToApplyFor("pix"),
           customerInfo: buildCustomerInfo(),
@@ -704,9 +768,16 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               </div>
 
               <div className="border-t border-border pt-4 space-y-3">
+                {couponBox}
+                {coupon && couponDiscountFor("card") > 0 && (
+                  <div className="flex items-center justify-between text-sm text-success">
+                    <span>Cupom {coupon.code}</span>
+                    <span className="font-medium">− R$ {couponDiscountFor("card").toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="font-display font-semibold text-foreground">Total</span>
-                  <span className="text-lg font-bold text-primary font-display">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-lg font-bold text-primary font-display">R$ {amountForChannel("card").toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="space-y-1.5">
                   <Button className="w-full gap-2 font-body" size="lg" onClick={() => openDeliveryDialog("pix_auto")}>
@@ -937,7 +1008,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <div className="flex justify-between border-t border-border pt-1.5"><span className="text-muted-foreground">Itens</span><span className="font-medium text-foreground">{totalItems}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Entrega</span><span className="font-medium text-foreground">{deliveryMethod === "pickup" ? "Retirada" : "Envio"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Canal</span><span className="font-medium text-foreground">{pendingChannel === "pix_auto" ? "PIX automático" : pendingChannel === "pix" ? "PIX (comprovante)" : pendingChannel === "card" ? "Cartão" : "WhatsApp"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{isPixChannel(pendingChannel) ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {amountForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{isPixChannel(pendingChannel) ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {subtotalForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              {coupon && couponDiscountFor(pendingChannel) > 0 && (
+                <div className="flex justify-between text-success"><span>Cupom {coupon.code}</span><span className="font-medium">− R$ {couponDiscountFor(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              )}
               {deliveryMethod === "shipping" && getFreightValue() > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium text-foreground">R$ {getFreightValue().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
               )}
@@ -946,6 +1020,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               )}
               <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">Total a pagar</span><span className="font-bold text-primary">R$ {Math.max(0, amountForChannel(pendingChannel) + getFreightValue() - creditsToApplyFor(pendingChannel)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             </div>
+
+            {couponBox}
 
             {user && creditBalance > 0 && (
               <label className="flex items-start gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5 cursor-pointer">
