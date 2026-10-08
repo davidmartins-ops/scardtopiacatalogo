@@ -84,7 +84,7 @@ const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isL
       <Button
         size="sm"
         variant="outline"
-        className="w-full h-10 text-[13px] sm:text-[14px] gap-1.5 border-primary/30 hover:border-primary/50 text-primary font-semibold transition-all duration-150 active:scale-[0.98]"
+        className="w-full h-9 sm:h-10 px-2 text-[12px] sm:text-[14px] whitespace-normal leading-tight gap-1.5 border-primary/30 hover:border-primary/50 text-primary font-semibold transition-all duration-150 active:scale-[0.98]"
         onClick={() => { if (!isLoggedIn) { toast.error("Faça login para receber notificações."); return; } setOpen(true); }}
       >
         <Bell className="h-4 w-4" /> Me avise quando disponível!
