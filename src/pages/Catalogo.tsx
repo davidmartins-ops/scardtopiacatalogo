@@ -416,7 +416,7 @@ const ItemGrid = ({
               <div className="flex-1 premium-divider" />
               <span className="text-xs text-muted-foreground font-body">{catItems.length} itens</span>
             </div>
-            <div className={`grid gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+            <div className={`grid gap-2 sm:gap-4 ${isSingles ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"}`}>
               {catItems.map((item, i) => {
                 const versions = isSingles ? versionsByName.get(item.name.trim().toLowerCase()) ?? [] : [];
                 const versionsCount = versions.length;
