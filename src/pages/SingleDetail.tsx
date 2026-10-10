@@ -61,6 +61,41 @@ const SingleDetail = () => {
     } catch {}
   }, [item?.id]);
 
+  const discount = item?.discount ?? 0;
+  // Desconto aplica SOMENTE ao PIX. Cartão permanece com valor cheio.
+  const cardPrice = (item?.price ?? 0);
+  const pixBase = (item?.price_pix ?? 0) > 0 ? (item?.price_pix as number) : (item?.price ?? 0);
+  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
+  const hasPixHighlight = pixFinal < cardPrice;
+  const displayName = card?.printed_name || card?.name || item?.name ?? "Single";
+  const displayType = card?.printed_type_line || card?.type_line || "";
+  const displayText = card?.printed_text || card?.oracle_text || "";
+  const bestImage = pickBestImageUrl(card?.image_uris, item?.image_url);
+
+  const canonical = `https://www.spencerscardtopia.com.br/single/${item?.id ?? ""}`;
+  const availability = (item?.quantity ?? 0) <= 0 ? "OutOfStock" : "InStock";
+  const seoDesc = card?.printed_text || card?.oracle_text
+    ? `${displayName} (${card?.set_name ?? ""}${card?.collector_number ? ` #${card.collector_number}` : ""}) — ${item?.description} ${item?.language ?? ""} ${item?.condition ?? ""}. Disponível na Spencer's Cardtopia.`
+    : `${displayName} — Magic: The Gathering single (${item?.description}${item?.language ? `, ${item?.language}` : ""}${item?.condition ? `, ${item?.condition}` : ""}) na Spencer's Cardtopia.`;
+  useSEO({
+    title: displayName,
+    description: seoDesc,
+    canonical,
+    image: bestImage || item?.image_url,
+    type: "product",
+    product: {
+      name: displayName,
+      price: pixFinal,
+      currency: "BRL",
+      availability,
+      image: bestImage || item?.image_url,
+      description: seoDesc,
+      sku: item?.id,
+      category: card?.set_name || item?.category || "Magic: The Gathering",
+      brand: "Magic: The Gathering",
+    },
+  });
+
   if (isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -74,43 +109,6 @@ const SingleDetail = () => {
       </div>
     );
   }
-
-  const discount = item.discount ?? 0;
-  // Desconto aplica SOMENTE ao PIX. Cartão permanece com valor cheio.
-  const cardPrice = item.price;
-  const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
-  const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
-  const hasPixHighlight = pixFinal < cardPrice;
-  const displayName = card?.printed_name || card?.name || item.name;
-  const displayType = card?.printed_type_line || card?.type_line || "";
-  const displayText = card?.printed_text || card?.oracle_text || "";
-  const bestImage = pickBestImageUrl(card?.image_uris, item.image_url);
-
-  const canonical = `https://www.spencerscardtopia.com.br/single/${item.id}`;
-  const availability = item.quantity <= 0 ? "OutOfStock" : "InStock";
-  const seoDesc = card?.printed_text || card?.oracle_text
-    ? `${displayName} (${card?.set_name ?? ""}${card?.collector_number ? ` #${card.collector_number}` : ""}) — ${item.description} ${item.language ?? ""} ${item.condition ?? ""}. Disponível na Spencer's Cardtopia.`
-    : `${displayName} — Magic: The Gathering single (${item.description}${item.language ? `, ${item.language}` : ""}${item.condition ? `, ${item.condition}` : ""}) na Spencer's Cardtopia.`;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useSEO({
-    title: displayName,
-    description: seoDesc,
-    canonical,
-    image: bestImage || item.image_url,
-    type: "product",
-    product: {
-      name: displayName,
-      price: pixFinal,
-      currency: "BRL",
-      availability,
-      image: bestImage || item.image_url,
-      description: seoDesc,
-      sku: item.id,
-      category: card?.set_name || item.category || "Magic: The Gathering",
-      brand: "Magic: The Gathering",
-    },
-  });
-
   return (
     <div className="min-h-screen bg-background font-body">
       <div className="sticky top-0 z-40 border-b border-brand-header-border bg-brand-header backdrop-blur-xl shadow-md">
