@@ -1260,7 +1260,10 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             </div>
             <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
               <p className="text-xs text-muted-foreground">Valor a transferir</p>
-              <p className="text-2xl font-bold text-primary font-display">R$ {pixTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p className="text-2xl font-bold text-primary font-display">R$ {amountForChannel("pix").toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              {coupon && couponDiscountFor("pix") > 0 && (
+                <p className="text-[11px] text-success font-medium">Cupom {coupon.code} aplicado: − R$ {couponDiscountFor("pix").toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              )}
             </div>
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
               <p className="text-[11px] text-muted-foreground leading-relaxed">

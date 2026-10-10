@@ -248,11 +248,17 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
       {/* Card Info - flex column with anchored bottom actions */}
       <div className="relative z-10 p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-1.5 flex flex-col flex-1">
-        {/* Title */}
+        {/* Title — links to the full product page (essential on mobile, where the details button is hidden) */}
         <div className="min-h-[34px] sm:min-h-[42px]">
-          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
-            {item.name}
-          </h3>
+          <Link
+            to={isSingle ? `/catalogo/single/${encodeURIComponent(item.id)}` : `/catalogo/drop/${item.id}`}
+            onClick={() => trackEvent(isSingle ? "more_info_click" : "drop_content_click", item)}
+            className="block"
+          >
+            <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
+              {item.name}
+            </h3>
+          </Link>
         </div>
 
         {/* Foil badge + Availability */}
