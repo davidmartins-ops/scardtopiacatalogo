@@ -202,19 +202,19 @@ const Index = () => {
           <section className="xl:col-span-3" aria-labelledby="dashboard-inventory-heading">
             <h2 id="dashboard-inventory-heading" className="sr-only">Inventário e gestão</h2>
             <Tabs value={activeTab} onValueChange={(v) => setSearchParams((p) => { p.set("tab", v); return p; }, { replace: true })} className="w-full">
-              <TabsList className="w-full mb-4 bg-muted/50 backdrop-blur-sm flex flex-wrap h-auto gap-1 p-1 justify-start">
-                <TabsTrigger value="drops" className="flex-1 font-display text-xs sm:text-sm">Drops ({drops.length})</TabsTrigger>
-                <TabsTrigger value="singles" className="flex-1 font-display text-xs sm:text-sm">Singles ({singles.length})</TabsTrigger>
-                <TabsTrigger value="banners" className="flex-1 font-display text-xs sm:text-sm gap-1">
+              <TabsList className="w-full mb-4 bg-muted/50 backdrop-blur-sm grid grid-cols-3 sm:flex sm:flex-wrap h-auto gap-1 p-1 justify-start">
+                <TabsTrigger value="drops" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5"><Layers className="h-3.5 w-3.5" /> Drops ({drops.length})</TabsTrigger>
+                <TabsTrigger value="singles" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5"><Package className="h-3.5 w-3.5" /> Singles ({singles.length})</TabsTrigger>
+                <TabsTrigger value="banners" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <ImageIcon className="h-3.5 w-3.5" /> Banners
                 </TabsTrigger>
-                <TabsTrigger value="sales" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="sales" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <TrendingUp className="h-3.5 w-3.5" /> Vendas
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="analytics" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <BarChart3 className="h-3.5 w-3.5" /> Analytics
                 </TabsTrigger>
-                <TabsTrigger value="orders" data-tab-orders className="flex-1 font-display text-xs sm:text-sm gap-1 relative">
+                <TabsTrigger value="orders" data-tab-orders className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5 relative">
                   <ShoppingBag className="h-3.5 w-3.5" /> Pedidos
                   {pendingCount > 0 && (
                     <span className="ml-1 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full text-[9px] bg-primary text-primary-foreground">
@@ -222,55 +222,55 @@ const Index = () => {
                     </span>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="disputes" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="disputes" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <ShoppingBag className="h-3.5 w-3.5" /> Devoluções
                 </TabsTrigger>
-                <TabsTrigger value="audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="audit" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <ClipboardList className="h-3.5 w-3.5" /> Auditoria
                 </TabsTrigger>
-                <TabsTrigger value="order-audit" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="order-audit" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <ClipboardList className="h-3.5 w-3.5" /> Hist. Pedidos
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="reports" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/relatorios"><ClipboardList className="h-3.5 w-3.5" /> Relatórios</Link>
                 </TabsTrigger>
-                <TabsTrigger value="reconciliation" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="reconciliation" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/reconciliacao"><DollarSign className="h-3.5 w-3.5" /> Reconciliação</Link>
                 </TabsTrigger>
-                <TabsTrigger value="refunds" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="refunds" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/reembolsos"><DollarSign className="h-3.5 w-3.5" /> Reembolsos</Link>
                 </TabsTrigger>
-                <TabsTrigger value="emails" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="emails" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/emails"><Mail className="h-3.5 w-3.5" /> E-mails</Link>
                 </TabsTrigger>
-                <TabsTrigger value="backups" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="backups" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/backups"><Lock className="h-3.5 w-3.5" /> Backups</Link>
                 </TabsTrigger>
-                <TabsTrigger value="live" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="live" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/vendas-ao-vivo"><TrendingUp className="h-3.5 w-3.5" /> Ao vivo</Link>
                 </TabsTrigger>
-                <TabsTrigger value="stock" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="stock" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/estoque-precos"><Package className="h-3.5 w-3.5" /> Estoque/Preços</Link>
                 </TabsTrigger>
-                <TabsTrigger value="coupons" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="coupons" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/cupons"><Package className="h-3.5 w-3.5" /> Cupons</Link>
                 </TabsTrigger>
-                <TabsTrigger value="customers" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="customers" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/clientes"><Package className="h-3.5 w-3.5" /> Clientes</Link>
                 </TabsTrigger>
-                <TabsTrigger value="receipts" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="receipts" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/comprovantes"><Package className="h-3.5 w-3.5" /> Comprovantes</Link>
                 </TabsTrigger>
-                <TabsTrigger value="status" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="status" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/status"><BarChart3 className="h-3.5 w-3.5" /> Servidor</Link>
                 </TabsTrigger>
-                <TabsTrigger value="credits" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="credits" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/creditos"><Coins className="h-3.5 w-3.5" /> Créditos</Link>
                 </TabsTrigger>
-                <TabsTrigger value="special-products" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                <TabsTrigger value="special-products" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5" asChild>
                   <Link to="/admin/produtos-encomenda"><Truck className="h-3.5 w-3.5" /> Encomendas</Link>
                 </TabsTrigger>
-                <TabsTrigger value="admins" className="flex-1 font-display text-xs sm:text-sm gap-1">
+                <TabsTrigger value="admins" className="w-full sm:flex-1 flex-col sm:flex-row items-center justify-center font-display text-[10px] sm:text-sm gap-0.5 sm:gap-1 px-1 py-2 sm:py-1.5">
                   <Shield className="h-3.5 w-3.5" /> Admins
                 </TabsTrigger>
               </TabsList>
