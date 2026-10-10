@@ -37,7 +37,16 @@ const AdminLiveSales = () => {
         setPayments((o) => [row, ...o.filter((x) => x.id !== row.id)].slice(0, 50));
       })
       .subscribe((s) => setLive(s === "SUBSCRIBED"));
-    const byCoupon = useMemo(() => {
+    return () => { void supabase.removeChannel(ch); };
+  }, []);
+
+  const today = useMemo(() => {
+    const d = new Date().toDateString();
+    const t = orders.filter((o) => new Date(o.created_at).toDateString() === d && o.status !== "cancelled");
+    return { count: t.length, total: t.reduce((s, o) => s + Number(o.total), 0), paid: t.filter((o) => o.paid_at).reduce((s, o) => s + Number(o.total), 0) };
+  }, [orders]);
+
+  const byCoupon = useMemo(() => {
     const m = new Map<string, { count: number; charged: number; discount: number }>();
     orders.filter((o) => o.coupon_code && o.status !== "cancelled").forEach((o) => {
       const c = m.get(o.coupon_code!) ?? { count: 0, charged: 0, discount: 0 };
@@ -45,15 +54,6 @@ const AdminLiveSales = () => {
       m.set(o.coupon_code!, c);
     });
     return [...m.entries()].sort((a, b) => b[1].charged - a[1].charged);
-  }, [orders]);
-
-  return () => { void supabase.removeChannel(ch); };
-  }, []);
-
-  const today = useMemo(() => {
-    const d = new Date().toDateString();
-    const t = orders.filter((o) => new Date(o.created_at).toDateString() === d && o.status !== "cancelled");
-    return { count: t.length, total: t.reduce((s, o) => s + Number(o.total), 0), paid: t.filter((o) => o.paid_at).reduce((s, o) => s + Number(o.total), 0) };
   }, [orders]);
 
   return (
