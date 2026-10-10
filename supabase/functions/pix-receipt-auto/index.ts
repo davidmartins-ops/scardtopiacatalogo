@@ -20,7 +20,7 @@ interface Extracted {
 async function extract(dataUrl: string): Promise<Extracted> {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) throw new Error("IA não configurada");
-  const nul = (t: string, d?: string) => ({ type: ["string", "null"], ...(d ? { description: d } : {}) , ...(t === "number" ? { type: ["number", "null"] } : {}) });
+  const nul = (t: "string" | "number", d?: string) => ({ type: [t, "null"], ...(d ? { description: d } : {}) });
   const res = await fetch(GATEWAY, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
