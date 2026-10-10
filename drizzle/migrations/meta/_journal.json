@@ -36,6 +36,13 @@
       "when": 1791478262110,
       "tag": "0004_special_order_coupon_approved_only",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791655712733,
+      "tag": "0005_notify_payment_confirmed",
+      "breakpoints": true
     }
   ]
 }

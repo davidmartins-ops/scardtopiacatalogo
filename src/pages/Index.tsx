@@ -255,6 +255,9 @@ const Index = () => {
                 <TabsTrigger value="coupons" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
                   <Link to="/admin/cupons"><Package className="h-3.5 w-3.5" /> Cupons</Link>
                 </TabsTrigger>
+                <TabsTrigger value="customers" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
+                  <Link to="/admin/clientes"><Package className="h-3.5 w-3.5" /> Clientes</Link>
+                </TabsTrigger>
                 <TabsTrigger value="status" className="flex-1 font-display text-xs sm:text-sm gap-1" asChild>
                   <Link to="/admin/status"><BarChart3 className="h-3.5 w-3.5" /> Servidor</Link>
                 </TabsTrigger>
