@@ -123,8 +123,8 @@ const AdminCoupons = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
-        <div className="flex items-center justify-between gap-3">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Link to="/admin"><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
             <h1 className="font-display text-2xl text-foreground flex items-center gap-2"><Tag className="h-5 w-5 text-primary" /> Cupons</h1>
@@ -138,10 +138,10 @@ const AdminCoupons = () => {
         ) : (
           <div className="grid gap-3">
             {coupons.map((c) => (
-              <div key={c.id} className="glass-card p-4 flex flex-wrap items-center justify-between gap-3">
+              <div key={c.id} className="glass-card p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-lg text-foreground tracking-wide">{c.code}</span>
+                    <span className="font-bold text-base sm:text-lg text-foreground tracking-wide break-all">{c.code}</span>
                     <span className="font-semibold text-success">{formatCouponValue(c)}</span>
                     {status(c)}
                     {c.show_in_catalog && <Badge variant="outline">No catálogo</Badge>}
@@ -162,8 +162,8 @@ const AdminCoupons = () => {
                     </p>
                   )}
                 </div>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="gap-1" onClick={() => setHistoryFor(c)}><History className="h-3.5 w-3.5" /> Histórico</Button>
+                <div className="flex gap-1 w-full sm:w-auto justify-end border-t border-border/50 pt-2 sm:border-0 sm:pt-0">
+                  <Button size="sm" variant="outline" className="gap-1 mr-auto sm:mr-0" onClick={() => setHistoryFor(c)}><History className="h-3.5 w-3.5" /> Histórico</Button>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(c)} aria-label="Editar"><Pencil className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setToDelete(c)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -189,11 +189,11 @@ const AdminCoupons = () => {
               </div>
               <div><Label>Valor</Label><Input inputMode="decimal" value={form.discount_value} onChange={(e) => set("discount_value", e.target.value)} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Válido a partir de</Label><Input type="datetime-local" value={form.starts_at} onChange={(e) => set("starts_at", e.target.value)} /></div>
               <div><Label>Válido até</Label><Input type="datetime-local" value={form.expires_at} onChange={(e) => set("expires_at", e.target.value)} /></div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div><Label>Limite total de usos</Label><Input inputMode="numeric" placeholder="Ilimitado" value={form.max_uses} onChange={(e) => set("max_uses", e.target.value.replace(/\D/g, ""))} /></div>
               <div><Label>Usos por CPF</Label><Input inputMode="numeric" value={form.per_cpf_limit} onChange={(e) => set("per_cpf_limit", e.target.value.replace(/\D/g, ""))} /></div>
               <div><Label>Compra mínima (R$)</Label><Input inputMode="decimal" value={form.min_purchase} onChange={(e) => set("min_purchase", e.target.value)} /></div>
@@ -202,7 +202,7 @@ const AdminCoupons = () => {
             <div><Label>Bloquear categorias</Label><Input value={form.blocked_categories} onChange={(e) => set("blocked_categories", e.target.value)} placeholder="Separe por vírgula" /></div>
             <div><Label>Bloquear clientes por CPF</Label><Input value={form.blocked_cpfs} onChange={(e) => set("blocked_cpfs", e.target.value)} placeholder="000.000.000-00, ..." /></div>
             <div><Label>Bloquear clientes por e-mail</Label><Input value={form.blocked_emails} onChange={(e) => set("blocked_emails", e.target.value)} placeholder="cliente@email.com, ..." /></div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
               {([["is_active", "Ativo"], ["show_in_catalog", "Mostrar no catálogo"], ["applies_to_catalog", "Vale na loja"], ["applies_to_special_orders", "Vale em encomendas"]] as const).map(([k, l]) => (
                 <label key={k} className="flex items-center gap-2"><Switch checked={form[k]} onCheckedChange={(v) => set(k, v)} /> {l}</label>
               ))}
@@ -219,7 +219,18 @@ const AdminCoupons = () => {
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-card">
           <DialogHeader><DialogTitle>Quem usou {historyFor?.code}</DialogTitle></DialogHeader>
           {redemptions.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum uso ainda.</p> : (
-            <table className="w-full text-xs">
+            <>
+            <ul className="sm:hidden space-y-2">
+              {redemptions.map((r) => (
+                <li key={r.id} className="rounded-md border border-border p-2 text-xs space-y-0.5">
+                  <p className="flex justify-between"><span>{new Date(r.created_at).toLocaleString("pt-BR")}</span><b>-{brl(r.discount_amount)}</b></p>
+                  <p className="truncate">{r.user_email ?? "—"} · CPF {r.cpf ? `***.${r.cpf.slice(3, 6)}.${r.cpf.slice(6, 9)}-**` : "—"}</p>
+                  {r.order_id ? <Link className="text-primary underline" to={`/admin/pedidos/${r.order_id}`}>Pedido #{r.order_id.slice(0, 8)}</Link>
+                    : r.special_order_id ? <Link className="text-primary underline" to={`/admin/encomendas/${r.special_order_id}`}>Encomenda #{r.special_order_id.slice(0, 8)}</Link> : null}
+                </li>
+              ))}
+            </ul>
+            <table className="hidden sm:table w-full text-xs">
               <thead><tr className="text-left text-muted-foreground border-b border-border"><th className="py-1.5">Data</th><th>Cliente</th><th>CPF</th><th>Pedido</th><th className="text-right">Desconto</th></tr></thead>
               <tbody>
                 {redemptions.map((r) => (
@@ -236,6 +247,7 @@ const AdminCoupons = () => {
                 ))}
               </tbody>
             </table>
+            </>
           )}
         </DialogContent>
       </Dialog>
