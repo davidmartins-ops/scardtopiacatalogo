@@ -47,6 +47,7 @@ import AdminLiveSales from "./pages/AdminLiveSales.tsx";
 import AdminStockPrices from "./pages/AdminStockPrices.tsx";
 import AdminCoupons from "./pages/AdminCoupons.tsx";
 import AdminCustomers from "./pages/AdminCustomers.tsx";
+import AdminReceipts from "./pages/AdminReceipts.tsx";
 import AdminOrderDetail from "./pages/AdminOrderDetail.tsx";
 import AdminStoreCredits from "./pages/AdminStoreCredits.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
@@ -115,6 +116,7 @@ const App = () => (
             <Route path="/admin/vendas-ao-vivo" element={<AdminRoute><AdminLiveSales /></AdminRoute>} />
             <Route path="/admin/cupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
             <Route path="/admin/clientes" element={<AdminRoute><AdminCustomers /></AdminRoute>} />
+            <Route path="/admin/comprovantes" element={<AdminRoute><AdminReceipts /></AdminRoute>} />
             <Route path="/admin/estoque-precos" element={<AdminRoute><AdminStockPrices /></AdminRoute>} />
             <Route path="/admin/pedidos/:orderId" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
             <Route path="/admin/creditos" element={<AdminRoute><AdminStoreCredits /></AdminRoute>} />

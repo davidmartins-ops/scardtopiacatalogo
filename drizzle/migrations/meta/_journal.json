@@ -43,6 +43,13 @@
       "when": 1791655712733,
       "tag": "0005_notify_payment_confirmed",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791656521544,
+      "tag": "0006_notify_names_fix",
+      "breakpoints": true
     }
   ]
 }
