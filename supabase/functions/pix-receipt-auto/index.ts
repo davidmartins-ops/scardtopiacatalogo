@@ -8,8 +8,8 @@ const corsHeaders = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const STORE_CNPJ = "66981664000197";
-const MODEL = "google/gemini-3-flash-preview";
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "openai/gpt-6-astra";
+const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
 const MAX_BYTES = 6 * 1024 * 1024;
 
 interface Extracted {
@@ -20,41 +20,55 @@ interface Extracted {
 async function extract(dataUrl: string): Promise<Extracted> {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) throw new Error("IA não configurada");
+  const nul = (t: string, d?: string) => ({ type: ["string", "null"], ...(d ? { description: d } : {}) , ...(t === "number" ? { type: ["number", "null"] } : {}) });
   const res = await fetch(GATEWAY, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
     body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: "Você lê comprovantes de PIX brasileiros. Extraia apenas o que está visível; use null quando não houver. Nunca invente valores." },
-        { role: "user", content: [
-          { type: "text", text: "Extraia os dados deste comprovante de PIX." },
-          { type: "image_url", image_url: { url: dataUrl } },
-        ] },
-      ],
-      tools: [{ type: "function", function: {
-        name: "pix_receipt", description: "Dados do comprovante",
-        parameters: { type: "object", additionalProperties: false, required: ["is_pix_receipt", "amount", "paid_at", "recipient_document", "recipient_name", "payer_name", "transaction_id", "confidence"], properties: {
-          is_pix_receipt: { type: "boolean", description: "true se for um comprovante de PIX concluído" },
-          amount: { type: ["number", "null"], description: "Valor pago em reais, ex. 9.5" },
-          paid_at: { type: ["string", "null"], description: "Data/hora ISO 8601 do pagamento" },
-          recipient_document: { type: ["string", "null"], description: "CPF/CNPJ do recebedor como aparece (pode estar mascarado)" },
-          recipient_name: { type: ["string", "null"] },
-          payer_name: { type: ["string", "null"] },
-          transaction_id: { type: ["string", "null"], description: "ID da transação / E2E (começa com E) ou autenticação" },
-          confidence: { type: "number", description: "0 a 1, confiança na leitura" },
-        } },
-      } }],
-      tool_choice: { type: "function", function: { name: "pix_receipt" } },
+      model: MODEL, stream: true, store: false,
+      reasoning: { effort: "low" }, include: ["reasoning.encrypted_content"],
+      instructions: "Você lê comprovantes de PIX brasileiros. Extraia apenas o que está visível; use null quando não houver. Nunca invente valores.",
+      input: [{ role: "user", content: [
+        { type: "input_text", text: "Extraia os dados deste comprovante de PIX." },
+        { type: "input_image", image_url: dataUrl },
+      ] }],
+      text: { format: { type: "json_schema", name: "pix_receipt", strict: true, schema: {
+        type: "object", additionalProperties: false,
+        required: ["is_pix_receipt", "amount", "paid_at", "recipient_document", "recipient_name", "payer_name", "transaction_id", "confidence"],
+        properties: {
+          is_pix_receipt: { type: "boolean", description: "true se for comprovante de PIX concluído" },
+          amount: nul("number", "Valor pago em reais, ex. 9.5"),
+          paid_at: nul("string", "Data/hora ISO 8601 do pagamento"),
+          recipient_document: nul("string", "CPF/CNPJ do recebedor como aparece (pode estar mascarado)"),
+          recipient_name: nul("string"), payer_name: nul("string"),
+          transaction_id: nul("string", "ID da transação / E2E (começa com E) ou autenticação"),
+          confidence: { type: "number", description: "0 a 1" },
+        } } } },
     }),
   });
   if (res.status === 402) throw new Error("Créditos de IA esgotados.");
   if (res.status === 429) throw new Error("Muitas solicitações, tente em instantes.");
-  if (!res.ok) throw new Error(`Falha na leitura por IA (${res.status})`);
-  const out = await res.json();
-  const args = out?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-  if (!args) throw new Error("A IA não conseguiu ler o comprovante.");
-  return JSON.parse(args);
+  if (!res.ok || !res.body) throw new Error(`Falha na leitura por IA (${res.status})`);
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = "", text = "", failed: string | null = null;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += value;
+    const lines = buf.split("\n"); buf = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const raw = line.slice(5).trim();
+      if (!raw || raw === "[DONE]") continue;
+      try {
+        const ev = JSON.parse(raw);
+        if (ev.type === "response.output_text.delta") text += ev.delta ?? "";
+        else if (ev.type === "response.failed" || ev.type === "error") failed = ev.response?.error?.message ?? ev.message ?? "Falha";
+      } catch { /* partial */ }
+    }
+  }
+  if (failed || !text.trim()) throw new Error("A IA não conseguiu ler o comprovante.");
+  return JSON.parse(text);
 }
 
 Deno.serve(async (req) => {
