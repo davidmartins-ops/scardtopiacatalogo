@@ -67,7 +67,7 @@ const SingleDetail = () => {
   const pixBase = (item?.price_pix ?? 0) > 0 ? (item?.price_pix as number) : (item?.price ?? 0);
   const pixFinal = Math.max(0, pixBase * (1 - discount / 100));
   const hasPixHighlight = pixFinal < cardPrice;
-  const displayName = card?.printed_name || card?.name || item?.name ?? "Single";
+  const displayName = card?.printed_name || card?.name || (item?.name ?? "Single");
   const displayType = card?.printed_type_line || card?.type_line || "";
   const displayText = card?.printed_text || card?.oracle_text || "";
   const bestImage = pickBestImageUrl(card?.image_uris, item?.image_url);
