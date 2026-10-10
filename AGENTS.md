@@ -1,1 +1,2 @@
 - Coupons are validated and applied server-side (orders BEFORE INSERT trigger after price validation; `apply_special_order_coupon` RPC for encomendas); client math is preview only — why: clients can't be trusted with discounts.
+- Manual PIX receipts uploaded by admins are read by the `pix-receipt-auto` function (AI extraction + server checks: store CNPJ, unique transaction id, single pending order with equal total) before auto-confirming — why: never trust client or AI alone for payment status.
