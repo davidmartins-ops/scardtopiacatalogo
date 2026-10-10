@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
-interface Order { id: string; created_at: string; status: string; total: number; payment_method: string; paid_at: string | null; customer_info: { name?: string } | null }
+interface Order { id: string; created_at: string; status: string; total: number; payment_method: string; paid_at: string | null; coupon_code: string | null; coupon_discount: number | null; customer_info: { name?: string } | null }
 interface Payment { id: string; created_at: string; status: string; amount: number | null; paid_amount: number | null; order_id: string | null; provider: string }
 
 const brl = (v: number | null | undefined) => `R$ ${Number(v ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
@@ -18,7 +18,7 @@ const AdminLiveSales = () => {
 
   useEffect(() => {
     const since = new Date(Date.now() - 7 * 864e5).toISOString();
-    void supabase.from("orders").select("id, created_at, status, total, payment_method, paid_at, customer_info").gte("created_at", since).order("created_at", { ascending: false }).limit(100)
+    void supabase.from("orders").select("id, created_at, status, total, payment_method, paid_at, coupon_code, coupon_discount, customer_info").gte("created_at", since).order("created_at", { ascending: false }).limit(100)
       .then(({ data }) => setOrders((data ?? []) as unknown as Order[]));
     void supabase.from("payment_events").select("id, created_at, status, amount, paid_amount, order_id, provider").order("created_at", { ascending: false }).limit(50)
       .then(({ data }) => setPayments((data ?? []) as Payment[]));
@@ -37,7 +37,17 @@ const AdminLiveSales = () => {
         setPayments((o) => [row, ...o.filter((x) => x.id !== row.id)].slice(0, 50));
       })
       .subscribe((s) => setLive(s === "SUBSCRIBED"));
-    return () => { void supabase.removeChannel(ch); };
+    const byCoupon = useMemo(() => {
+    const m = new Map<string, { count: number; charged: number; discount: number }>();
+    orders.filter((o) => o.coupon_code && o.status !== "cancelled").forEach((o) => {
+      const c = m.get(o.coupon_code!) ?? { count: 0, charged: 0, discount: 0 };
+      c.count++; c.charged += Number(o.total); c.discount += Number(o.coupon_discount ?? 0);
+      m.set(o.coupon_code!, c);
+    });
+    return [...m.entries()].sort((a, b) => b[1].charged - a[1].charged);
+  }, [orders]);
+
+  return () => { void supabase.removeChannel(ch); };
   }, []);
 
   const today = useMemo(() => {
@@ -54,11 +64,26 @@ const AdminLiveSales = () => {
           <h1 className="font-display text-2xl">Vendas ao vivo</h1>
           <span className={`text-xs flex items-center gap-1 ${live ? "text-primary" : "text-muted-foreground"}`}><Radio className={`h-4 w-4 ${live ? "animate-pulse" : ""}`} /> {live ? "Atualizando em tempo real" : "Conectando…"}</span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="rounded-lg border bg-card p-4"><p className="text-xs text-muted-foreground">Pedidos hoje</p><p className="text-2xl font-semibold">{today.count}</p></div>
           <div className="rounded-lg border bg-card p-4"><p className="text-xs text-muted-foreground">Vendido hoje</p><p className="text-2xl font-semibold">{brl(today.total)}</p></div>
           <div className="rounded-lg border bg-card p-4"><p className="text-xs text-muted-foreground">Já pago hoje</p><p className="text-2xl font-semibold text-primary">{brl(today.paid)}</p></div>
         </div>
+        <section className="rounded-lg border">
+          <h2 className="p-3 font-semibold border-b">Impacto dos cupons (últimos 7 dias)</h2>
+          {byCoupon.length === 0 ? <p className="p-4 text-sm text-muted-foreground">Nenhum pedido com cupom.</p> : (
+            <div className="grid gap-2 p-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {byCoupon.map(([code, c]) => (
+                <div key={code} className="rounded-md border bg-card p-3 text-sm">
+                  <p className="font-bold tracking-wide">{code}</p>
+                  <p className="text-xs text-muted-foreground">{c.count} pedido(s)</p>
+                  <p>Cobrado: <b>{brl(c.charged)}</b></p>
+                  <p className="text-xs text-destructive">Desconto: -{brl(c.discount)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
         <div className="grid lg:grid-cols-3 gap-4">
           <section className="lg:col-span-2 rounded-lg border">
             <h2 className="p-3 font-semibold flex items-center gap-2 border-b"><ShoppingBag className="h-4 w-4" /> Pedidos (últimos 7 dias)</h2>
@@ -68,6 +93,7 @@ const AdminLiveSales = () => {
                   <Link to={`/admin/pedidos/${o.id}`} className="min-w-0 hover:underline">
                     <p className="font-mono text-xs">#{o.id.slice(0, 8).toUpperCase()} · {o.customer_info?.name ?? "—"}</p>
                     <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")} · {o.payment_method}</p>
+                    {o.coupon_code && <p className="text-xs text-primary">Cupom {o.coupon_code} · -{brl(o.coupon_discount)}</p>}
                   </Link>
                   <div className="flex items-center gap-2 shrink-0"><span className="font-medium">{brl(o.total)}</span><OrderStatusBadge status={o.status as never} /></div>
                 </li>
