@@ -184,7 +184,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
   return (
     <div
       ref={cardRef}
-      className={`group glass-card glow-hover overflow-hidden relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col h-full`}
+      className={`group glass-card glow-hover overflow-hidden relative transition-all duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-lg flex flex-col h-full`}
     >
       {/* Discount badge - top left, prominent */}
       {discount > 0 && !isOutOfStock && (
