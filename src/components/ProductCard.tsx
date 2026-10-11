@@ -249,17 +249,19 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
       {/* Card Info - flex column with anchored bottom actions */}
       <div className="relative z-10 p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-1.5 flex flex-col flex-1">
         {/* Title — links to the full product page (essential on mobile, where the details button is hidden) */}
-        <div className="min-h-[34px] sm:min-h-[42px]">
-          <Link
-            to={isSingle ? `/catalogo/single/${encodeURIComponent(item.id)}` : `/catalogo/drop/${item.id}`}
-            onClick={() => trackEvent(isSingle ? "more_info_click" : "drop_content_click", item)}
-            className="block"
-          >
-            <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] group-hover:text-primary transition-colors duration-300 line-clamp-2">
-              {item.name}
-            </h3>
-          </Link>
-        </div>
+        <Link
+          to={isSingle ? `/catalogo/single/${encodeURIComponent(item.id)}` : `/catalogo/drop/${item.id}`}
+          onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
+          aria-label={`Ver detalhes de ${item.name}`}
+          className="block min-h-[40px] sm:min-h-[42px] -mx-1 px-1 py-0.5 rounded-md touch-manipulation active:bg-primary/10 [-webkit-tap-highlight-color:transparent]"
+        >
+          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] sm:group-hover:text-primary transition-colors duration-300 line-clamp-2">
+            {item.name}
+          </h3>
+          <span className="sm:hidden mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary">
+            <Info className="h-3 w-3" /> Ver detalhes
+          </span>
+        </Link>
 
         {/* Foil badge + Availability */}
         <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
