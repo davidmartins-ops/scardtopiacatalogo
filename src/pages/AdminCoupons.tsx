@@ -48,11 +48,37 @@ const AdminCoupons = () => {
   const [historyFor, setHistoryFor] = useState<Coupon | null>(null);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
 
+  // No celular, a renovação do login pode travar a requisição; limita o tempo
+  // de espera e tenta de novo em vez de deixar o botão girando para sempre.
+  const withTimeout = <T,>(p: PromiseLike<T>, ms: number) =>
+    Promise.race([
+      Promise.resolve(p),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+    ]);
+
+  const runWithRetry = async <T,>(fn: () => PromiseLike<T>): Promise<T> => {
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await withTimeout(fn(), 10000);
+      } catch (e) {
+        lastErr = e;
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      }
+    }
+    throw lastErr;
+  };
+
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("coupons" as never).select("*").order("created_at", { ascending: false });
-    if (error) toast.error("Falha ao carregar cupons");
-    setCoupons((data ?? []) as unknown as Coupon[]);
+    try {
+      const { data, error } = await runWithRetry(() =>
+        supabase.from("coupons" as never).select("*").order("created_at", { ascending: false }));
+      if (error) toast.error("Falha ao carregar cupons");
+      setCoupons((data ?? []) as unknown as Coupon[]);
+    } catch {
+      toast.error("Conexão lenta — toque para tentar de novo");
+    }
     setLoading(false);
   };
   useEffect(() => { void load(); }, []);
