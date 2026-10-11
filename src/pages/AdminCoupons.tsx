@@ -119,12 +119,18 @@ const AdminCoupons = () => {
       applies_to_catalog: form.applies_to_catalog, applies_to_special_orders: form.applies_to_special_orders, show_in_catalog: form.show_in_catalog, is_active: form.is_active,
     };
     setSaving(true);
-    const q = editing
-      ? supabase.from("coupons" as never).update(payload as never).eq("id", editing.id)
-      : supabase.from("coupons" as never).insert(payload as never);
-    const { error } = await q;
-    setSaving(false);
-    if (error) { toast.error(error.message.includes("duplicate") ? "Já existe um cupom com esse código" : error.message); return; }
+    try {
+      const q = editing
+        ? supabase.from("coupons" as never).update(payload as never).eq("id", editing.id)
+        : supabase.from("coupons" as never).insert(payload as never);
+      const { error } = await runWithRetry(() => q);
+      if (error) { toast.error(error.message.includes("duplicate") ? "Já existe um cupom com esse código" : error.message); return; }
+    } catch {
+      toast.error("Conexão lenta — não foi possível salvar. Tente de novo.");
+      return;
+    } finally {
+      setSaving(false);
+    }
     toast.success(editing ? "Cupom atualizado" : "Cupom criado");
     setOpen(false); void load();
   };
