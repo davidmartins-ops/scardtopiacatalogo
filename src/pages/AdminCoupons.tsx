@@ -48,11 +48,37 @@ const AdminCoupons = () => {
   const [historyFor, setHistoryFor] = useState<Coupon | null>(null);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
 
+  // No celular, a renovação do login pode travar a requisição; limita o tempo
+  // de espera e tenta de novo em vez de deixar o botão girando para sempre.
+  const withTimeout = <T,>(p: PromiseLike<T>, ms: number) =>
+    Promise.race([
+      Promise.resolve(p),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+    ]);
+
+  const runWithRetry = async <T,>(fn: () => PromiseLike<T>): Promise<T> => {
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await withTimeout(fn(), 10000);
+      } catch (e) {
+        lastErr = e;
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      }
+    }
+    throw lastErr;
+  };
+
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("coupons" as never).select("*").order("created_at", { ascending: false });
-    if (error) toast.error("Falha ao carregar cupons");
-    setCoupons((data ?? []) as unknown as Coupon[]);
+    try {
+      const { data, error } = await runWithRetry(() =>
+        supabase.from("coupons" as never).select("*").order("created_at", { ascending: false }));
+      if (error) toast.error("Falha ao carregar cupons");
+      setCoupons((data ?? []) as unknown as Coupon[]);
+    } catch {
+      toast.error("Conexão lenta — toque para tentar de novo");
+    }
     setLoading(false);
   };
   useEffect(() => { void load(); }, []);
@@ -93,12 +119,18 @@ const AdminCoupons = () => {
       applies_to_catalog: form.applies_to_catalog, applies_to_special_orders: form.applies_to_special_orders, show_in_catalog: form.show_in_catalog, is_active: form.is_active,
     };
     setSaving(true);
-    const q = editing
-      ? supabase.from("coupons" as never).update(payload as never).eq("id", editing.id)
-      : supabase.from("coupons" as never).insert(payload as never);
-    const { error } = await q;
-    setSaving(false);
-    if (error) { toast.error(error.message.includes("duplicate") ? "Já existe um cupom com esse código" : error.message); return; }
+    try {
+      const q = editing
+        ? supabase.from("coupons" as never).update(payload as never).eq("id", editing.id)
+        : supabase.from("coupons" as never).insert(payload as never);
+      const { error } = await runWithRetry(() => q);
+      if (error) { toast.error(error.message.includes("duplicate") ? "Já existe um cupom com esse código" : error.message); return; }
+    } catch {
+      toast.error("Conexão lenta — não foi possível salvar. Tente de novo.");
+      return;
+    } finally {
+      setSaving(false);
+    }
     toast.success(editing ? "Cupom atualizado" : "Cupom criado");
     setOpen(false); void load();
   };
