@@ -11,29 +11,45 @@ interface CustomerProfile {
   address?: Record<string, unknown> | null;
 }
 
+// Shared across every component using this hook: one profile lookup per user
+// per minute instead of one per component mount / token refresh.
+const PROFILE_TTL = 60_000;
+const profileCache = new Map<string, { at: number; p: Promise<CustomerProfile | null> }>();
+const loadProfile = (userId: string, force = false) => {
+  const hit = profileCache.get(userId);
+  if (!force && hit && Date.now() - hit.at < PROFILE_TTL) return hit.p;
+  const p = (async () => {
+    const { data, error } = await supabase.from("customer_profiles").select("*").eq("id", userId).maybeSingle();
+    if (error) { profileCache.delete(userId); return null; }
+    return data as unknown as CustomerProfile | null;
+  })();
+  profileCache.set(userId, { at: Date.now(), p });
+  return p;
+};
+
 export const useCustomerAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Exported: callers use it after editing the profile, so it always refetches.
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("customer_profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-    setProfile(data as unknown as CustomerProfile | null);
+    setProfile(await loadProfile(userId, true));
   }, []);
 
   useEffect(() => {
+    let alive = true;
+    const apply = (userId: string) => { void loadProfile(userId).then((p) => { if (alive) setProfile(p); }); };
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          const id = session.user.id;
+          setTimeout(() => apply(id), 0);
         } else {
+          profileCache.clear();
           setProfile(null);
         }
         setLoading(false);
@@ -43,14 +59,12 @@ export const useCustomerAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
+      if (session?.user) apply(session.user.id);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    return () => { alive = false; subscription.unsubscribe(); };
+  }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
