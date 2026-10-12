@@ -215,7 +215,16 @@ const DropDetail = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {singlesImages.map((img) => (
                 <div key={img.id} className="glass-card glow-hover overflow-hidden rounded-xl">
-                  <ImageZoom src={img.image_url} alt={img.caption || `Carta do drop ${drop?.name ?? ""}`.trim()} className="w-full aspect-[2.5/3.5] object-cover" containerClassName="w-full" />
+                  <ImageZoom
+                    src={img.image_url}
+                    alt={img.caption || `Carta do drop ${drop?.name ?? ""}`.trim()}
+                    className="w-full aspect-[2.5/3.5] object-cover"
+                    containerClassName="w-full"
+                    gallery={singlesImages.map((g) => ({
+                      src: g.image_url,
+                      alt: g.caption || `Carta do drop ${drop?.name ?? ""}`.trim(),
+                    }))}
+                  />
                   {img.caption && (
                     <p className="p-2 text-xs text-muted-foreground text-center truncate">{img.caption}</p>
                   )}
