@@ -18,6 +18,7 @@ interface Coupon {
   starts_at: string | null; expires_at: string | null; max_uses: number | null; uses_count: number; per_cpf_limit: number;
   min_purchase: number; allowed_categories: string[]; blocked_categories: string[]; blocked_cpfs: string[]; blocked_emails: string[];
   applies_to_catalog: boolean; applies_to_special_orders: boolean; show_in_catalog: boolean; is_active: boolean; created_at: string;
+  applies_to_product_type: "all" | "single" | "drop";
 }
 interface Redemption { id: string; code: string; user_email: string | null; cpf: string | null; order_id: string | null; special_order_id: string | null; discount_amount: number; created_at: string }
 
@@ -25,6 +26,7 @@ const empty = {
   code: "", description: "", discount_type: "percent" as "percent" | "fixed", discount_value: "10", starts_at: "", expires_at: "",
   max_uses: "", per_cpf_limit: "1", min_purchase: "0", allowed_categories: "", blocked_categories: "", blocked_cpfs: "", blocked_emails: "",
   applies_to_catalog: true, applies_to_special_orders: true, show_in_catalog: false, is_active: true,
+  applies_to_product_type: "all" as "all" | "single" | "drop",
 };
 type Form = typeof empty;
 
@@ -99,6 +101,7 @@ const AdminCoupons = () => {
       allowed_categories: c.allowed_categories.join(", "), blocked_categories: c.blocked_categories.join(", "),
       blocked_cpfs: c.blocked_cpfs.join(", "), blocked_emails: c.blocked_emails.join(", "),
       applies_to_catalog: c.applies_to_catalog, applies_to_special_orders: c.applies_to_special_orders, show_in_catalog: c.show_in_catalog, is_active: c.is_active,
+      applies_to_product_type: c.applies_to_product_type ?? "all",
     });
     setOpen(true);
   };
@@ -117,6 +120,7 @@ const AdminCoupons = () => {
       allowed_categories: list(form.allowed_categories), blocked_categories: list(form.blocked_categories),
       blocked_cpfs: list(form.blocked_cpfs), blocked_emails: list(form.blocked_emails),
       applies_to_catalog: form.applies_to_catalog, applies_to_special_orders: form.applies_to_special_orders, show_in_catalog: form.show_in_catalog, is_active: form.is_active,
+      applies_to_product_type: form.applies_to_product_type,
     };
     setSaving(true);
     try {
@@ -191,6 +195,7 @@ const AdminCoupons = () => {
                     {c.expires_at ? ` · até ${new Date(c.expires_at).toLocaleString("pt-BR")}` : ""}
                     {c.min_purchase > 0 ? ` · mínimo ${brl(c.min_purchase)}` : ""}
                     {` · ${[c.applies_to_catalog && "Loja", c.applies_to_special_orders && "Encomendas"].filter(Boolean).join(" + ")}`}
+                    {(c.applies_to_product_type ?? "all") !== "all" && ` · ${c.applies_to_product_type === "drop" ? "Só drops" : "Só singles"}`}
                   </p>
                   {(c.allowed_categories.length > 0 || c.blocked_categories.length > 0 || c.blocked_cpfs.length + c.blocked_emails.length > 0) && (
                     <p className="text-xs text-muted-foreground">
@@ -235,6 +240,13 @@ const AdminCoupons = () => {
               <div><Label>Limite total de usos</Label><Input inputMode="numeric" placeholder="Ilimitado" value={form.max_uses} onChange={(e) => set("max_uses", e.target.value.replace(/\D/g, ""))} /></div>
               <div><Label>Usos por CPF</Label><Input inputMode="numeric" value={form.per_cpf_limit} onChange={(e) => set("per_cpf_limit", e.target.value.replace(/\D/g, ""))} /></div>
               <div><Label>Compra mínima (R$)</Label><Input inputMode="decimal" value={form.min_purchase} onChange={(e) => set("min_purchase", e.target.value)} /></div>
+            </div>
+            <div><Label>Vale para</Label>
+              <select className="h-10 w-full rounded-md border border-input bg-background px-3" value={form.applies_to_product_type} onChange={(e) => set("applies_to_product_type", e.target.value as "all" | "single" | "drop")}>
+                <option value="all">Tudo (drops e singles)</option>
+                <option value="drop">Só drops</option>
+                <option value="single">Só singles</option>
+              </select>
             </div>
             <div><Label>Só para estas categorias (vazio = todas)</Label><Input value={form.allowed_categories} onChange={(e) => set("allowed_categories", e.target.value)} placeholder="Ex.: Secret Lair, Commander" /></div>
             <div><Label>Bloquear categorias</Label><Input value={form.blocked_categories} onChange={(e) => set("blocked_categories", e.target.value)} placeholder="Separe por vírgula" /></div>
