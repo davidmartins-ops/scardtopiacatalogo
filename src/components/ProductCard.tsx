@@ -18,17 +18,8 @@ import { queueAnalyticsEvent } from "@/lib/analytics-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Non-Foil": { label: "Non-Foil", icon: Circle, className: "bg-non-foil/15 text-non-foil border-non-foil/30" },
-  "Surge Foil": { label: "Surge Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Rainbow Foil": { label: "Rainbow Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
-  "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Galaxy Foil": { label: "Galaxy Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
-  "Confetti Foil": { label: "Confetti Foil", icon: Sparkles, className: "bg-accent/15 text-accent border-accent/30" },
-  "Etched Foil": { label: "Etched Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
-  "Silver Scroll": { label: "Silver Scroll", icon: Sparkles, className: "bg-muted/40 text-foreground border-border" },
-};
+import { FINISH_META } from "@/lib/finish";
+
 
 // Session-scoped tracking: avoid duplicate views per item per session
 const SESSION_VIEWED = new Set<string>();
@@ -151,7 +142,7 @@ import { useAppliedCoupon, priceWithCoupon } from "@/hooks/use-coupon";
 
 const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId, versionsCount, versionsHref }: ProductCardProps) => {
   const hasMultipleVersions = (versionsCount ?? 0) > 1 && !!versionsHref;
-  const config = descriptionConfig[item.description];
+  const config = FINISH_META[item.description];
   const Icon = config?.icon ?? Circle;
   const discount = item.discount ?? 0;
   // Desconto aplica SOMENTE ao PIX. Cartão permanece com valor cheio.
