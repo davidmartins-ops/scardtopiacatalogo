@@ -8,6 +8,7 @@ import { useOrderRefunds, type RefundMethod, type RefundStatus } from "@/hooks/u
 import { useInventory } from "@/hooks/use-inventory";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { OrderStatusBadge, ORDER_STATUS_LABELS, ORDER_STATUS_ICONS } from "@/components/OrderStatusBadge";
+import { FinishBadge } from "@/components/FinishBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -289,7 +290,12 @@ const OrderDetailPage = () => {
           <ul className="space-y-2">
             {order.items.map((it, idx) => (
               <li key={idx} className="flex items-center justify-between text-sm border-b border-border/40 pb-2 last:border-0">
-                <span className="flex-1 truncate">{it.quantity}× {it.name}</span>
+                <span className="flex-1 truncate">
+                  {it.quantity}× {it.name}
+                  <FinishBadge value={it.description} className="ml-1 align-middle" />
+                  {it.language ? <span className="text-xs text-muted-foreground"> · {it.language}</span> : null}
+                  {it.condition ? <span className="text-xs text-muted-foreground"> · {it.condition}</span> : null}
+                </span>
                 <span className="font-medium ml-3">R$ {Number(it.total_price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
               </li>
             ))}
