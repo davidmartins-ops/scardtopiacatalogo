@@ -8,6 +8,7 @@ export interface AppliedCoupon {
   discount_value: number;
   allowed_categories: string[];
   blocked_categories: string[];
+  applies_to_product_type?: "all" | "single" | "drop";
   description?: string | null;
   expires_at?: string | null;
 }
@@ -15,6 +16,7 @@ export interface AppliedCoupon {
 export interface CouponLine {
   category: string;
   amount: number;
+  product_type?: string | null;
 }
 
 const KEY = "applied_coupon_v1";
@@ -52,7 +54,13 @@ export function useAppliedCoupon() {
   return { coupon, setCoupon: save, clearCoupon: () => save(null) };
 }
 
-export const isCategoryEligible = (c: Pick<AppliedCoupon, "allowed_categories" | "blocked_categories">, category?: string | null) => {
+export const isCategoryEligible = (
+  c: Pick<AppliedCoupon, "allowed_categories" | "blocked_categories" | "applies_to_product_type">,
+  category?: string | null,
+  productType?: string | null,
+) => {
+  const scope = c.applies_to_product_type ?? "all";
+  if (scope !== "all" && (productType ?? "").trim().toLowerCase() !== scope) return false;
   const cat = (category ?? "").trim().toLowerCase();
   if ((c.blocked_categories ?? []).some((b) => b.trim().toLowerCase() === cat)) return false;
   if ((c.allowed_categories ?? []).length > 0) return c.allowed_categories.some((a) => a.trim().toLowerCase() === cat);
