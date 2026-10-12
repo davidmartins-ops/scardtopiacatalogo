@@ -70,14 +70,14 @@ export const isCategoryEligible = (
 /** Mirrors the server rule (server recomputes and is authoritative). */
 export const computeCouponDiscount = (c: AppliedCoupon | null, lines: CouponLine[]) => {
   if (!c) return 0;
-  const eligible = lines.filter((l) => isCategoryEligible(c, l.category)).reduce((s, l) => s + l.amount, 0);
+  const eligible = lines.filter((l) => isCategoryEligible(c, l.category, l.product_type)).reduce((s, l) => s + l.amount, 0);
   if (eligible <= 0) return 0;
   const d = c.discount_type === "percent" ? (eligible * Math.min(c.discount_value, 100)) / 100 : Math.min(c.discount_value, eligible);
   return Math.round(d * 100) / 100;
 };
 
-export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category?: string | null) => {
-  if (!c || !isCategoryEligible(c, category)) return null;
+export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category?: string | null, productType?: string | null) => {
+  if (!c || !isCategoryEligible(c, category, productType)) return null;
   if (c.discount_type === "percent") return Math.round(price * (1 - Math.min(c.discount_value, 100) / 100) * 100) / 100;
   return null; // valor fixo vale para o pedido inteiro, não por item
 };
