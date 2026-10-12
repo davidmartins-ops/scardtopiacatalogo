@@ -136,11 +136,13 @@ interface ProductCardProps {
   userId?: string;
   versionsCount?: number;
   versionsHref?: string;
+  /** Images to navigate between while the zoom lightbox is open. */
+  gallery?: { src: string; alt: string }[];
 }
 
 import { useAppliedCoupon, priceWithCoupon } from "@/hooks/use-coupon";
 
-const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId, versionsCount, versionsHref }: ProductCardProps) => {
+const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite, isLoggedIn, userId, versionsCount, versionsHref, gallery }: ProductCardProps) => {
   const hasMultipleVersions = (versionsCount ?? 0) > 1 && !!versionsHref;
   const config = FINISH_META[item.description];
   const Icon = config?.icon ?? Circle;
@@ -226,6 +228,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
               alt={item.name}
               className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ${isOutOfStock ? "grayscale" : ""}`}
               containerClassName="w-full h-full"
+              gallery={gallery}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground bg-muted/10">
