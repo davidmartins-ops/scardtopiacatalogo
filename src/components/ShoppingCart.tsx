@@ -331,7 +331,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   };
 
   const couponLinesFor = (channel: Channel | null) =>
-    items.map((ci) => ({ category: ci.item.category ?? "", amount: unitPriceFor(ci, channel) * ci.qty }));
+    items.map((ci) => ({ category: ci.item.category ?? "", product_type: ci.item.product_type ?? "drop", amount: unitPriceFor(ci, channel) * ci.qty }));
 
   // Cupom (não acumulativo: apenas um por pedido). O servidor recalcula e valida.
   const couponDiscountFor = (channel: Channel | null) =>
