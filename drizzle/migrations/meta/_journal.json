@@ -50,6 +50,13 @@
       "when": 1791656521544,
       "tag": "0006_notify_names_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791832506488,
+      "tag": "0007_coupon_product_type_scope",
+      "breakpoints": true
     }
   ]
 }

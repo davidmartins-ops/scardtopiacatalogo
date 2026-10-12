@@ -478,6 +478,7 @@ export type Database = {
         Row: {
           allowed_categories: string[]
           applies_to_catalog: boolean
+          applies_to_product_type: string
           applies_to_special_orders: boolean
           blocked_categories: string[]
           blocked_cpfs: string[]
@@ -502,6 +503,7 @@ export type Database = {
         Insert: {
           allowed_categories?: string[]
           applies_to_catalog?: boolean
+          applies_to_product_type?: string
           applies_to_special_orders?: boolean
           blocked_categories?: string[]
           blocked_cpfs?: string[]
@@ -526,6 +528,7 @@ export type Database = {
         Update: {
           allowed_categories?: string[]
           applies_to_catalog?: boolean
+          applies_to_product_type?: string
           applies_to_special_orders?: boolean
           blocked_categories?: string[]
           blocked_cpfs?: string[]
