@@ -648,7 +648,7 @@ const InventoryTable = ({ data }: Props) => {
                     </td>
 
                     {editingId === item.id ? (
-                      <td colSpan={11} className="px-2 sm:px-3 py-3 bg-muted/20">
+                      <td colSpan={11} className="px-2 sm:px-3 py-3 bg-muted/20 max-w-0">
                         <div className="flex flex-wrap items-end gap-x-3 gap-y-2 w-full">
                           <div className="flex flex-col gap-1 min-w-[200px] flex-[2]">
                             <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Nome</span>
