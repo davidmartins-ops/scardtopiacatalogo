@@ -434,6 +434,9 @@ const ItemGrid = ({
                       userId={userId}
                       versionsCount={versionsCount}
                       versionsHref={versionsHref}
+                      gallery={catItems
+                        .filter((g) => !!g.image_url)
+                        .map((g) => ({ src: g.image_url as string, alt: g.name }))}
                     />
                   </div>
                 );
