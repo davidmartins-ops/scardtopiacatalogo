@@ -33,12 +33,15 @@ export const useAdminNotifications = () => {
   const query = useQuery({
     queryKey: ["admin-notifications", adminId],
     enabled: !!adminId,
+    // Realtime keeps this fresh; avoid refetching on focus/remount.
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<AdminNotification[]> => {
       const { data: notifs, error } = await supabase
         .from("admin_notifications")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(30);
       if (error) throw error;
 
       const ids = (notifs ?? []).map((n) => n.id);
@@ -64,8 +67,17 @@ export const useAdminNotifications = () => {
     if (!adminId) return;
     const ch = supabase
       .channel("admin-notifications-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "admin_notifications" }, () => {
-        qc.invalidateQueries({ queryKey: ["admin-notifications", adminId] });
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_notifications" }, (payload) => {
+        const key = ["admin-notifications", adminId];
+        if (payload.eventType === "INSERT") {
+          const n = { ...(payload.new as AdminNotification), read_at: null };
+          qc.setQueryData<AdminNotification[]>(key, (prev) => prev ? [n, ...prev.filter((x) => x.id !== n.id)].slice(0, 30) : prev);
+        } else if (payload.eventType === "DELETE") {
+          const id = (payload.old as { id?: string }).id;
+          qc.setQueryData<AdminNotification[]>(key, (prev) => prev?.filter((x) => x.id !== id));
+        } else {
+          qc.invalidateQueries({ queryKey: key });
+        }
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "admin_notification_reads", filter: `admin_id=eq.${adminId}` }, () => {
         qc.invalidateQueries({ queryKey: ["admin-notifications", adminId] });

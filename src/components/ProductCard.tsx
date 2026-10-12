@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import ImageZoom from "@/components/ImageZoom";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
+import { queueAnalyticsEvent } from "@/lib/analytics-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,13 +42,13 @@ const trackEvent = async (eventType: string, item: InventoryItem) => {
   const { hasAnalyticsConsent } = await import("@/lib/consent");
   if (!hasAnalyticsConsent()) return;
   try {
-    await supabase.from("analytics_events").insert({
+    queueAnalyticsEvent({
       event_type: eventType,
       inventory_item_id: item.id,
       item_name: item.name,
       category: item.category,
       session_id: getSessionId(),
-    } as any);
+    });
   } catch {}
 };
 
