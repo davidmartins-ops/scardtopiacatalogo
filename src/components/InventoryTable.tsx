@@ -648,45 +648,54 @@ const InventoryTable = ({ data }: Props) => {
                     </td>
 
                     {editingId === item.id ? (
-                      <>
-                        <td className="px-2 sm:px-3 py-2">
-                          <Input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="h-8 text-sm bg-muted border-border" />
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
-                          <Select value={editForm.description} onValueChange={(v) => setEditForm((p) => ({ ...p, description: v }))}>
-                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-28"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {FOIL_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
-                          <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-24" />
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
-                          <Select value={editForm.language} onValueChange={(v) => setEditForm((p) => ({ ...p, language: v }))}>
-                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
-                          <Select value={editForm.condition} onValueChange={(v) => setEditForm((p) => ({ ...p, condition: v }))}>
-                            <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
+                      <td colSpan={11} className="px-2 sm:px-3 py-3 bg-muted/20">
+                        <div className="flex flex-wrap items-end gap-x-3 gap-y-2 w-full">
+                          <div className="flex flex-col gap-1 min-w-[200px] flex-[2]">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Nome</span>
+                            <Input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="h-8 text-sm bg-muted border-border" />
+                          </div>
                           <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Tipo</span>
+                            <Select value={editForm.description} onValueChange={(v) => setEditForm((p) => ({ ...p, description: v }))}>
+                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-28"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {FOIL_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Categoria</span>
+                            <Input value={editForm.category} onChange={(e) => setEditForm((p) => ({ ...p, category: e.target.value }))} className="h-8 text-sm bg-muted border-border w-28" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Idioma</span>
+                            <Select value={editForm.language} onValueChange={(v) => setEditForm((p) => ({ ...p, language: v }))}>
+                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Qual.</span>
+                            <Select value={editForm.condition} onValueChange={(v) => setEditForm((p) => ({ ...p, condition: v }))}>
+                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Classificação</span>
                             <Select value={editForm.status} onValueChange={(v) => setEditForm((p) => ({ ...p, status: v }))}>
                               <SelectTrigger className="h-8 text-xs bg-muted border-border w-32"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                               </SelectContent>
                             </Select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Disponibilidade</span>
                             <Select value={editForm.availability} onValueChange={(v) => setEditForm((p) => ({ ...p, availability: v }))}>
                               <SelectTrigger className="h-8 text-[11px] bg-muted border-border w-32"><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -695,60 +704,61 @@ const InventoryTable = ({ data }: Props) => {
                               </SelectContent>
                             </Select>
                           </div>
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-[9px] uppercase text-muted-foreground w-8">Cart.</span>
-                              <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-7 text-xs bg-muted border-border w-20" />
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[9px] uppercase text-muted-foreground w-8">PIX</span>
-                              <Input type="number" min="0" step="0.01" value={editForm.price_pix} onChange={(e) => setEditForm((p) => ({ ...p, price_pix: e.target.value }))} className="h-7 text-xs bg-muted border-border w-20" />
-                            </div>
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Preço Cartão</span>
+                            <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} className="h-8 text-xs bg-muted border-border w-24" />
                           </div>
-                        </td>
-                        <td className="px-2 sm:px-3 py-2">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Preço PIX</span>
+                            <Input type="number" min="0" step="0.01" value={editForm.price_pix} onChange={(e) => setEditForm((p) => ({ ...p, price_pix: e.target.value }))} className="h-8 text-xs bg-muted border-border w-24" />
+                          </div>
                           {(() => {
                             const editFormErr = validateDiscount(editForm.discount);
                             const invalid = !editFormErr.ok;
                             return (
-                              <div className="flex items-center gap-1 justify-center">
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  pattern="[0-9.,]*"
-                                  value={editForm.discount}
-                                  onChange={(e) => setEditForm((p) => ({ ...p, discount: normalizeDiscountInput(e.target.value) }))}
-                                  onFocus={(e) => e.currentTarget.select()}
-                                  aria-invalid={invalid}
-                                  aria-describedby={invalid ? `edit-discount-err-${item.id}` : undefined}
-                                  className={`h-8 text-sm bg-muted w-16 min-w-[3.5rem] px-2 text-center tabular-nums ${invalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
-                                  placeholder="0"
-                                />
-                                <span className="text-xs text-muted-foreground">%</span>
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Desconto</span>
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="text"
+                                    inputMode="decimal"
+                                    pattern="[0-9.,]*"
+                                    value={editForm.discount}
+                                    onChange={(e) => setEditForm((p) => ({ ...p, discount: normalizeDiscountInput(e.target.value) }))}
+                                    onFocus={(e) => e.currentTarget.select()}
+                                    aria-invalid={invalid}
+                                    aria-describedby={invalid ? `edit-discount-err-${item.id}` : undefined}
+                                    className={`h-8 text-sm bg-muted w-16 min-w-[3.5rem] px-2 text-center tabular-nums ${invalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30" : "border-border"}`}
+                                    placeholder="0"
+                                  />
+                                  <span className="text-xs text-muted-foreground">%</span>
+                                </div>
+                                {invalid && editFormErr.message && (
+                                  <p id={`edit-discount-err-${item.id}`} role="alert" className="text-[10px] text-destructive leading-tight max-w-[140px]">{editFormErr.message}</p>
+                                )}
                               </div>
                             );
                           })()}
-                        </td>
-
-                        <td className="px-2 sm:px-3 py-2">
-                          <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-14" />
-                        </td>
-                        <td className="px-2 sm:px-3 py-2.5 font-semibold tabular-nums text-primary text-xs">
-                          R$ {(parseFloat(editForm.price || "0") * (1 - parseFloat(editForm.discount || "0") / 100) * parseInt(editForm.quantity || "0", 10)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="px-2 sm:px-3 py-2.5">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-success hover:text-success hover:bg-success/10" onClick={() => saveEdit(item.id)} disabled={saving}>
-                              <Check className="h-4 w-4" />
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Qtd</span>
+                            <Input type="number" min="0" step="1" value={editForm.quantity} onChange={(e) => setEditForm((p) => ({ ...p, quantity: e.target.value }))} className="h-8 text-sm bg-muted border-border w-16" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Valor final</span>
+                            <span className="h-8 flex items-center font-semibold tabular-nums text-primary text-xs whitespace-nowrap">
+                              R$ {(parseFloat(editForm.price || "0") * (1 - parseFloat(editForm.discount || "0") / 100) * parseInt(editForm.quantity || "0", 10)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            <Button size="sm" className="h-8 gap-1 text-xs" onClick={() => saveEdit(item.id)} disabled={saving}>
+                              <Check className="h-4 w-4" /> Salvar
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={cancelEdit}>
-                              <X className="h-4 w-4" />
+                            <Button size="sm" variant="ghost" className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground" onClick={cancelEdit}>
+                              <X className="h-4 w-4" /> Cancelar
                             </Button>
                           </div>
-                        </td>
-                      </>
+                        </div>
+                      </td>
                     ) : (
                       <>
                         <td className="px-2 sm:px-3 py-2.5 min-w-[240px] max-w-[340px]">
