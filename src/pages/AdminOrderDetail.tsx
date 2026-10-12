@@ -11,6 +11,7 @@ import {
   type ShippingLabelStatus,
 } from "@/hooks/use-shipping-label";
 import { OrderStatusBadge, ORDER_STATUS_LABELS } from "@/components/OrderStatusBadge";
+import { FinishBadge } from "@/components/FinishBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

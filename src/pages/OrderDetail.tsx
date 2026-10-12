@@ -8,6 +8,7 @@ import { useOrderRefunds, type RefundMethod, type RefundStatus } from "@/hooks/u
 import { useInventory } from "@/hooks/use-inventory";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { OrderStatusBadge, ORDER_STATUS_LABELS, ORDER_STATUS_ICONS } from "@/components/OrderStatusBadge";
+import { FinishBadge } from "@/components/FinishBadge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
