@@ -476,6 +476,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/FULMJM5JENFNM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECJRXS1ENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -497,11 +502,6 @@
   </url>
   <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/PUMMJLQMENNFNM</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/FULMJM5JENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
