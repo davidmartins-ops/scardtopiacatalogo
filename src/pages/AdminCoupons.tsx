@@ -120,11 +120,17 @@ const AdminCoupons = () => {
     };
     setSaving(true);
     try {
-      const q = editing
-        ? supabase.from("coupons" as never).update(payload as never).eq("id", editing.id)
-        : supabase.from("coupons" as never).insert(payload as never);
-      const { error } = await runWithRetry(() => q);
-      if (error) { toast.error(error.message.includes("duplicate") ? "Já existe um cupom com esse código" : error.message); return; }
+      let attempts = 0;
+      const { error } = await runWithRetry(() => {
+        attempts++;
+        return editing
+          ? supabase.from("coupons" as never).update(payload as never).eq("id", editing.id)
+          : supabase.from("coupons" as never).insert(payload as never);
+      });
+      const duplicate = !!error && (error.code === "23505" || error.message.includes("duplicate"));
+      // Uma tentativa anterior (que estourou o tempo) já criou o cupom: trata como sucesso.
+      const createdByEarlierAttempt = !editing && duplicate && attempts > 1;
+      if (error && !createdByEarlierAttempt) { toast.error(duplicate ? "Já existe um cupom com esse código" : error.message); return; }
     } catch {
       toast.error("Conexão lenta — não foi possível salvar. Tente de novo.");
       return;
