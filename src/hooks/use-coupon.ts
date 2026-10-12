@@ -8,6 +8,7 @@ export interface AppliedCoupon {
   discount_value: number;
   allowed_categories: string[];
   blocked_categories: string[];
+  applies_to_product_type?: "all" | "single" | "drop";
   description?: string | null;
   expires_at?: string | null;
 }
@@ -15,6 +16,7 @@ export interface AppliedCoupon {
 export interface CouponLine {
   category: string;
   amount: number;
+  product_type?: string | null;
 }
 
 const KEY = "applied_coupon_v1";
@@ -52,7 +54,13 @@ export function useAppliedCoupon() {
   return { coupon, setCoupon: save, clearCoupon: () => save(null) };
 }
 
-export const isCategoryEligible = (c: Pick<AppliedCoupon, "allowed_categories" | "blocked_categories">, category?: string | null) => {
+export const isCategoryEligible = (
+  c: Pick<AppliedCoupon, "allowed_categories" | "blocked_categories" | "applies_to_product_type">,
+  category?: string | null,
+  productType?: string | null,
+) => {
+  const scope = c.applies_to_product_type ?? "all";
+  if (scope !== "all" && (productType ?? "").trim().toLowerCase() !== scope) return false;
   const cat = (category ?? "").trim().toLowerCase();
   if ((c.blocked_categories ?? []).some((b) => b.trim().toLowerCase() === cat)) return false;
   if ((c.allowed_categories ?? []).length > 0) return c.allowed_categories.some((a) => a.trim().toLowerCase() === cat);
@@ -62,14 +70,14 @@ export const isCategoryEligible = (c: Pick<AppliedCoupon, "allowed_categories" |
 /** Mirrors the server rule (server recomputes and is authoritative). */
 export const computeCouponDiscount = (c: AppliedCoupon | null, lines: CouponLine[]) => {
   if (!c) return 0;
-  const eligible = lines.filter((l) => isCategoryEligible(c, l.category)).reduce((s, l) => s + l.amount, 0);
+  const eligible = lines.filter((l) => isCategoryEligible(c, l.category, l.product_type)).reduce((s, l) => s + l.amount, 0);
   if (eligible <= 0) return 0;
   const d = c.discount_type === "percent" ? (eligible * Math.min(c.discount_value, 100)) / 100 : Math.min(c.discount_value, eligible);
   return Math.round(d * 100) / 100;
 };
 
-export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category?: string | null) => {
-  if (!c || !isCategoryEligible(c, category)) return null;
+export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category?: string | null, productType?: string | null) => {
+  if (!c || !isCategoryEligible(c, category, productType)) return null;
   if (c.discount_type === "percent") return Math.round(price * (1 - Math.min(c.discount_value, 100) / 100) * 100) / 100;
   return null; // valor fixo vale para o pedido inteiro, não por item
 };

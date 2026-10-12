@@ -154,8 +154,8 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
   const hasPixHighlight = pixFinal < cardPrice;
   const isOutOfStock = item.quantity <= 0;
   const { coupon } = useAppliedCoupon();
-  const couponPix = priceWithCoupon(coupon, pixFinal, item.category);
-  const couponCard = priceWithCoupon(coupon, cardPrice, item.category);
+  const couponPix = priceWithCoupon(coupon, pixFinal, item.category, item.product_type);
+  const couponCard = priceWithCoupon(coupon, cardPrice, item.category, item.product_type);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Track product view once per session per item using IntersectionObserver
