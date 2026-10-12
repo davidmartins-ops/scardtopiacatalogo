@@ -12,6 +12,8 @@ import {
 } from "@/hooks/use-shipping-label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FinishText } from "@/components/FinishBadge";
+import { finishLabel } from "@/lib/finish";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -246,7 +248,7 @@ const AdminOrdersPanel = () => {
         statusConfig(o.status).label,
         Number(o.total).toFixed(2).replace(".", ","),
         o.tracking_code ?? "",
-        (o.items as any[]).map((it) => `${it.quantity}× ${it.name}`).join(" | "),
+        (o.items as any[]).map((it) => `${it.quantity}× ${it.name}${finishLabel(it.description) ? ` (${finishLabel(it.description)})` : ""}`).join(" | "),
         o.receipt_url ?? "",
       ]);
     }

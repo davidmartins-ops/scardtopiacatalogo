@@ -11,6 +11,8 @@ import { useSpecialOrders } from "@/hooks/use-special-orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { FinishText } from "@/components/FinishBadge";
+import { finishLabel } from "@/lib/finish";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -294,7 +296,7 @@ const CustomerDashboard = () => {
                     orders.forEach((order) => {
                       xml += `  <order id="${esc(order.id)}" status="${esc(order.status)}" date="${esc(order.created_at)}" total="${esc(order.total)}">\n`;
                       (order.items as any[]).forEach((item: any) => {
-                        xml += `    <item name="${esc(item.name)}" quantity="${esc(item.quantity)}" unit_price="${esc(item.unit_price)}" total_price="${esc(item.total_price)}" />\n`;
+                        xml += `    <item name="${esc(item.name)}" finish="${esc(finishLabel(item.description))}" quantity="${esc(item.quantity)}" unit_price="${esc(item.unit_price)}" total_price="${esc(item.total_price)}" />\n`;
                       });
                       xml += `  </order>\n`;
                     });
