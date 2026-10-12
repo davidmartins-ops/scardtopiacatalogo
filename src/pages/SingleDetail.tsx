@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 import ProductMedia from "@/components/ProductMedia";
 import AddToCartButton from "@/components/AddToCartButton";
+import { queueAnalyticsEvent } from "@/lib/analytics-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchScryfallCard, pickBestImageUrl, type ScryfallCardData } from "@/lib/scryfall-cache";
 import ManaCost from "@/components/ManaCost";
@@ -35,13 +36,13 @@ const SingleDetail = () => {
         setCard(data);
         if (data && data._imageQuality && data._imageQuality !== "high") {
           try {
-            supabase.from("analytics_events").insert({
+            queueAnalyticsEvent({
               event_type: "scryfall_low_quality_image",
               inventory_item_id: item.id,
               item_name: item.name,
               category: item.category,
-              metadata: { quality: data._imageQuality, set, num } as any,
-            } as any);
+              metadata: { quality: data._imageQuality, set, num },
+            });
           } catch {}
         }
       })
@@ -51,13 +52,13 @@ const SingleDetail = () => {
     // Track view
     try {
       const sid = sessionStorage.getItem("analytics_session") || (() => { const id = crypto.randomUUID(); sessionStorage.setItem("analytics_session", id); return id; })();
-      supabase.from("analytics_events").insert({
+      queueAnalyticsEvent({
         event_type: "single_detail_view",
         inventory_item_id: item.id,
         item_name: item.name,
         category: item.category,
         session_id: sid,
-      } as any);
+      });
     } catch {}
   }, [item?.id]);
 

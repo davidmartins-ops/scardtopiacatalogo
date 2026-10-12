@@ -59,6 +59,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useSavedCart } from "@/hooks/use-saved-cart";
 import { type OrderItem } from "@/hooks/use-orders";
 import { useQueryClient } from "@tanstack/react-query";
+import { queueAnalyticsEvent } from "@/lib/analytics-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 import SetCombobox from "@/components/SetCombobox";
@@ -100,7 +101,7 @@ const trackEvent = async (eventType: string, item?: InventoryItem) => {
   if (!hasAnalyticsConsent()) return;
   try {
     const sessionId = sessionStorage.getItem("analytics_session") || (() => { const id = crypto.randomUUID(); sessionStorage.setItem("analytics_session", id); return id; })();
-    await supabase.from("analytics_events").insert({ event_type: eventType, inventory_item_id: item?.id ?? null, item_name: item?.name ?? null, category: item?.category ?? null, session_id: sessionId });
+    queueAnalyticsEvent({ event_type: eventType, inventory_item_id: item?.id ?? null, item_name: item?.name ?? null, category: item?.category ?? null, session_id: sessionId });
   } catch {}
 };
 

@@ -3,6 +3,7 @@ import { Package, ImageOff, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import placeholderImg from "/placeholder.svg";
 import ImageZoom from "@/components/ImageZoom";
+import { queueAnalyticsEvent } from "@/lib/analytics-queue";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
@@ -57,13 +58,13 @@ const ProductMedia = ({
     }
     console.warn("[ProductMedia] image failed", { src, id: itemId, diagnosis });
     try {
-      await supabase.from("analytics_events").insert({
+      queueAnalyticsEvent({
         event_type: "image_load_error",
         inventory_item_id: itemId,
         item_name: itemName,
         category: category,
-        metadata: { src, diagnosis } as any,
-      } as any);
+        metadata: { src, diagnosis },
+      });
     } catch {}
   };
 

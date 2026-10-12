@@ -5,6 +5,10 @@ import type { InventoryItem } from "@/data/inventory";
 export const useInventory = () => {
   return useQuery({
     queryKey: ["inventory"],
+    // Stock list changes rarely; reuse it for 3 min instead of refetching on every visit/focus.
+    staleTime: 3 * 60_000,
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<InventoryItem[]> => {
       const { data, error } = await supabase
         .from("inventory")
