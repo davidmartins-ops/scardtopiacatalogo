@@ -330,6 +330,7 @@ const AdminOrderDetail = () => {
               <li key={idx} className="flex items-center justify-between text-sm border-b border-border/40 pb-2 last:border-0">
                 <span className="flex-1 truncate">
                   {it.quantity}× {it.name}
+                  <FinishBadge value={it.description} className="ml-1 align-middle" />
                   {it.language ? <span className="text-xs text-muted-foreground"> · {it.language}</span> : null}
                   {it.condition ? <span className="text-xs text-muted-foreground"> · {it.condition}</span> : null}
                   <span className="text-[11px] text-muted-foreground block font-mono">{it.id}</span>

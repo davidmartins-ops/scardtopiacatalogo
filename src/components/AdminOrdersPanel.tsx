@@ -580,6 +580,7 @@ const AdminOrdersPanel = () => {
                   {(order.items as any[]).map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between text-[11px] text-muted-foreground">
                       <span className="truncate flex-1">{item.quantity}× {item.name}</span>
+                      <FinishText value={item.description} className="text-[10px] ml-2" />
                       <span className="shrink-0 ml-2">R$ {Number(item.total_price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                     </div>
                   ))}
