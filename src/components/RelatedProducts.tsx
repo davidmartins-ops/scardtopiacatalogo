@@ -17,6 +17,16 @@ const pathFor = (i: InventoryItem) =>
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Duas unidades do mesmo produto (foil / non-foil, idiomas ou condições diferentes)
+// compartilham o nome. Normalizamos para tratar as duas como o mesmo item.
+const nameKey = (n: string) =>
+  n
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
 interface Props { current: InventoryItem }
 
 const RelatedProducts = ({ current }: Props) => {
@@ -32,8 +42,13 @@ const RelatedProducts = ({ current }: Props) => {
   }, [current.id]);
 
   const items = useMemo(() => {
+    const currentKey = nameKey(current.name);
     const visible = inventory.filter(
-      (i) => i.id !== current.id && !(i.product_type === "single" && i.quantity <= 0),
+      (i) =>
+        i.id !== current.id &&
+        !(i.product_type === "single" && i.quantity <= 0) &&
+        // Nunca mostrar o item aberto, nem em outro acabamento/idioma/condição.
+        !(nameKey(i.name) === currentKey && (i.product_type ?? "single") === (current.product_type ?? "single")),
     );
     const byId = new Map(visible.map((i) => [i.id, i]));
     const result: InventoryItem[] = [];
@@ -43,7 +58,7 @@ const RelatedProducts = ({ current }: Props) => {
     visible.filter((i) => i.product_type === current.product_type).forEach(add);
     // Produtos com estoque vêm sempre antes dos esgotados.
     return prioritizeInStock(result).slice(0, 8);
-  }, [inventory, current.id, current.category, current.product_type, viewed]);
+  }, [inventory, current.id, current.name, current.category, current.product_type, viewed]);
 
   if (items.length === 0) return null;
 
