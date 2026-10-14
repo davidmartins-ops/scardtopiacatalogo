@@ -79,7 +79,7 @@ const NotifyMeDialog = ({ item, isLoggedIn, userId }: { item: InventoryItem; isL
         className="w-full h-9 sm:h-10 px-2 text-[12px] sm:text-[14px] whitespace-normal leading-tight gap-1.5 border-primary/30 hover:border-primary/50 text-primary font-semibold transition-all duration-150 active:scale-[0.98]"
         onClick={() => { if (!isLoggedIn) { toast.error("Faça login para receber notificações."); return; } setOpen(true); }}
       >
-        <Bell className="h-4 w-4" /> Me avise quando disponível!
+        <Bell className="h-4 w-4 shrink-0" /> <span className="min-w-0">Me avise quando disponível!</span>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm bg-card border-border">
@@ -242,7 +242,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
       </div>
 
       {/* Card Info - flex column with anchored bottom actions */}
-      <div className="relative z-10 p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-1.5 flex flex-col flex-1">
+      <div className="relative z-10 p-2 pt-2 sm:p-3 sm:pt-2.5 gap-1.5 flex flex-col flex-1">
         {/* Title — links to the full product page (essential on mobile, where the details button is hidden) */}
         <Link
           to={isSingle ? `/catalogo/single/${encodeURIComponent(item.id)}` : `/catalogo/drop/${item.id}`}
@@ -259,7 +259,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         </Link>
 
         {/* Foil badge + Availability */}
-        <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
+        <div className={`flex gap-1.5 ${isSingle ? "flex-wrap items-center min-h-[22px]" : "flex-col items-start min-h-[46px] sm:min-h-[22px] sm:flex-row sm:flex-wrap sm:items-center sm:content-start"}`}>
           <Badge variant="outline" className={`gap-1 text-[10px] ${config?.className ?? ""}`}>
             <Icon className="h-2.5 w-2.5" />
             {config?.label ?? item.description}
@@ -281,7 +281,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
         {/* Info block - standardized height */}
         <div className="min-h-[80px] sm:min-h-[110px] flex flex-col justify-start pt-1">
           {isOutOfStock ? (
-            <div className="flex-1 flex flex-col justify-center">
+            <div className="flex-1 flex flex-col justify-start sm:justify-center">
               <p className="text-[13px] sm:text-[14px] text-muted-foreground font-medium">Indisponível</p>
             </div>
           ) : (
