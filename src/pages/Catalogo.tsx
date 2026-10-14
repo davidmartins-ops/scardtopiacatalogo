@@ -65,6 +65,7 @@ import { useMtgSets, extractSetCode } from "@/hooks/use-mtg-sets";
 import SetCombobox from "@/components/SetCombobox";
 import useSEO from "@/hooks/use-seo";
 import { friendlyOrderError } from "@/lib/order-errors";
+import { prioritizeInStock, stockScoreFor } from "@/lib/stock";
 
 
 const MTG_COLORS = [
@@ -270,7 +271,7 @@ const ItemGrid = ({
       return [["Todas as cartas", sorted]] as [string, typeof displayItems][];
     }
     const groups: Record<string, typeof displayItems> = {};
-    displayItems.forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
+    prioritizeInStock(displayItems).forEach((item) => { if (!groups[item.category]) groups[item.category] = []; groups[item.category].push(item); });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [displayItems, sortOrder]);
 
@@ -451,8 +452,13 @@ const ItemGrid = ({
 
 /* Catalog Banner Carousel */
 const CatalogBanner = () => {
-  const { data: banners = [] } = useActiveBanners("catalogo");
+  const { data: bannersRaw = [] } = useActiveBanners("catalogo");
   const { data: inventory = [] } = useInventory();
+  // Destaques: banners que apontam para produto com estoque giram antes dos esgotados.
+  const banners = useMemo(
+    () => [...bannersRaw].sort((a, b) => stockScoreFor(inventory, b.inventory_item_id) - stockScoreFor(inventory, a.inventory_item_id)),
+    [bannersRaw, inventory],
+  );
   const [currentBanner, setCurrentBanner] = useState(0);
   useEffect(() => { if (banners.length <= 1) return; const timer = setInterval(() => { setCurrentBanner((prev) => (prev + 1) % banners.length); }, 7000); return () => clearInterval(timer); }, [banners.length]);
 
@@ -810,7 +816,7 @@ const Catalogo = () => {
   const singles = useMemo(() => inventoryData.filter((i) => i.product_type === "single"), [inventoryData]);
 
   const canonical = "https://www.spencerscardtopia.com.br/catalogo";
-  const featured = inventoryData.slice(0, 20);
+  const featured = prioritizeInStock(inventoryData).slice(0, 20);
   const collectionJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

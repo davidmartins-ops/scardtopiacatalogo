@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useInventory } from "@/hooks/use-inventory";
+import { prioritizeInStock } from "@/lib/stock";
 import type { InventoryItem } from "@/data/inventory";
 
 const KEY = "recently_viewed_products";
@@ -40,7 +41,8 @@ const RelatedProducts = ({ current }: Props) => {
     visible.filter((i) => i.category === current.category).forEach(add);
     viewed.forEach((id) => add(byId.get(id)));
     visible.filter((i) => i.product_type === current.product_type).forEach(add);
-    return result.slice(0, 8);
+    // Produtos com estoque vêm sempre antes dos esgotados.
+    return prioritizeInStock(result).slice(0, 8);
   }, [inventory, current.id, current.category, current.product_type, viewed]);
 
   if (items.length === 0) return null;
