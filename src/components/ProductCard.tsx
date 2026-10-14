@@ -106,7 +106,7 @@ export const ProductCardSkeleton = ({ isSingle = false }: { isSingle?: boolean }
       <Skeleton className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-28 sm:h-48"} rounded-xl`} />
     </div>
     <div className="p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-2.5">
-      <div className="min-h-[34px] sm:min-h-[42px]">
+      <div className="min-h-[34px] sm:min-h-[45px]">
         <Skeleton className="h-4 w-full rounded" />
         <Skeleton className="h-4 w-3/4 rounded mt-1.5" />
       </div>
@@ -248,7 +248,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           to={isSingle ? `/catalogo/single/${encodeURIComponent(item.id)}` : `/catalogo/drop/${item.id}`}
           onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
           aria-label={`Ver detalhes de ${item.name}`}
-          className="block min-h-[40px] sm:min-h-[42px] -mx-1 px-1 py-0.5 rounded-md touch-manipulation active:bg-primary/10 [-webkit-tap-highlight-color:transparent]"
+          className="block -mx-1 px-1 py-0.5 rounded-md touch-manipulation active:bg-primary/10 [-webkit-tap-highlight-color:transparent]"
         >
           <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] sm:group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[34px] sm:min-h-[45px] md:min-h-[47px]">
             {item.name}
