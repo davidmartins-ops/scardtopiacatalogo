@@ -17,6 +17,16 @@ const pathFor = (i: InventoryItem) =>
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Duas unidades do mesmo produto (foil / non-foil, idiomas ou condições diferentes)
+// compartilham o nome. Normalizamos para tratar as duas como o mesmo item.
+const nameKey = (n: string) =>
+  n
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
 interface Props { current: InventoryItem }
 
 const RelatedProducts = ({ current }: Props) => {
