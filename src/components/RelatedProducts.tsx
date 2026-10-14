@@ -62,21 +62,21 @@ const RelatedProducts = ({ current }: Props) => {
           const isSingle = i.product_type === "single";
           return (
             <Link key={i.id} to={pathFor(i)} className="glass-card glow-hover rounded-xl overflow-hidden flex flex-col">
-              <div className={`bg-muted/20 ${isSingle ? "aspect-[2.5/3.5]" : "aspect-square"} flex items-center justify-center`}>
+              <div className="bg-muted/20 aspect-square overflow-hidden flex items-center justify-center">
                 {i.image_url ? (
-                  <img src={i.image_url} alt={i.name} loading="lazy" className="w-full h-full object-cover" />
+                  <img src={i.image_url} alt={i.name} loading="lazy" className={`w-full h-full ${isSingle ? "object-contain" : "object-cover"}`} />
                 ) : (
                   <Package className="h-8 w-8 text-muted-foreground" />
                 )}
               </div>
               <div className="p-2 space-y-1.5 flex-1 flex flex-col">
-                <p className="text-xs font-semibold text-foreground line-clamp-2">{i.name}</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-xs font-semibold text-foreground leading-[1.3] line-clamp-2 min-h-[2.6em]">{i.name}</p>
+                <div className="flex flex-wrap gap-1 min-h-[20px]">
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-foil/10 text-foil border-foil/30">{i.description}</Badge>
                   {i.language && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{i.language}</Badge>}
                   {i.condition && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{i.condition}</Badge>}
                 </div>
-                <div className="mt-auto space-y-0.5">
+                <div className="space-y-0.5">
                   <p className="text-sm font-bold text-success">R$ {fmt(pix)} <span className="text-[10px] font-medium">PIX</span></p>
                   {pix < i.price && <p className="text-[10px] text-muted-foreground">Cartão: R$ {fmt(i.price)}</p>}
                   <p className={`text-[11px] font-medium ${inStock ? "text-success" : "text-destructive"}`}>
