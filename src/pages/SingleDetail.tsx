@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchScryfallCard, pickBestImageUrl, type ScryfallCardData } from "@/lib/scryfall-cache";
 import ManaCost from "@/components/ManaCost";
 import useSEO from "@/hooks/use-seo";
+import RelatedProducts from "@/components/RelatedProducts";
 
 
 const SingleDetail = () => {
@@ -218,6 +219,9 @@ const SingleDetail = () => {
           <AddToCartButton item={item} />
 
         </div>
+      </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-8">
+        <RelatedProducts current={item} />
       </div>
     </div>
   );

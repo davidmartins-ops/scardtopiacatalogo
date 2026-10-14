@@ -13,6 +13,7 @@ import ProductMedia from "@/components/ProductMedia";
 import AddToCartButton from "@/components/AddToCartButton";
 import { toast } from "sonner";
 import useSEO from "@/hooks/use-seo";
+import RelatedProducts from "@/components/RelatedProducts";
 
 
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
@@ -233,6 +234,8 @@ const DropDetail = () => {
             </div>
           </div>
         )}
+
+        <RelatedProducts current={drop} />
       </div>
     </div>
   );
