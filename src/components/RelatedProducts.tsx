@@ -58,7 +58,7 @@ const RelatedProducts = ({ current }: Props) => {
     visible.filter((i) => i.product_type === current.product_type).forEach(add);
     // Produtos com estoque vêm sempre antes dos esgotados.
     return prioritizeInStock(result).slice(0, 8);
-  }, [inventory, current.id, current.category, current.product_type, viewed]);
+  }, [inventory, current.id, current.name, current.category, current.product_type, viewed]);
 
   if (items.length === 0) return null;
 
