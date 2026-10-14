@@ -279,7 +279,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
 
         {/* Info block - standardized height */}
-        <div className="min-h-[64px] sm:min-h-[110px] flex flex-col justify-start pt-1">
+        <div className="min-h-[80px] sm:min-h-[110px] flex flex-col justify-start pt-1">
           {isOutOfStock ? (
             <div className="flex-1 flex flex-col justify-center">
               <p className="text-[13px] sm:text-[14px] text-muted-foreground font-medium">Indisponível</p>
