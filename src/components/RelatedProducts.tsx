@@ -42,8 +42,13 @@ const RelatedProducts = ({ current }: Props) => {
   }, [current.id]);
 
   const items = useMemo(() => {
+    const currentKey = nameKey(current.name);
     const visible = inventory.filter(
-      (i) => i.id !== current.id && !(i.product_type === "single" && i.quantity <= 0),
+      (i) =>
+        i.id !== current.id &&
+        !(i.product_type === "single" && i.quantity <= 0) &&
+        // Nunca mostrar o item aberto, nem em outro acabamento/idioma/condição.
+        !(nameKey(i.name) === currentKey && (i.product_type ?? "single") === (current.product_type ?? "single")),
     );
     const byId = new Map(visible.map((i) => [i.id, i]));
     const result: InventoryItem[] = [];
