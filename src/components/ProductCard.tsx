@@ -250,7 +250,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           aria-label={`Ver detalhes de ${item.name}`}
           className="block min-h-[40px] sm:min-h-[42px] -mx-1 px-1 py-0.5 rounded-md touch-manipulation active:bg-primary/10 [-webkit-tap-highlight-color:transparent]"
         >
-          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] sm:group-hover:text-primary transition-colors duration-300 line-clamp-2">
+          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] sm:group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[34px] sm:min-h-[45px] md:min-h-[47px]">
             {item.name}
           </h3>
           <span className="sm:hidden mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary">
@@ -330,7 +330,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                   📦 {versionsCount} versões disponíveis
                 </p>
               ) : (
-                <p className="hidden sm:block text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
+                <p className="text-[11px] sm:text-[13px] font-medium text-foreground/70 mt-1">
                   {item.quantity === 1 ? "🔥 Última unidade!" : `📦 ${item.quantity} em estoque`}
                 </p>
               )}
