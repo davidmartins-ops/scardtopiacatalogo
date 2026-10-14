@@ -106,7 +106,7 @@ export const ProductCardSkeleton = ({ isSingle = false }: { isSingle?: boolean }
       <Skeleton className={`w-full ${isSingle ? "aspect-[2.5/3.5]" : "h-28 sm:h-48"} rounded-xl`} />
     </div>
     <div className="p-2 pt-2 sm:p-3 sm:pt-2.5 space-y-2.5">
-      <div className="min-h-[34px] sm:min-h-[42px]">
+      <div className="min-h-[34px] sm:min-h-[45px]">
         <Skeleton className="h-4 w-full rounded" />
         <Skeleton className="h-4 w-3/4 rounded mt-1.5" />
       </div>
@@ -248,9 +248,9 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           to={isSingle ? `/catalogo/single/${encodeURIComponent(item.id)}` : `/catalogo/drop/${item.id}`}
           onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
           aria-label={`Ver detalhes de ${item.name}`}
-          className="block min-h-[40px] sm:min-h-[42px] -mx-1 px-1 py-0.5 rounded-md touch-manipulation active:bg-primary/10 [-webkit-tap-highlight-color:transparent]"
+          className="block -mx-1 px-1 py-0.5 rounded-md touch-manipulation active:bg-primary/10 [-webkit-tap-highlight-color:transparent]"
         >
-          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] sm:group-hover:text-primary transition-colors duration-300 line-clamp-2">
+          <h3 className="font-body font-semibold text-foreground leading-[1.3] text-[13px] sm:text-[17px] md:text-[18px] sm:group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[34px] sm:min-h-[45px] md:min-h-[47px]">
             {item.name}
           </h3>
           <span className="sm:hidden mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary">
@@ -279,7 +279,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
 
 
         {/* Info block - standardized height */}
-        <div className="min-h-[64px] sm:min-h-[110px] flex flex-col justify-start pt-1">
+        <div className="min-h-[80px] sm:min-h-[110px] flex flex-col justify-start pt-1">
           {isOutOfStock ? (
             <div className="flex-1 flex flex-col justify-center">
               <p className="text-[13px] sm:text-[14px] text-muted-foreground font-medium">Indisponível</p>
@@ -330,7 +330,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
                   📦 {versionsCount} versões disponíveis
                 </p>
               ) : (
-                <p className="hidden sm:block text-[12px] sm:text-[13px] font-medium text-foreground/70 mt-1">
+                <p className="text-[11px] sm:text-[13px] font-medium text-foreground/70 mt-1">
                   {item.quantity === 1 ? "🔥 Última unidade!" : `📦 ${item.quantity} em estoque`}
                 </p>
               )}
