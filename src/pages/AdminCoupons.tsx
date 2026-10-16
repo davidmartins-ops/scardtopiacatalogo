@@ -19,6 +19,7 @@ interface Coupon {
   min_purchase: number; allowed_categories: string[]; blocked_categories: string[]; blocked_cpfs: string[]; blocked_emails: string[];
   applies_to_catalog: boolean; applies_to_special_orders: boolean; show_in_catalog: boolean; is_active: boolean; created_at: string;
   applies_to_product_type: "all" | "single" | "drop";
+  max_discount: number | null;
 }
 interface Redemption { id: string; code: string; user_email: string | null; cpf: string | null; order_id: string | null; special_order_id: string | null; discount_amount: number; created_at: string }
 
@@ -27,6 +28,7 @@ const empty = {
   max_uses: "", per_cpf_limit: "1", min_purchase: "0", allowed_categories: "", blocked_categories: "", blocked_cpfs: "", blocked_emails: "",
   applies_to_catalog: true, applies_to_special_orders: true, show_in_catalog: false, is_active: true,
   applies_to_product_type: "all" as "all" | "single" | "drop",
+  max_discount: "",
 };
 type Form = typeof empty;
 
@@ -102,6 +104,7 @@ const AdminCoupons = () => {
       blocked_cpfs: c.blocked_cpfs.join(", "), blocked_emails: c.blocked_emails.join(", "),
       applies_to_catalog: c.applies_to_catalog, applies_to_special_orders: c.applies_to_special_orders, show_in_catalog: c.show_in_catalog, is_active: c.is_active,
       applies_to_product_type: c.applies_to_product_type ?? "all",
+      max_discount: c.max_discount == null ? "" : String(c.max_discount),
     });
     setOpen(true);
   };
@@ -121,6 +124,7 @@ const AdminCoupons = () => {
       blocked_cpfs: list(form.blocked_cpfs), blocked_emails: list(form.blocked_emails),
       applies_to_catalog: form.applies_to_catalog, applies_to_special_orders: form.applies_to_special_orders, show_in_catalog: form.show_in_catalog, is_active: form.is_active,
       applies_to_product_type: form.applies_to_product_type,
+      max_discount: form.max_discount ? Math.max(0, Number(form.max_discount.replace(",", ".")) || 0) : null,
     };
     setSaving(true);
     try {
@@ -194,6 +198,7 @@ const AdminCoupons = () => {
                     {c.starts_at ? ` · de ${new Date(c.starts_at).toLocaleString("pt-BR")}` : ""}
                     {c.expires_at ? ` · até ${new Date(c.expires_at).toLocaleString("pt-BR")}` : ""}
                     {c.min_purchase > 0 ? ` · mínimo ${brl(c.min_purchase)}` : ""}
+                    {c.max_discount != null && c.max_discount > 0 ? ` · teto ${brl(c.max_discount)}` : ""}
                     {` · ${[c.applies_to_catalog && "Loja", c.applies_to_special_orders && "Encomendas"].filter(Boolean).join(" + ")}`}
                     {(c.applies_to_product_type ?? "all") !== "all" && ` · ${c.applies_to_product_type === "drop" ? "Só drops" : "Só singles"}`}
                   </p>
@@ -241,6 +246,7 @@ const AdminCoupons = () => {
               <div><Label>Usos por CPF</Label><Input inputMode="numeric" value={form.per_cpf_limit} onChange={(e) => set("per_cpf_limit", e.target.value.replace(/\D/g, ""))} /></div>
               <div><Label>Compra mínima (R$)</Label><Input inputMode="decimal" value={form.min_purchase} onChange={(e) => set("min_purchase", e.target.value)} /></div>
             </div>
+            <div><Label>Desconto máximo (R$) — vazio = sem limite</Label><Input inputMode="decimal" placeholder="Ex.: 300" value={form.max_discount} onChange={(e) => set("max_discount", e.target.value)} /></div>
             <div><Label>Vale para</Label>
               <select className="h-10 w-full rounded-md border border-input bg-background px-3" value={form.applies_to_product_type} onChange={(e) => set("applies_to_product_type", e.target.value as "all" | "single" | "drop")}>
                 <option value="all">Tudo (drops e singles)</option>
