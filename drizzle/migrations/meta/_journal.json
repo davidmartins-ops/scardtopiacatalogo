@@ -64,6 +64,13 @@
       "when": 1792168672613,
       "tag": "0008_coupon_max_discount",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792168725849,
+      "tag": "0009_showcase_coupons_max_discount",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,18 @@
+DROP FUNCTION public.get_showcase_coupons();
+CREATE FUNCTION public.get_showcase_coupons()
+ RETURNS TABLE(code text, description text, discount_type text, discount_value numeric, expires_at timestamp with time zone, allowed_categories text[], blocked_categories text[], max_discount numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT c.code, c.description, c.discount_type, c.discount_value, c.expires_at,
+         c.allowed_categories, c.blocked_categories, c.max_discount
+  FROM public.coupons c
+  WHERE c.is_active AND c.show_in_catalog
+    AND (c.starts_at IS NULL OR now() >= c.starts_at)
+    AND (c.expires_at IS NULL OR now() <= c.expires_at)
+    AND (c.max_uses IS NULL OR c.uses_count < c.max_uses)
+  ORDER BY c.created_at DESC;
+END $function$;

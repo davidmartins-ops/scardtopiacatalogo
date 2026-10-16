@@ -2066,6 +2066,7 @@ export type Database = {
           discount_type: string
           discount_value: number
           expires_at: string
+          max_discount: number
         }[]
       }
       has_role: {
