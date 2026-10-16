@@ -304,6 +304,7 @@ const ItemGrid = ({
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="Non-Foil">Non-Foil</SelectItem>
               <SelectItem value="Foil">Foil</SelectItem>
+              <SelectItem value="Foil e Non-Foil">Foil e Non-Foil</SelectItem>
               <SelectItem value="Surge Foil">Surge Foil</SelectItem>
               <SelectItem value="Rainbow Foil">Rainbow Foil</SelectItem>
               <SelectItem value="Holo Foil">Holo Foil</SelectItem>
