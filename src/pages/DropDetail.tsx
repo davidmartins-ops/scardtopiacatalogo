@@ -19,6 +19,7 @@ import RelatedProducts from "@/components/RelatedProducts";
 const descriptionConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Non-Foil": { label: "Non-Foil", icon: Circle, className: "bg-non-foil/15 text-non-foil border-non-foil/30" },
+  "Foil e Non-Foil": { label: "Foil e Non-Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
   "Surge Foil": { label: "Surge Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },
   "Rainbow Foil": { label: "Rainbow Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30" },
   "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30" },

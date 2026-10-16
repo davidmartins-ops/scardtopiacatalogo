@@ -27,6 +27,7 @@ import MultiImageUpload, { type UploadedImage } from "@/components/MultiImageUpl
 const descriptionStyles: Record<string, string> = {
   "Foil": "bg-foil/15 text-foil border-foil/30",
   "Non-Foil": "bg-non-foil/15 text-non-foil border-non-foil/30",
+  "Foil e Non-Foil": "bg-rainbow/15 text-rainbow border-rainbow/30",
   "Rainbow Foil": "bg-rainbow/15 text-rainbow border-rainbow/30",
   "Holo Foil": "bg-foil/15 text-foil border-foil/30",
   "Galaxy Foil": "bg-rainbow/15 text-rainbow border-rainbow/30",
@@ -54,6 +55,7 @@ const CONDITIONS = [
 const FOIL_TYPES = [
   { value: "Foil", label: "Foil" },
   { value: "Non-Foil", label: "Non-Foil" },
+  { value: "Foil e Non-Foil", label: "Foil e Non-Foil" },
   { value: "Surge Foil", label: "Surge Foil" },
   { value: "Rainbow Foil", label: "Rainbow Foil" },
   { value: "Holo Foil", label: "Holo Foil" },
@@ -397,7 +399,7 @@ const InventoryTable = ({ data }: Props) => {
     </th>
   );
 
-  const typeFilters = ["all", "Foil", "Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil", "Silver Scroll"];
+  const typeFilters = ["all", "Foil", "Non-Foil", "Foil e Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil", "Silver Scroll"];
 
   return (
     <>

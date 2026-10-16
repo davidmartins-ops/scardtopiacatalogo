@@ -16,6 +16,7 @@ export interface FinishMeta {
 export const FINISH_META: Record<string, FinishMeta> = {
   Foil: { label: "Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30", textClass: "text-foil" },
   "Non-Foil": { label: "Non-Foil", icon: Circle, className: "bg-non-foil/15 text-non-foil border-non-foil/30", textClass: "text-non-foil" },
+  "Foil e Non-Foil": { label: "Foil e Non-Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30", textClass: "text-rainbow" },
   "Surge Foil": { label: "Surge Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30", textClass: "text-foil" },
   "Rainbow Foil": { label: "Rainbow Foil", icon: Rainbow, className: "bg-rainbow/15 text-rainbow border-rainbow/30", textClass: "text-rainbow" },
   "Holo Foil": { label: "Holo Foil", icon: Sparkles, className: "bg-foil/15 text-foil border-foil/30", textClass: "text-foil" },

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-const DESCRIPTIONS = ["Foil", "Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil", "Silver Scroll"] as const;
+const DESCRIPTIONS = ["Foil", "Non-Foil", "Foil e Non-Foil", "Surge Foil", "Rainbow Foil", "Holo Foil", "Galaxy Foil", "Confetti Foil", "Etched Foil", "Silver Scroll"] as const;
 const LANGUAGES = [
   { value: "PT", label: "Português" },
   { value: "EN", label: "English" },
@@ -142,7 +142,7 @@ const AddItemDialog = () => {
     const set = parts.set.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
     const num = parts.num.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (!set || !num) return "";
-    const foilTag = description === "Non-Foil" ? "NF" : "F";
+    const foilTag = description === "Non-Foil" ? "NF" : description === "Foil e Non-Foil" ? "FNF" : "F";
     return `${set}${num}${language}${foilTag}${condition}`;
   };
 
