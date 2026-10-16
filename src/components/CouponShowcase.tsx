@@ -29,7 +29,7 @@ const CouponShowcase = () => {
               disabled={active}
               onClick={() => {
                 if (coupon && coupon.code !== c.code) toast.info(`Cupom ${coupon.code} substituído — cupons não são acumulativos.`);
-                setCoupon({ code: c.code, discount_type: c.discount_type, discount_value: Number(c.discount_value), allowed_categories: c.allowed_categories ?? [], blocked_categories: c.blocked_categories ?? [], description: c.description, expires_at: c.expires_at });
+                setCoupon({ code: c.code, discount_type: c.discount_type, discount_value: Number(c.discount_value), allowed_categories: c.allowed_categories ?? [], blocked_categories: c.blocked_categories ?? [], max_discount: c.max_discount ?? null, description: c.description, expires_at: c.expires_at });
                 toast.success(`Cupom ${c.code} aplicado! Os preços com desconto aparecem nos produtos.`);
               }}
             >

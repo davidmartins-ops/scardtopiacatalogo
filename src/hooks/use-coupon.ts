@@ -9,6 +9,7 @@ export interface AppliedCoupon {
   allowed_categories: string[];
   blocked_categories: string[];
   applies_to_product_type?: "all" | "single" | "drop";
+  max_discount?: number | null;
   description?: string | null;
   expires_at?: string | null;
 }
@@ -72,13 +73,18 @@ export const computeCouponDiscount = (c: AppliedCoupon | null, lines: CouponLine
   if (!c) return 0;
   const eligible = lines.filter((l) => isCategoryEligible(c, l.category, l.product_type)).reduce((s, l) => s + l.amount, 0);
   if (eligible <= 0) return 0;
-  const d = c.discount_type === "percent" ? (eligible * Math.min(c.discount_value, 100)) / 100 : Math.min(c.discount_value, eligible);
+  let d = c.discount_type === "percent" ? (eligible * Math.min(c.discount_value, 100)) / 100 : Math.min(c.discount_value, eligible);
+  if (c.max_discount != null && c.max_discount > 0) d = Math.min(d, c.max_discount);
   return Math.round(d * 100) / 100;
 };
 
 export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category?: string | null, productType?: string | null) => {
   if (!c || !isCategoryEligible(c, category, productType)) return null;
-  if (c.discount_type === "percent") return Math.round(price * (1 - Math.min(c.discount_value, 100) / 100) * 100) / 100;
+  if (c.discount_type === "percent") {
+    let d = (price * Math.min(c.discount_value, 100)) / 100;
+    if (c.max_discount != null && c.max_discount > 0) d = Math.min(d, c.max_discount);
+    return Math.round((price - d) * 100) / 100;
+  }
   return null; // valor fixo vale para o pedido inteiro, não por item
 };
 
@@ -100,6 +106,7 @@ export interface ShowcaseCoupon {
   expires_at: string | null;
   allowed_categories: string[];
   blocked_categories: string[];
+  max_discount?: number | null;
 }
 
 export function useShowcaseCoupons() {
