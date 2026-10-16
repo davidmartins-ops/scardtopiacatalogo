@@ -48,6 +48,7 @@ const CONDITIONS = [
   { value: "MP", label: "MP" },
   { value: "HP", label: "HP" },
   { value: "D", label: "D" },
+  { value: "LACRADO", label: "Lacrado" },
 ];
 
 const FOIL_TYPES = [
@@ -679,7 +680,7 @@ const InventoryTable = ({ data }: Props) => {
                           <div className="flex flex-col gap-1">
                             <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Qual.</span>
                             <Select value={editForm.condition} onValueChange={(v) => setEditForm((p) => ({ ...p, condition: v }))}>
-                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-16"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs bg-muted border-border w-24"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {CONDITIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                               </SelectContent>

@@ -22,6 +22,7 @@ const LANGUAGES = [
   { value: "JP", label: "日本語" },
 ];
 const CONDITIONS = [
+  { value: "LACRADO", label: "Lacrado" },
   { value: "NM", label: "NM - Near Mint" },
   { value: "SP", label: "SP - Slightly Played" },
   { value: "MP", label: "MP - Moderately Played" },
