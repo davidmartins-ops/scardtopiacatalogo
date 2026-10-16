@@ -374,7 +374,7 @@ const AddItemDialog = () => {
           {/* Multi image upload — primeira imagem vira principal, demais formam a galeria */}
           <MultiImageUpload
             label="Imagens do Produto (1ª = principal, demais = galeria)"
-            maxImages={10}
+            maxImages={35}
             value={images}
             onUploaded={(image) => setImages((prev) => [...prev, image])}
             onRemove={(image) => setImages((prev) => prev.filter((i) => i.id !== image.id))}
