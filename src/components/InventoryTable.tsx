@@ -1032,7 +1032,7 @@ const InventoryTable = ({ data }: Props) => {
           </DialogHeader>
           <MultiImageUpload
             label="Imagens da Galeria"
-            maxImages={20}
+            maxImages={35}
             value={singlesImages.map((img) => ({ id: img.id, url: img.image_url, alt: img.caption || "" }))}
             onUploaded={async (image) => {
               if (!singlesDialogItem) return;
