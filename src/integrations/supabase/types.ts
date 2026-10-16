@@ -492,6 +492,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean
+          max_discount: number | null
           max_uses: number | null
           min_purchase: number
           per_cpf_limit: number
@@ -517,6 +518,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          max_discount?: number | null
           max_uses?: number | null
           min_purchase?: number
           per_cpf_limit?: number
@@ -542,6 +544,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          max_discount?: number | null
           max_uses?: number | null
           min_purchase?: number
           per_cpf_limit?: number

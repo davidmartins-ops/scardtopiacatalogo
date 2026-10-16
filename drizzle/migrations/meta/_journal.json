@@ -57,6 +57,13 @@
       "when": 1791832506488,
       "tag": "0007_coupon_product_type_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792168672613,
+      "tag": "0008_coupon_max_discount",
+      "breakpoints": true
     }
   ]
 }
