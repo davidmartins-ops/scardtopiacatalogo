@@ -16,11 +16,16 @@ export const useInventory = () => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 12_000);
       signal?.addEventListener("abort", () => ctrl.abort());
-      const { data, error } = await supabase
-        .from("inventory")
-        .select("id, name, description, price, price_pix, quantity, category, discount, image_url, product_type, language, condition, status, availability, drop_description")
-        .abortSignal(ctrl.signal)
-        .finally(() => clearTimeout(timer));
+      let res;
+      try {
+        res = await supabase
+          .from("inventory")
+          .select("id, name, description, price, price_pix, quantity, category, discount, image_url, product_type, language, condition, status, availability, drop_description")
+          .abortSignal(ctrl.signal);
+      } finally {
+        clearTimeout(timer);
+      }
+      const { data, error } = res;
 
       if (error) {
         console.error("[useInventory] Supabase error:", error);
