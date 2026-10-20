@@ -9,10 +9,23 @@ export const useInventory = () => {
     staleTime: 3 * 60_000,
     gcTime: 10 * 60_000,
     refetchOnWindowFocus: false,
-    queryFn: async (): Promise<InventoryItem[]> => {
-      const { data, error } = await supabase
-        .from("inventory")
-        .select("id, name, description, price, price_pix, quantity, category, discount, image_url, product_type, language, condition, status, availability, drop_description");
+    // A hung request would leave the catalog on skeletons forever: abort after 12s and retry.
+    retry: 4,
+    retryDelay: (n) => Math.min(1000 * 2 ** n, 8000),
+    queryFn: async ({ signal }): Promise<InventoryItem[]> => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12_000);
+      signal?.addEventListener("abort", () => ctrl.abort());
+      let res;
+      try {
+        res = await supabase
+          .from("inventory")
+          .select("id, name, description, price, price_pix, quantity, category, discount, image_url, product_type, language, condition, status, availability, drop_description")
+          .abortSignal(ctrl.signal);
+      } finally {
+        clearTimeout(timer);
+      }
+      const { data, error } = res;
 
       if (error) {
         console.error("[useInventory] Supabase error:", error);
