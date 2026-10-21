@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +10,26 @@ const CookieBanner = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [analytics, setAnalytics] = useState(true);
   const [marketing, setMarketing] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  // Reserve the banner's actual height so even the final footer links can
+  // scroll above it. This also handles the taller preferences view.
+  useEffect(() => {
+    const banner = bannerRef.current;
+    if (!open || !banner) return;
+    const update = () => {
+      document.body.style.setProperty("--cookie-banner-height", `${banner.getBoundingClientRect().height}px`);
+    };
+    document.body.dataset.cookieBannerOpen = "true";
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      delete document.body.dataset.cookieBannerOpen;
+      document.body.style.removeProperty("--cookie-banner-height");
+    };
+  }, [open]);
 
   useEffect(() => {
     const stored = getStoredConsent();
@@ -62,10 +82,11 @@ const CookieBanner = () => {
 
   return (
     <div
+      ref={bannerRef}
       role="dialog"
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-desc"
-      className="fixed bottom-0 inset-x-0 z-[100] p-3 sm:p-4 animate-fade-in-up"
+      className="fixed bottom-0 inset-x-0 z-[100] max-h-[100dvh] overflow-y-auto p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fade-in-up"
     >
       <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-background/95 backdrop-blur-md shadow-2xl shadow-primary/10 p-5 sm:p-6">
         <div className="flex items-start gap-3 sm:gap-4">
