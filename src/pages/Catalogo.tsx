@@ -653,17 +653,6 @@ const Catalogo = () => {
   const cartLoadedFromDb = useRef(false);
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [fabsVisible, setFabsVisible] = useState(true);
-  const bottomSentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const sentinel = bottomSentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(([entry]) => { setFabsVisible(!entry.isIntersecting); }, { threshold: 0 });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, []);
-
   // Restore cart from localStorage (persisted across page navigations/login redirects)
   const cartHydrated = useRef(false);
   useEffect(() => {
@@ -983,10 +972,8 @@ const Catalogo = () => {
         </Tabs>
       </div>
 
-      <div ref={bottomSentinelRef} className="h-1 w-full" />
-
       {/* Social FABs */}
-      <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+      <div data-floating-shortcut className="fixed bottom-6 left-6 z-40 flex flex-col gap-3 transition-all duration-500">
         <a href="https://www.instagram.com/scardtopia/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-accent/50 hover:shadow-accent/10 hover:shadow-xl transition-all duration-300">
           <Instagram className="h-5 w-5 text-accent" /> Instagram
         </a>
@@ -995,7 +982,7 @@ const Catalogo = () => {
         </a>
       </div>
 
-      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={handleOrderPlaced} fabsVisible={fabsVisible} />
+      <ShoppingCart items={cartItems} onAdd={addToCart} onRemove={removeFromCart} onClear={clearCart} onUpdateQty={updateCartQty} onOrderPlaced={handleOrderPlaced} />
     </div>
   );
 };
