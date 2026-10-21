@@ -246,13 +246,18 @@ const ItemGrid = ({
 
   // Categoria: barra de rolagem horizontal — avisa nas bordas quando há mais opções
   const catScrollRef = useRef<HTMLDivElement>(null);
-  const [catEdges, setCatEdges] = useState({ start: true, end: false });
+  const [catEdges, setCatEdges] = useState({ start: true, end: false, thumb: 100, shift: 0 });
   const syncCatEdges = useCallback(() => {
     const el = catScrollRef.current;
     if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const visible = el.scrollWidth > 0 ? Math.min(1, el.clientWidth / el.scrollWidth) : 1;
+    const thumb = Math.max(12, Math.round(visible * 100));
     setCatEdges({
       start: el.scrollLeft <= 1,
-      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+      end: max <= 1 || el.scrollLeft >= max - 1,
+      thumb,
+      shift: Math.round((max > 0 ? el.scrollLeft / max : 0) * (100 - thumb)),
     });
   }, []);
   useEffect(() => {
