@@ -174,30 +174,31 @@
   .animate-badge-glow { animation: badge-glow 2s ease-in-out infinite; }
   .animate-badge-glow-primary { animation: badge-glow-primary 2s ease-in-out infinite; }
 
-  /* Horizontal chip scroller: one row, swipe sideways, always-visible thin bar */
+  /* Horizontal chip scroller: one row, swipe sideways, with its own visible bar */
   .chip-scroll-x {
     @apply flex flex-nowrap items-center gap-1.5 overflow-x-auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     scroll-padding: 8px;
-    padding-bottom: 8px;
+    padding-bottom: 2px;
+  }
+  .chip-scroll-x::-webkit-scrollbar {
+    display: none;
   }
   .chip-scroll-x > * {
     flex: 0 0 auto;
   }
-  .chip-scroll-x::-webkit-scrollbar {
-    height: 6px;
+
+  /* The visible bar: thin track + gold thumb that follows the slide */
+  .chip-scroll-bar {
+    @apply mt-1 h-[3px] w-full rounded-full;
+    background: hsl(var(--muted) / 0.85);
   }
-  .chip-scroll-x::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.75);
-    border-radius: 9999px;
-  }
-  .chip-scroll-x::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.6);
-    border-radius: 9999px;
-  }
-  .chip-scroll-x::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.85);
+  .chip-scroll-bar > span {
+    @apply block h-full rounded-full;
+    background: hsl(var(--primary) / 0.75);
   }
 
   /* Edge fades that hint there is more to slide (hidden at each end) */
