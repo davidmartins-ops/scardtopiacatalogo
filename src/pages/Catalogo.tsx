@@ -244,6 +244,23 @@ const ItemGrid = ({
     return Array.from(cats).sort((a, b) => a.localeCompare(b));
   }, [items]);
 
+  // Categoria: barra de rolagem horizontal — avisa nas bordas quando há mais opções
+  const catScrollRef = useRef<HTMLDivElement>(null);
+  const [catEdges, setCatEdges] = useState({ start: true, end: false });
+  const syncCatEdges = useCallback(() => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    setCatEdges({
+      start: el.scrollLeft <= 1,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+    });
+  }, []);
+  useEffect(() => {
+    syncCatEdges();
+    const t = setTimeout(syncCatEdges, 300);
+    return () => clearTimeout(t);
+  }, [availableCategories, categoryFilter, syncCatEdges]);
+
   // For singles: group by normalized name so each card name appears once.
   // versionsByName maps name → all matching filtered items.
   const versionsByName = useMemo(() => {
