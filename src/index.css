@@ -207,7 +207,7 @@
     content: "";
     position: absolute;
     top: 0;
-    bottom: 8px;
+    bottom: 9px;
     width: 26px;
     pointer-events: none;
     z-index: 1;
