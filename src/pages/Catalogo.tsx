@@ -333,10 +333,10 @@ const ItemGrid = ({
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setFoilFilter("all"); setSetFilter("all"); }}>Limpar</button>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Categoria:</span>
-          <div className="flex items-center gap-1.5 flex-wrap max-h-[40vh] overflow-y-auto">
+          <div className="chip-scroll-x min-w-0 flex-1" role="group" aria-label="Categorias disponíveis" tabIndex={0}>
             {availableCategories.map((cat) => {
               const count = (items ?? []).filter((i) => i.category === cat).length;
               const active = categoryFilter === cat;
@@ -346,7 +346,7 @@ const ItemGrid = ({
                   type="button"
                   onClick={() => setCategoryFilter(active ? "all" : cat)}
                   aria-pressed={active}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+                  className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
                 >
                   {cat} ({count})
                 </button>
@@ -354,7 +354,7 @@ const ItemGrid = ({
             })}
           </div>
           {categoryFilter !== "all" && (
-            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setCategoryFilter("all")}>Limpar</button>
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold shrink-0" onClick={() => setCategoryFilter("all")}>Limpar</button>
           )}
         </div>
         {isSingles && (
