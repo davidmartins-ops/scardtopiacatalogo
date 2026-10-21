@@ -707,7 +707,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     <>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <button className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-primary/50 hover:shadow-primary/10 hover:shadow-xl transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+          <button data-floating-shortcut className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 glass-card rounded-full px-5 py-3 text-sm font-medium text-foreground shadow-lg hover:border-primary/50 hover:shadow-primary/10 hover:shadow-xl transition-all duration-500 ${fabsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
             <CartIcon className="h-5 w-5 text-primary" />
             Carrinho
             {totalItems > 0 && (

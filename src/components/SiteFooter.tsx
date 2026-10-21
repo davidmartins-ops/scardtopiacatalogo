@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Clock, Instagram, MessageCircle, ShieldCheck } from "lucide-react";
 
@@ -15,6 +15,7 @@ const ORG_JSONLD_ID = "site-footer-org-jsonld";
 
 const SiteFooter = () => {
   const year = new Date().getFullYear();
+  const footerRef = useRef<HTMLElement>(null);
 
   const openCookieSettings = () => {
     // Telemetria discreta: confirma intenção e estado atual de consentimento preservado
@@ -32,14 +33,35 @@ const SiteFooter = () => {
     window.dispatchEvent(new CustomEvent("open-cookie-settings"));
   };
 
-  // Hide floating social buttons when footer is mounted
+  // Keep shortcuts hidden throughout the footer, not only while a tiny
+  // sentinel intersects the viewport. Recheck when catalog content resizes.
   useEffect(() => {
-    if (typeof document === "undefined" || !document.body) return;
-    document.body.dataset.footerVisible = "true";
+    const footer = footerRef.current;
+    if (!footer) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      document.body.dataset.footerVisible = String(
+        footer.getBoundingClientRect().top <= window.innerHeight + 128,
+      );
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(document.body);
+    observer.observe(footer);
     return () => {
-      if (document.body) {
-        delete document.body.dataset.footerVisible;
-      }
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      observer.disconnect();
+      delete document.body.dataset.footerVisible;
     };
   }, []);
 
@@ -114,6 +136,7 @@ const SiteFooter = () => {
 
   return (
     <footer
+      ref={footerRef}
       role="contentinfo"
       data-testid="site-footer"
       aria-label="Rodapé do site"

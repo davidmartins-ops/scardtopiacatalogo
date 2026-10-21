@@ -84,6 +84,14 @@
 }
 
 @layer components {
+  /* Shared by every floating social/cart shortcut, including future pages. */
+  body[data-footer-visible="true"] [data-floating-shortcut] {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+  }
+
   /* Skip link — WCAG 2.4.1 Bypass Blocks */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200]
