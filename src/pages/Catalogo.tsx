@@ -376,6 +376,11 @@ const ItemGrid = ({
                 );
               })}
             </div>
+            {catEdges.thumb < 100 && (
+              <div className="chip-scroll-bar" aria-hidden="true">
+                <span style={{ width: `${catEdges.thumb}%`, marginLeft: `${catEdges.shift}%` }} />
+              </div>
+            )}
           </div>
           {categoryFilter !== "all" && (
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold shrink-0" onClick={() => setCategoryFilter("all")}>Limpar</button>
