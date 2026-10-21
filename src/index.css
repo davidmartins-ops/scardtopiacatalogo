@@ -193,7 +193,7 @@
 
   /* The visible bar: thin track + gold thumb that follows the slide */
   .chip-scroll-bar {
-    @apply mt-1 h-[3px] w-full rounded-full;
+    @apply mt-1.5 h-[3px] w-full rounded-full;
     background: hsl(var(--muted) / 0.85);
   }
   .chip-scroll-bar > span {
