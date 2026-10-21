@@ -127,6 +127,7 @@ const ItemGrid = ({
   const [setFilter, setSetFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "launch" | "pre_sale" | "none">("all");
   const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "pronta_entrega" | "encomenda">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { sets: allSets } = useMtgSets();
 
   useEffect(() => {
@@ -207,6 +208,7 @@ const ItemGrid = ({
       const matchesPrice = (minP === null || finalPrice >= minP) && (maxP === null || finalPrice <= maxP);
       const matchesFoil = foilFilter === "all" || item.description === foilFilter;
       const matchesSet = setFilter === "all" || (isSingles && extractSetCode(item.id) === setFilter);
+      const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
       const matchesStatus = statusFilter === "all" || (item.status ?? "none") === statusFilter;
       const matchesAvailability = availabilityFilter === "all" || (item.quantity > 0 && ((item as any).availability ?? "pronta_entrega") === availabilityFilter);
       const matchesColor = selectedColors.length === 0 || !isSingles || (() => {
@@ -217,9 +219,9 @@ const ItemGrid = ({
         if (itemColors.length !== activeColors.length) return false;
         return activeColors.every((color, index) => itemColors[index] === color);
       })();
-      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesStatus && matchesAvailability;
+      return matchesSearch && matchesPrice && matchesColor && matchesFoil && matchesSet && matchesCategory && matchesStatus && matchesAvailability;
     });
-  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter, availabilityFilter]);
+  }, [items, search, priceMin, priceMax, selectedColors, isSingles, manaProfiles, foilFilter, setFilter, statusFilter, availabilityFilter, categoryFilter]);
 
   // Sets present in current items (only for singles)
   const availableSets = useMemo(() => {
@@ -234,6 +236,13 @@ const ItemGrid = ({
       .map((code) => ({ code, name: nameByCode.get(code) ?? code.toUpperCase() }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [items, isSingles, allSets]);
+
+  // Categorias presentes nos itens atuais (drops e singles)
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>();
+    (items ?? []).forEach((item) => { if (item.category) cats.add(item.category); });
+    return Array.from(cats).sort((a, b) => a.localeCompare(b));
+  }, [items]);
 
   // For singles: group by normalized name so each card name appears once.
   // versionsByName maps name → all matching filtered items.
@@ -322,6 +331,30 @@ const ItemGrid = ({
           )}
           {(foilFilter !== "all" || setFilter !== "all") && (
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setFoilFilter("all"); setSetFilter("all"); }}>Limpar</button>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Categoria:</span>
+          <div className="flex items-center gap-1.5 flex-wrap max-h-[40vh] overflow-y-auto">
+            {availableCategories.map((cat) => {
+              const count = (items ?? []).filter((i) => i.category === cat).length;
+              const active = categoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategoryFilter(active ? "all" : cat)}
+                  aria-pressed={active}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+                >
+                  {cat} ({count})
+                </button>
+              );
+            })}
+          </div>
+          {categoryFilter !== "all" && (
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setCategoryFilter("all")}>Limpar</button>
           )}
         </div>
         {isSingles && (

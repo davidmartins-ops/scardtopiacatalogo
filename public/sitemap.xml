@@ -451,6 +451,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMJMLMENFNM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/AMAMJMEJENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -531,17 +536,17 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECN6UBMENFNFLACRADO</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECJRXZKENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SLD20ENFNM</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMJMLMENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -606,7 +611,27 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECN0LBFENNFLACRADO</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECN0LGYENFLACRADO</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMGDLPENFNM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECN0LLRENNFLACRADO</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECN0LO4ENFLACRADO</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
