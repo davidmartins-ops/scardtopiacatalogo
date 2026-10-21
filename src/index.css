@@ -174,15 +174,13 @@
   .animate-badge-glow { animation: badge-glow 2s ease-in-out infinite; }
   .animate-badge-glow-primary { animation: badge-glow-primary 2s ease-in-out infinite; }
 
-  /* Horizontal chip scroller: one row, swipe sideways, thin always-visible bar */
+  /* Horizontal chip scroller: one row, swipe sideways, always-visible thin bar */
   .chip-scroll-x {
     @apply flex flex-nowrap items-center gap-1.5 overflow-x-auto;
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.5) hsl(var(--muted) / 0.7);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     scroll-padding: 8px;
-    padding-bottom: 7px;
+    padding-bottom: 8px;
   }
   .chip-scroll-x > * {
     flex: 0 0 auto;
@@ -191,15 +189,40 @@
     height: 6px;
   }
   .chip-scroll-x::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.7);
+    background: hsl(var(--muted) / 0.75);
     border-radius: 9999px;
   }
   .chip-scroll-x::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.5);
+    background: hsl(var(--primary) / 0.6);
     border-radius: 9999px;
   }
   .chip-scroll-x::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.75);
+    background: hsl(var(--primary) / 0.85);
+  }
+
+  /* Edge fades that hint there is more to slide (hidden at each end) */
+  .chip-scroll-wrap::before,
+  .chip-scroll-wrap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 8px;
+    width: 26px;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 200ms ease;
+  }
+  .chip-scroll-wrap::before {
+    left: 0;
+    background: linear-gradient(90deg, hsl(var(--background) / 0.95), transparent);
+  }
+  .chip-scroll-wrap::after {
+    right: 0;
+    background: linear-gradient(270deg, hsl(var(--background) / 0.95), transparent);
+  }
+  .chip-scroll-wrap[data-at-start="true"]::before,
+  .chip-scroll-wrap[data-at-end="true"]::after {
+    opacity: 0;
   }
 }
 
