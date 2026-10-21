@@ -19,7 +19,7 @@ const Sobre = () => {
         "Loja brasileira de Magic: The Gathering especializada em Secret Lair Drops, singles e acessórios para colecionadores.",
       email: "spencerscardtopia@gmail.com",
       sameAs: [
-        "https://instagram.com/spencerscardtopia",
+        "https://www.instagram.com/scardtopia/",
         "https://wa.me/5511947154555",
       ],
       contactPoint: {
