@@ -336,23 +336,15 @@ const ItemGrid = ({
         <div className="flex items-center gap-2 flex-wrap">
           <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Categoria:</span>
-          <div className="flex items-center gap-1.5 flex-wrap max-h-[40vh] overflow-y-auto">
-            {availableCategories.map((cat) => {
-              const count = (items ?? []).filter((i) => i.category === cat).length;
-              const active = categoryFilter === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategoryFilter(active ? "all" : cat)}
-                  aria-pressed={active}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
-                >
-                  {cat} ({count})
-                </button>
-              );
-            })}
-          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="h-8 text-xs bg-muted/30 border-border/50 max-w-[250px]" aria-label="Filtrar por categoria"><SelectValue placeholder="Todas" /></SelectTrigger>
+            <SelectContent className="max-h-60 z-50 bg-popover">
+              <SelectItem value="all">Todas</SelectItem>
+              {availableCategories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat} ({(items ?? []).filter((i) => i.category === cat).length})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {categoryFilter !== "all" && (
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setCategoryFilter("all")}>Limpar</button>
           )}
