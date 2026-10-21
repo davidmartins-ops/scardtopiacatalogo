@@ -244,6 +244,28 @@ const ItemGrid = ({
     return Array.from(cats).sort((a, b) => a.localeCompare(b));
   }, [items]);
 
+  // Categoria: barra de rolagem horizontal — avisa nas bordas quando há mais opções
+  const catScrollRef = useRef<HTMLDivElement>(null);
+  const [catEdges, setCatEdges] = useState({ start: true, end: false, thumb: 100, shift: 0 });
+  const syncCatEdges = useCallback(() => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const visible = el.scrollWidth > 0 ? Math.min(1, el.clientWidth / el.scrollWidth) : 1;
+    const thumb = Math.max(12, Math.round(visible * 100));
+    setCatEdges({
+      start: el.scrollLeft <= 1,
+      end: max <= 1 || el.scrollLeft >= max - 1,
+      thumb,
+      shift: Math.round((max > 0 ? el.scrollLeft / max : 0) * (100 - thumb)),
+    });
+  }, []);
+  useEffect(() => {
+    syncCatEdges();
+    const t = setTimeout(syncCatEdges, 300);
+    return () => clearTimeout(t);
+  }, [availableCategories, categoryFilter, syncCatEdges]);
+
   // For singles: group by normalized name so each card name appears once.
   // versionsByName maps name → all matching filtered items.
   const versionsByName = useMemo(() => {
@@ -333,28 +355,35 @@ const ItemGrid = ({
             <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => { setFoilFilter("all"); setSetFilter("all"); }}>Limpar</button>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground font-medium shrink-0">Categoria:</span>
-          <div className="flex items-center gap-1.5 flex-wrap max-h-[40vh] overflow-y-auto">
-            {availableCategories.map((cat) => {
-              const count = (items ?? []).filter((i) => i.category === cat).length;
-              const active = categoryFilter === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategoryFilter(active ? "all" : cat)}
-                  aria-pressed={active}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
-                >
-                  {cat} ({count})
-                </button>
-              );
-            })}
+          <div className="chip-scroll-wrap relative min-w-0 flex-1" data-at-start={catEdges.start ? "true" : "false"} data-at-end={catEdges.end ? "true" : "false"}>
+            <div ref={catScrollRef} onScroll={syncCatEdges} className="chip-scroll-x" role="group" aria-label="Categorias disponíveis" tabIndex={0}>
+              {availableCategories.map((cat) => {
+                const count = (items ?? []).filter((i) => i.category === cat).length;
+                const active = categoryFilter === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategoryFilter(active ? "all" : cat)}
+                    aria-pressed={active}
+                    className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border"}`}
+                  >
+                    {cat} ({count})
+                  </button>
+                );
+              })}
+            </div>
+            {catEdges.thumb < 100 && (
+              <div className="chip-scroll-bar" aria-hidden="true">
+                <span style={{ width: `${catEdges.thumb}%`, marginLeft: `${catEdges.shift}%` }} />
+              </div>
+            )}
           </div>
           {categoryFilter !== "all" && (
-            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setCategoryFilter("all")}>Limpar</button>
+            <button className="text-xs text-primary hover:text-primary/80 transition-colors font-semibold shrink-0" onClick={() => setCategoryFilter("all")}>Limpar</button>
           )}
         </div>
         {isSingles && (
