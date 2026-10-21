@@ -302,7 +302,7 @@ const sections: Section[] = [
               </li>
               <li>
                 <a
-                  href="https://instagram.com/spencerscardtopia"
+                  href="https://www.instagram.com/scardtopia/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline underline-offset-2 text-primary hover:opacity-80"
