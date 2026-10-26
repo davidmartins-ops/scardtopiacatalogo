@@ -40,6 +40,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { resizedImageUrl } from "@/lib/image-sources";
 import logo from "@/assets/logo.png";
 import { useActiveBanners } from "@/hooks/use-banners";
 import { useInventory } from "@/hooks/use-inventory";
