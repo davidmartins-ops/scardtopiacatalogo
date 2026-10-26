@@ -17,13 +17,16 @@ interface ImageZoomProps {
   onError?: () => void;
   /** Optional list of images to navigate between while the zoom is open. */
   gallery?: ZoomGalleryImage[];
+  /** Lighter URL used only for the small inline preview; the zoom still opens `src`. */
+  previewSrc?: string;
 }
 
-const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, onError, gallery }: ImageZoomProps) => {
+const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, onError, gallery, previewSrc }: ImageZoomProps) => {
   const [open, setOpen] = useState(false);
   const [viewIndex, setViewIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
-  const variants = buildImageVariants(src);
+  const displaySrc = previewSrc ?? src;
+  const variants = buildImageVariants(displaySrc);
 
   const images: ZoomGalleryImage[] =
     gallery && gallery.length > 1 ? gallery : [{ src, alt }];
@@ -75,7 +78,7 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, 
           <source key={v.type} type={v.type} srcSet={v.src} />
         ))}
         <img
-          src={src}
+          src={displaySrc}
           alt={alt}
           className={className}
           loading="lazy"
