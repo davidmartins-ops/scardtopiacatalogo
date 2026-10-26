@@ -643,7 +643,14 @@ const PromoHighlights = ({
 };
 
 const Catalogo = () => {
-  const { data: inventoryData = [], isLoading, error } = useInventory();
+  const { data: inventoryData = [], isLoading, error, isFetching, refetch: refetchInventory } = useInventory();
+  // After 6s of skeletons tell the visitor we are still trying instead of looking frozen.
+  const [slowLoad, setSlowLoad] = useState(false);
+  useEffect(() => {
+    if (!isLoading) { setSlowLoad(false); return; }
+    const t = setTimeout(() => setSlowLoad(true), 6000);
+    return () => clearTimeout(t);
+  }, [isLoading]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user, profile, signOut } = useCustomerAuth();
 
@@ -874,6 +881,12 @@ const Catalogo = () => {
           </div>
         </div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          {slowLoad && (
+            <div role="status" className="mb-4 rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground flex flex-wrap items-center justify-between gap-2">
+              <span>A loja está demorando para responder. Continuamos tentando automaticamente…</span>
+              <Button size="sm" variant="outline" onClick={() => refetchInventory()}>Tentar agora</Button>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (<ProductCardSkeleton key={i} />))}
           </div>
@@ -882,17 +895,20 @@ const Catalogo = () => {
     );
   }
 
-  if (error) {
+  if (error && inventoryData.length === 0) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">
-          <p className="text-destructive font-body font-semibold">Erro ao carregar catálogo.</p>
-          <p className="text-xs text-muted-foreground font-mono break-all">{(error as any)?.message ?? String(error)}</p>
-          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Tentar novamente</Button>
+          <p className="text-destructive font-body font-semibold">Não conseguimos carregar o catálogo agora.</p>
+          <p className="text-sm text-muted-foreground">O servidor da loja está instável. Vamos tentar de novo sozinhos a cada 20 segundos.</p>
+          <Button size="sm" variant="outline" onClick={() => refetchInventory()} disabled={isFetching}>
+            {isFetching ? "Tentando…" : "Tentar novamente"}
+          </Button>
         </div>
       </div>
     );
   }
+
 
 
   return (
@@ -955,6 +971,14 @@ const Catalogo = () => {
       <CatalogBanner />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 relative z-20 pb-12 space-y-6">
+        {error && (
+          <div role="status" className="rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground flex flex-wrap items-center justify-between gap-2">
+            <span>Mostrando os produtos salvos da última visita. Preços e estoque são confirmados ao finalizar o pedido.</span>
+            <Button size="sm" variant="outline" onClick={() => refetchInventory()} disabled={isFetching}>
+              {isFetching ? "Atualizando…" : "Atualizar"}
+            </Button>
+          </div>
+        )}
         <CouponShowcase />
         <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
 
