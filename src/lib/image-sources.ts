@@ -26,3 +26,18 @@ export const buildImageVariants = (src: string | null | undefined): ImageVariant
   if (webp) variants.push({ type: "image/webp", src: webp });
   return variants;
 };
+
+/**
+ * Downscaled preview URL for Supabase-hosted images (catalog cards, thumbnails).
+ * Non-Supabase URLs (e.g. Scryfall) are returned unchanged. Full-size originals
+ * remain available everywhere — this only affects list/card rendering.
+ */
+export const resizedImageUrl = (
+  src: string | null | undefined,
+  width = 480,
+): string | undefined => {
+  if (!src || !src.includes(SUPABASE_PUBLIC)) return src ?? undefined;
+  const rendered = src.replace(SUPABASE_PUBLIC, SUPABASE_RENDER);
+  const sep = rendered.includes("?") ? "&" : "?";
+  return `${rendered}${sep}width=${width}&quality=75`;
+};

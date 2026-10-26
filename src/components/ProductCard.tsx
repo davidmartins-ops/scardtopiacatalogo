@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import ImageZoom from "@/components/ImageZoom";
+import { resizedImageUrl } from "@/lib/image-sources";
 import { type InventoryItem } from "@/data/inventory";
 import { toast } from "sonner";
 import { queueAnalyticsEvent } from "@/lib/analytics-queue";
@@ -225,6 +226,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
           {item.image_url ? (
             <ImageZoom
               src={item.image_url}
+              previewSrc={resizedImageUrl(item.image_url, 480)}
               alt={item.name}
               className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ${isOutOfStock ? "grayscale" : ""}`}
               containerClassName="w-full h-full"
