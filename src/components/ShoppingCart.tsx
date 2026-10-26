@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { type InventoryItem } from "@/data/inventory";
+import { resizedImageUrl } from "@/lib/image-sources";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/use-customer-auth";
@@ -741,7 +742,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
                   return (
                     <div key={ci.item.id} className="flex gap-3 p-3 rounded-lg border border-border bg-muted/20">
                       {ci.item.image_url ? (
-                        <img src={ci.item.image_url} alt={ci.item.name} className="h-16 w-12 rounded object-cover border border-border/40 shrink-0" />
+                        <img src={resizedImageUrl(ci.item.image_url, 160)} alt={ci.item.name} className="h-16 w-12 rounded object-cover border border-border/40 shrink-0" />
                       ) : (
                         <div className="h-16 w-12 rounded bg-muted/30 border border-border/40 shrink-0" />
                       )}

@@ -608,7 +608,7 @@ const PromoHighlights = ({
               <div className="relative z-10 px-2 pt-2">
                 <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20 h-44 sm:h-48">
                   {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500" />
+                    <img src={resizedImageUrl(item.image_url, 480)} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-muted/10"><Package className="h-8 w-8 text-muted-foreground/30" /></div>
                   )}

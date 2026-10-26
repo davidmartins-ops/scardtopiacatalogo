@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Package } from "lucide-react";
+import { resizedImageUrl } from "@/lib/image-sources";
 import { Badge } from "@/components/ui/badge";
 import { useInventory } from "@/hooks/use-inventory";
 import { prioritizeInStock } from "@/lib/stock";
@@ -79,7 +80,7 @@ const RelatedProducts = ({ current }: Props) => {
             <Link key={i.id} to={pathFor(i)} className="glass-card glow-hover rounded-xl overflow-hidden flex flex-col">
               <div className="bg-muted/20 aspect-square overflow-hidden flex items-center justify-center">
                 {i.image_url ? (
-                  <img src={i.image_url} alt={i.name} loading="lazy" className={`w-full h-full ${isSingle ? "object-contain" : "object-cover"}`} />
+                  <img src={resizedImageUrl(i.image_url, 480)} alt={i.name} loading="lazy" className={`w-full h-full ${isSingle ? "object-contain" : "object-cover"}`} />
                 ) : (
                   <Package className="h-8 w-8 text-muted-foreground" />
                 )}
