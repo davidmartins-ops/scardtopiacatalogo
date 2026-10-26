@@ -971,6 +971,14 @@ const Catalogo = () => {
       <CatalogBanner />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 relative z-20 pb-12 space-y-6">
+        {error && (
+          <div role="status" className="rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground flex flex-wrap items-center justify-between gap-2">
+            <span>Mostrando os produtos salvos da última visita. Preços e estoque são confirmados ao finalizar o pedido.</span>
+            <Button size="sm" variant="outline" onClick={() => refetchInventory()} disabled={isFetching}>
+              {isFetching ? "Atualizando…" : "Atualizar"}
+            </Button>
+          </div>
+        )}
         <CouponShowcase />
         <PromoHighlights items={inventoryData} onAddToCart={addToCart} isFavorite={isFavorite} onToggleFavorite={(id) => toggleFavorite.mutate(id)} isLoggedIn={!!user} />
 
