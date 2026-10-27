@@ -13,6 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { supabase } from "@/integrations/supabase/client";
 import useSEO from "@/hooks/use-seo";
 import logo from "@/assets/logo.png";
+import { convertMarketPrice, marketSearchUrl, selectMarketCards } from "@/lib/market-search";
 
 interface ScryfallCard {
   name: string; id: string;
@@ -46,6 +47,9 @@ const TrendingCards = () => {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
+  const [searchCards, setSearchCards] = useState<CardWithChange[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"pct_desc" | "pct_asc">("pct_desc");
 
   useSEO({
@@ -115,6 +119,37 @@ const TrendingCards = () => {
   useEffect(() => { fetchExchangeRate(); fetchFormatCards("standard"); }, []);
   useEffect(() => { if (!formatData[activeFormat]) fetchFormatCards(activeFormat); }, [activeFormat]);
 
+  useEffect(() => {
+    const term = search.trim();
+    setSearchCards([]);
+    setSearchError(null);
+    if (!term) { setSearching(false); return; }
+    setSearching(true);
+    const controller = new AbortController();
+    let cancelled = false;
+    const debounce = window.setTimeout(async () => {
+      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await fetch(marketSearchUrl(term), { signal: controller.signal });
+        if (response.status === 404) return;
+        if (!response.ok) throw new Error("search unavailable");
+        const result = await response.json();
+        if (!cancelled) {
+          const cards: ScryfallCard[] = result.data ?? [];
+          setSearchCards(selectMarketCards(cards).sort((a, b) =>
+            Number(b.name.toLowerCase() === term.toLowerCase()) - Number(a.name.toLowerCase() === term.toLowerCase())
+          ));
+        }
+      } catch {
+        if (!cancelled) setSearchError("Não foi possível buscar agora. Tente novamente.");
+      } finally {
+        window.clearTimeout(timeout);
+        if (!cancelled) setSearching(false);
+      }
+    }, 400);
+    return () => { cancelled = true; window.clearTimeout(debounce); controller.abort(); };
+  }, [search]);
+
   const currentData = formatData[activeFormat] ?? { rising: [], falling: [] };
 
   const getPrice = (card: ScryfallCard) => { const p = card.prices.usd ?? card.prices.usd_foil; return p ? parseFloat(p) : 0; };
@@ -162,8 +197,8 @@ const TrendingCards = () => {
   const formatUSD = (val: string | undefined) => { if (!val) return "N/A"; return `$ ${parseFloat(val).toFixed(2)}`; };
 
   const formatBRL = (val: string | undefined) => {
-    if (!val || !exchangeRate) return "—";
-    const brl = parseFloat(val) * exchangeRate;
+    const brl = convertMarketPrice(val, exchangeRate);
+    if (brl == null) return "—";
     return `R$ ${brl.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
@@ -211,7 +246,7 @@ const TrendingCards = () => {
     );
   };
 
-  const CardList = ({ cards, type }: { cards: CardWithChange[]; type: "rising" | "falling" }) => {
+  const CardList = ({ cards, type }: { cards: CardWithChange[]; type: "rising" | "falling" | "search" }) => {
     const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
 
     useEffect(() => {
@@ -264,13 +299,13 @@ const TrendingCards = () => {
                 <p className="text-[10px] text-muted-foreground truncate">{card.set_name}</p>
                 <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className={`text-sm font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>{formatUSD(price)}</span>
+                    <span className={`text-sm font-bold ${!hasPctChange ? "text-foreground" : isPositive ? "text-green-600" : "text-red-600"}`}>{formatUSD(price)}</span>
                     <span className="block text-[10px] text-muted-foreground">{formatBRL(price)}</span>
                     {card.previousPrice != null && (
                       <span className="block text-[9px] text-muted-foreground">Anterior: ${card.previousPrice.toFixed(2)}</span>
                     )}
                   </div>
-                  {isPositive ? <TrendingUp className="h-3.5 w-3.5 text-green-600" /> : <TrendingDown className="h-3.5 w-3.5 text-red-600" />}
+                  {hasPctChange && (isPositive ? <TrendingUp className="h-3.5 w-3.5 text-green-600" /> : <TrendingDown className="h-3.5 w-3.5 text-red-600" />)}
                 </div>
                 <Badge variant="outline" className={`text-[9px] ${rarityColor(card.rarity)}`}>{card.rarity}</Badge>
               </div>
@@ -318,7 +353,7 @@ const TrendingCards = () => {
           <div className="flex gap-2 max-w-xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou coleção..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
+              <Input placeholder="Buscar carta pelo nome..." aria-label="Buscar carta pelo nome" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-muted/30 border-border/50 backdrop-blur-sm focus:border-primary/50 transition-colors" />
             </div>
             <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
               <SelectTrigger className="w-[160px] sm:w-[180px] bg-muted/30 border-border/50"><ArrowUpDown className="h-3.5 w-3.5 mr-1" /><SelectValue /></SelectTrigger>
@@ -342,7 +377,22 @@ const TrendingCards = () => {
           )}
         </div>
 
-        {loading ? (
+        {search.trim() ? (
+          <section className="space-y-5" aria-live="polite">
+            {searching ? (
+              <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin text-primary" />Buscando cartas...</div>
+            ) : searchError ? (
+              <p className="text-center py-12 text-destructive">{searchError}</p>
+            ) : searchCards.length === 0 ? (
+              <p className="text-center py-12 text-muted-foreground">Nenhuma carta encontrada para “{search.trim()}”.</p>
+            ) : (
+              <>
+                <h2 className="text-sm font-semibold text-foreground">Resultados da busca ({searchCards.length})</h2>
+                <CardList cards={searchCards} type="search" />
+              </>
+            )}
+          </section>
+        ) : loading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : (
           <Tabs defaultValue="rising" className="w-full">
