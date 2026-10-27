@@ -321,6 +321,11 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   // Resolve the amount to charge for the currently selected payment channel.
   const isPixChannel = (channel: Channel | null) => channel === "pix" || channel === "pix_auto";
 
+  // Forma de pagamento enviada à validação do cupom: no cartão o desconto
+  // promocional não incide, então o cupom continua valendo para itens em promoção.
+  const paymentMethodFor = (channel: Channel | null): string | null =>
+    channel === "card" ? "credit" : isPixChannel(channel) ? "pix" : channel === "whatsapp" ? "whatsapp" : null;
+
   const subtotalForChannel = (channel: Channel | null) =>
     isPixChannel(channel) ? pixTotal : total;
 
@@ -332,11 +337,16 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   };
 
   const couponLinesFor = (channel: Channel | null) =>
-    items.map((ci) => ({ category: ci.item.category ?? "", product_type: ci.item.product_type ?? "drop", amount: unitPriceFor(ci, channel) * ci.qty }));
+    items.map((ci) => ({
+      category: ci.item.category ?? "",
+      product_type: ci.item.product_type ?? "drop",
+      discount: ci.item.discount ?? 0,
+      amount: unitPriceFor(ci, channel) * ci.qty,
+    }));
 
   // Cupom (não acumulativo: apenas um por pedido). O servidor recalcula e valida.
   const couponDiscountFor = (channel: Channel | null) =>
-    Math.min(subtotalForChannel(channel), computeCouponDiscount(coupon, couponLinesFor(channel)));
+    Math.min(subtotalForChannel(channel), computeCouponDiscount(coupon, couponLinesFor(channel), paymentMethodFor(channel)));
 
   const amountForChannel = (channel: Channel | null) =>
     Math.max(0, subtotalForChannel(channel) - couponDiscountFor(channel));
@@ -348,7 +358,8 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
     if (coupon && coupon.code !== code) { setCouponError("Cupons não são acumulativos. Remova o atual para usar outro."); return; }
     setCouponChecking(true); setCouponError(null);
     const cpf = customerExtra.cpf || profile?.cpf || "";
-    const res = await previewCoupon(code, cpf, couponLinesFor(pendingChannel ?? "card"));
+    const channel = pendingChannel ?? "card";
+    const res = await previewCoupon(code, cpf, couponLinesFor(channel), "catalog", paymentMethodFor(channel));
     setCouponChecking(false);
     if (!res.ok) { setCouponError(res.error); return; }
     setCoupon(res.coupon);
@@ -373,6 +384,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       )}
       {couponError && <p className="text-[11px] text-destructive">{couponError}</p>}
       {coupon && <p className="text-[11px] text-muted-foreground">Válido para PIX e cartão. 1 uso por CPF; o desconto é confirmado ao finalizar.</p>}
+      {coupon && !coupon.allow_on_promotional && items.some((ci) => (ci.item.discount ?? 0) > 0) && (
+        <p className="text-[11px] text-muted-foreground">Itens em promoção só participam do cupom no pagamento por cartão.</p>
+      )}
     </div>
   );
 
