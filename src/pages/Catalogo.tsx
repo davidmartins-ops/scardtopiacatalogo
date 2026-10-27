@@ -597,16 +597,6 @@ const PromoHighlights = ({
 
           return (
             <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col h-auto">
-              {/* Card inteiro leva à página do produto. Fica acima de imagem/título/preços
-                  e abaixo dos botões (z-30), que continuam com suas próprias ações. */}
-              <Link
-                to={detailHref}
-                aria-label={`Ver detalhes de ${item.name}`}
-                title="Ver detalhes do produto"
-                className="absolute inset-0 z-20 rounded-xl"
-                onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
-              />
-
               {/* Discount badge */}
               <div className="absolute top-2 left-2 z-30">
                 <div className="bg-destructive text-destructive-foreground text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg">
@@ -621,8 +611,13 @@ const PromoHighlights = ({
               >
                 <Heart className={`h-3.5 w-3.5 ${isFavorite(item.id) ? "fill-current" : ""}`} aria-hidden="true" />
               </button>
-              {/* Image - FIXED height for ALL cards (singles or drops, with or without image) */}
-              <div className="relative z-10 px-2 pt-2">
+              {/* Image - FIXED height for ALL cards; clicável para a página do produto */}
+              <Link
+                to={detailHref}
+                aria-label={`Ver detalhes de ${item.name}`}
+                className="relative z-10 block px-2 pt-2 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+                onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
+              >
                 <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20 h-44 sm:h-48">
                   {item.image_url ? (
                     <img src={resizedImageUrl(item.image_url, 480)} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500" />
@@ -630,26 +625,38 @@ const PromoHighlights = ({
                     <div className="w-full h-full flex items-center justify-center bg-muted/10"><Package className="h-8 w-8 text-muted-foreground/30" /></div>
                   )}
                 </div>
-              </div>
+              </Link>
               <div className="relative z-10 p-3 pt-2 flex flex-col flex-1">
                 {/* Title - fixed min height */}
                 <div className="min-h-[54px] sm:min-h-[40px]">
-                  <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3] group-hover:text-primary transition-colors">{item.name}</h3>
-                  <span className="sm:hidden mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary">
-                    <Info className="h-3 w-3" /> Ver detalhes
-                  </span>
+                  <Link
+                    to={detailHref}
+                    aria-label={`Ver detalhes de ${item.name}`}
+                    className="block touch-manipulation [-webkit-tap-highlight-color:transparent]"
+                    onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
+                  >
+                    <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3] group-hover:text-primary transition-colors">{item.name}</h3>
+                    <span className="sm:hidden mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary">
+                      <Info className="h-3 w-3" /> Ver detalhes
+                    </span>
+                  </Link>
                 </div>
 
                 {/* Prices - PIX em destaque (desconto vale só p/ PIX) */}
-                <div className="space-y-0.5 mt-1.5 min-h-[52px]">
+                <Link
+                  to={detailHref}
+                  aria-label={`Ver detalhes de ${item.name}`}
+                  className="block space-y-0.5 mt-1.5 min-h-[52px] touch-manipulation [-webkit-tap-highlight-color:transparent]"
+                  onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
+                >
                   <span className="text-[22px] sm:text-[24px] font-bold text-success font-display block leading-none">
                     R$ {finalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                   <span className="text-[10px] font-semibold text-success/90 uppercase tracking-wide block">💰 no PIX · -{discount}%</span>
                   <span className="text-[12px] text-muted-foreground block">💳 Cartão R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                </div>
+                </Link>
                 {/* Button anchored to bottom */}
-                <div className="mt-auto pt-2 relative z-30">
+                <div className="mt-auto pt-2">
                   <Button size="sm" variant="default" className="w-full h-9 text-[13px] gap-1 font-semibold transition-all duration-150 active:scale-[0.98]" onClick={() => onAddToCart(item)}>
                     <Plus className="h-3.5 w-3.5" /> Adicionar
                   </Button>
