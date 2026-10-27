@@ -20,6 +20,7 @@ interface Coupon {
   applies_to_catalog: boolean; applies_to_special_orders: boolean; show_in_catalog: boolean; is_active: boolean; created_at: string;
   applies_to_product_type: "all" | "single" | "drop";
   max_discount: number | null;
+  allow_on_promotional: boolean;
 }
 interface Redemption { id: string; code: string; user_email: string | null; cpf: string | null; order_id: string | null; special_order_id: string | null; discount_amount: number; created_at: string }
 
@@ -29,6 +30,7 @@ const empty = {
   applies_to_catalog: true, applies_to_special_orders: true, show_in_catalog: false, is_active: true,
   applies_to_product_type: "all" as "all" | "single" | "drop",
   max_discount: "",
+  allow_on_promotional: false,
 };
 type Form = typeof empty;
 
@@ -105,6 +107,7 @@ const AdminCoupons = () => {
       applies_to_catalog: c.applies_to_catalog, applies_to_special_orders: c.applies_to_special_orders, show_in_catalog: c.show_in_catalog, is_active: c.is_active,
       applies_to_product_type: c.applies_to_product_type ?? "all",
       max_discount: c.max_discount == null ? "" : String(c.max_discount),
+      allow_on_promotional: c.allow_on_promotional ?? false,
     });
     setOpen(true);
   };
@@ -125,6 +128,7 @@ const AdminCoupons = () => {
       applies_to_catalog: form.applies_to_catalog, applies_to_special_orders: form.applies_to_special_orders, show_in_catalog: form.show_in_catalog, is_active: form.is_active,
       applies_to_product_type: form.applies_to_product_type,
       max_discount: form.max_discount ? Math.max(0, Number(form.max_discount.replace(",", ".")) || 0) : null,
+      allow_on_promotional: form.allow_on_promotional,
     };
     setSaving(true);
     try {
@@ -201,6 +205,7 @@ const AdminCoupons = () => {
                     {c.max_discount != null && c.max_discount > 0 ? ` · teto ${brl(c.max_discount)}` : ""}
                     {` · ${[c.applies_to_catalog && "Loja", c.applies_to_special_orders && "Encomendas"].filter(Boolean).join(" + ")}`}
                     {(c.applies_to_product_type ?? "all") !== "all" && ` · ${c.applies_to_product_type === "drop" ? "Só drops" : "Só singles"}`}
+                    {c.allow_on_promotional ? " · inclui itens em promoção" : ""}
                   </p>
                   {(c.allowed_categories.length > 0 || c.blocked_categories.length > 0 || c.blocked_cpfs.length + c.blocked_emails.length > 0) && (
                     <p className="text-xs text-muted-foreground">
@@ -247,6 +252,15 @@ const AdminCoupons = () => {
               <div><Label>Compra mínima (R$)</Label><Input inputMode="decimal" value={form.min_purchase} onChange={(e) => set("min_purchase", e.target.value)} /></div>
             </div>
             <div><Label>Desconto máximo (R$) — vazio = sem limite</Label><Input inputMode="decimal" placeholder="Ex.: 300" value={form.max_discount} onChange={(e) => set("max_discount", e.target.value)} /></div>
+            <div className="flex items-start justify-between gap-3 rounded-md border border-border/50 p-3">
+              <div>
+                <Label>Permitir em itens já promocionais</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Desligado: no PIX o cupom ignora itens que já estão em promoção. No cartão, onde o desconto promocional não incide, o cupom continua valendo.
+                </p>
+              </div>
+              <Switch checked={form.allow_on_promotional} onCheckedChange={(v) => set("allow_on_promotional", v)} aria-label="Permitir cupom em itens promocionais" />
+            </div>
             <div><Label>Vale para</Label>
               <select className="h-10 w-full rounded-md border border-input bg-background px-3" value={form.applies_to_product_type} onChange={(e) => set("applies_to_product_type", e.target.value as "all" | "single" | "drop")}>
                 <option value="all">Tudo (drops e singles)</option>

@@ -155,8 +155,11 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
   const hasPixHighlight = pixFinal < cardPrice;
   const isOutOfStock = item.quantity <= 0;
   const { coupon } = useAppliedCoupon();
-  const couponPix = priceWithCoupon(coupon, pixFinal, item.category, item.product_type);
-  const couponCard = priceWithCoupon(coupon, cardPrice, item.category, item.product_type);
+  const isPromotional = discount > 0;
+  // No PIX, item em promoção fica fora do cupom, salvo se o cupom permitir.
+  const couponPix = priceWithCoupon(coupon, pixFinal, item.category, item.product_type, isPromotional);
+  // No cartão o desconto promocional não incide, então o cupom segue valendo.
+  const couponCard = priceWithCoupon(coupon, cardPrice, item.category, item.product_type, isPromotional, "credit");
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Track product view once per session per item using IntersectionObserver
