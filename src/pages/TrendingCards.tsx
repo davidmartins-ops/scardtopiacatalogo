@@ -223,25 +223,26 @@ const TrendingCards = () => {
     const maxCount = Math.max(...chartData.map((d) => d.count));
 
     return (
-      <div className="glass-card p-4 sm:p-6 mb-6 border border-border/50">
-        <div className="flex items-center justify-between mb-4">
+      <div className="w-full max-w-2xl mx-auto py-3 mb-3" role="region" aria-label="Distribuição de preços">
+        <div className="flex items-center justify-between gap-2 mb-2">
           <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" /><span className="text-gradient">Distribuição de Preços</span></h2>
           <span className="text-[10px] text-muted-foreground">{cards.length} cartas</span>
         </div>
-        <div className="premium-divider mb-4" />
-        <div className="h-52 sm:h-56">
+        <div className="h-32 sm:h-36 min-w-0">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: -8 }}>
+            <BarChart data={chartData} accessibilityLayer margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs><linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={colorStart} stopOpacity={0.95} /><stop offset="100%" stopColor={colorEnd} stopOpacity={0.6} /></linearGradient></defs>
-              <XAxis dataKey="range" tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fontFamily: "'Cinzel', serif" }} axisLine={{ stroke: "hsl(var(--border))" }} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <XAxis dataKey="range" interval={0} tick={{ fontSize: 10, fill: "hsl(var(--foreground))", fontFamily: "'Cinzel', serif" }} axisLine={{ stroke: "hsl(var(--border))" }} tickLine={false} height={24} />
+              <YAxis width={24} tickCount={3} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip cursor={{ fill: "hsl(var(--muted) / 0.5)" }} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontFamily: "'Open Sans', sans-serif", backdropFilter: "blur(12px)", boxShadow: "0 8px 32px rgba(0,0,0,0.1)", padding: "10px 14px" }} labelStyle={{ color: "hsl(var(--primary))", fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 600, marginBottom: 6 }} itemStyle={{ color: "hsl(var(--foreground))", fontSize: 12 }} formatter={(value: number) => [`${value} carta${value !== 1 ? "s" : ""}`, "Quantidade"]} />
-              <Bar dataKey="count" name="Cartas" radius={[6, 6, 0, 0]} barSize={40}>
+              <Bar dataKey="count" name="Cartas" radius={[4, 4, 0, 0]} maxBarSize={32}>
                 {chartData.map((entry, i) => (<Cell key={i} fill={`url(#${gradientId})`} opacity={0.6 + (entry.count / maxCount) * 0.4} stroke={colorStart} strokeWidth={1} strokeOpacity={0.3} />))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
+        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-1 text-[11px] text-muted-foreground" aria-label="Quantidades por faixa de preço">
+          {chartData.map((entry) => <li key={entry.range}>{entry.range}: <span className="font-semibold text-foreground">{entry.count}</span></li>)}
       </div>
     );
   };
