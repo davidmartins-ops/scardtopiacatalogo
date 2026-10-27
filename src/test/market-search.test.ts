@@ -1,15 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { convertMarketPrice, marketSearchUrl } from "@/lib/market-search";
+import { convertMarketPrice, marketSearchUrl, selectMarketCards } from "@/lib/market-search";
 
 describe("Market card search", () => {
   it("searches the requested name beyond the loaded trends and selected format", () => {
     const url = new URL(marketSearchUrl("  Black Lotus  "));
-    expect(url.searchParams.get("q")).toBe('name:"Black Lotus"');
-    expect(url.searchParams.get("unique")).toBe("cards");
+    expect(url.searchParams.get("q")).toBe('name:"Black Lotus" game:paper');
+    expect(url.searchParams.get("unique")).toBe("prints");
     expect(url.searchParams.get("q")).not.toContain("f:standard");
   });
   it("keeps search operators inside the name instead of adding filters", () => {
-    expect(new URL(marketSearchUrl('Lotus" f:modern')).searchParams.get("q")).toBe('name:"Lotus  f:modern"');
+    expect(new URL(marketSearchUrl('Lotus" f:modern')).searchParams.get("q")).toBe('name:"Lotus  f:modern" game:paper');
+  });
+  it("prefers a priced print when a matching card has an unpriced edition", () => {
+    const unpriced = { name: "Sol Ring", prices: { usd: null } };
+    const priced = { name: "Sol Ring", prices: { usd: "10.00" } };
+    expect(selectMarketCards([unpriced, priced])).toEqual([priced]);
   });
   it("converts searched prices using the current USD to BRL exchange rate", () => {
     expect(convertMarketPrice("10.00", 5.4036)).toBeCloseTo(54.036);

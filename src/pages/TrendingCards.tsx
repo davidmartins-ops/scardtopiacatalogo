@@ -13,7 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { supabase } from "@/integrations/supabase/client";
 import useSEO from "@/hooks/use-seo";
 import logo from "@/assets/logo.png";
-import { convertMarketPrice, marketSearchUrl } from "@/lib/market-search";
+import { convertMarketPrice, marketSearchUrl, selectMarketCards } from "@/lib/market-search";
 
 interface ScryfallCard {
   name: string; id: string;
@@ -136,7 +136,7 @@ const TrendingCards = () => {
         const result = await response.json();
         if (!cancelled) {
           const cards: ScryfallCard[] = result.data ?? [];
-          setSearchCards([...cards].sort((a, b) =>
+          setSearchCards(selectMarketCards(cards).sort((a, b) =>
             Number(b.name.toLowerCase() === term.toLowerCase()) - Number(a.name.toLowerCase() === term.toLowerCase())
           ));
         }
