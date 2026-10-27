@@ -2063,7 +2063,9 @@ export type Database = {
       get_showcase_coupons: {
         Args: never
         Returns: {
+          allow_on_promotional: boolean
           allowed_categories: string[]
+          applies_to_product_type: string
           blocked_categories: string[]
           code: string
           description: string
