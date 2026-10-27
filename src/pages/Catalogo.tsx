@@ -29,6 +29,8 @@ import {
   ChevronLeft,
   ChevronRight,
   SearchIcon,
+  Info,
+
 } from "lucide-react";
 import {
   DropdownMenu,
