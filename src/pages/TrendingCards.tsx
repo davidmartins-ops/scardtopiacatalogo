@@ -243,6 +243,7 @@ const TrendingCards = () => {
         </div>
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-1 text-[11px] text-muted-foreground" aria-label="Quantidades por faixa de preço">
           {chartData.map((entry) => <li key={entry.range}>{entry.range}: <span className="font-semibold text-foreground">{entry.count}</span></li>)}
+        </ul>
       </div>
     );
   };
