@@ -588,9 +588,23 @@ const PromoHighlights = ({
           // Desconto aplica APENAS ao PIX.
           const pixBase = (item.price_pix ?? 0) > 0 ? (item.price_pix as number) : item.price;
           const finalPrice = Math.max(0, pixBase * (1 - discount / 100));
+          const isSingle = (item.product_type ?? "single") === "single";
+          const detailHref = isSingle
+            ? `/catalogo/single/${encodeURIComponent(item.id)}`
+            : `/catalogo/drop/${encodeURIComponent(item.id)}`;
 
           return (
             <div key={item.id} className="flex-shrink-0 w-52 sm:w-56 glass-card glow-hover overflow-hidden snap-start relative group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col h-auto">
+              {/* Card inteiro leva à página do produto. Fica acima de imagem/título/preços
+                  e abaixo dos botões (z-30), que continuam com suas próprias ações. */}
+              <Link
+                to={detailHref}
+                aria-label={`Ver detalhes de ${item.name}`}
+                title="Ver detalhes do produto"
+                className="absolute inset-0 z-20 rounded-xl"
+                onClick={() => { void trackEvent(isSingle ? "more_info_click" : "drop_content_click", item); }}
+              />
+
               {/* Discount badge */}
               <div className="absolute top-2 left-2 z-30">
                 <div className="bg-destructive text-destructive-foreground text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg">
