@@ -142,6 +142,7 @@ export interface ShowcaseCoupon {
   blocked_categories: string[];
   max_discount?: number | null;
   allow_on_promotional?: boolean;
+  applies_to_product_type?: "all" | "single" | "drop";
 }
 
 export function useShowcaseCoupons() {
