@@ -631,9 +631,13 @@ const PromoHighlights = ({
               </div>
               <div className="relative z-10 p-3 pt-2 flex flex-col flex-1">
                 {/* Title - fixed min height */}
-                <div className="min-h-[40px]">
-                  <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3]">{item.name}</h3>
+                <div className="min-h-[54px] sm:min-h-[40px]">
+                  <h3 className="text-[14px] sm:text-[15px] font-semibold text-foreground line-clamp-2 leading-[1.3] group-hover:text-primary transition-colors">{item.name}</h3>
+                  <span className="sm:hidden mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary">
+                    <Info className="h-3 w-3" /> Ver detalhes
+                  </span>
                 </div>
+
                 {/* Prices - PIX em destaque (desconto vale só p/ PIX) */}
                 <div className="space-y-0.5 mt-1.5 min-h-[52px]">
                   <span className="text-[22px] sm:text-[24px] font-bold text-success font-display block leading-none">
@@ -643,7 +647,7 @@ const PromoHighlights = ({
                   <span className="text-[12px] text-muted-foreground block">💳 Cartão R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
                 {/* Button anchored to bottom */}
-                <div className="mt-auto pt-2">
+                <div className="mt-auto pt-2 relative z-30">
                   <Button size="sm" variant="default" className="w-full h-9 text-[13px] gap-1 font-semibold transition-all duration-150 active:scale-[0.98]" onClick={() => onAddToCart(item)}>
                     <Plus className="h-3.5 w-3.5" /> Adicionar
                   </Button>
