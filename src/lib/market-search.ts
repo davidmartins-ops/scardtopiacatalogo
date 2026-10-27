@@ -1,6 +1,6 @@
 export const marketSearchUrl = (term: string) => {
   const name = term.trim().replace(/["\\]/g, " ");
-  const params = new URLSearchParams({ q: `name:"${name}" game:paper`, unique: "prints", order: "usd", dir: "desc" });
+  const params = new URLSearchParams({ q: `name:"${name}" game:paper`, unique: "prints", order: "usd", dir: "asc" });
   return `https://api.scryfall.com/cards/search?${params}`;
 };
 
