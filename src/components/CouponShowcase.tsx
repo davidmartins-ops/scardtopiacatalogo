@@ -21,6 +21,7 @@ const CouponShowcase = () => {
               <span className="font-semibold text-success">{formatCouponValue(c)}</span>
               {c.description && <span className="hidden sm:inline text-muted-foreground">· {c.description}</span>}
               {c.expires_at && <span className="text-xs text-muted-foreground">até {new Date(c.expires_at).toLocaleDateString("pt-BR")}</span>}
+              {c.allow_on_promotional === false && <span className="text-xs text-muted-foreground">· não vale p/ itens em promoção no PIX</span>}
             </div>
             <Button
               size="sm"
@@ -29,7 +30,7 @@ const CouponShowcase = () => {
               disabled={active}
               onClick={() => {
                 if (coupon && coupon.code !== c.code) toast.info(`Cupom ${coupon.code} substituído — cupons não são acumulativos.`);
-                setCoupon({ code: c.code, discount_type: c.discount_type, discount_value: Number(c.discount_value), allowed_categories: c.allowed_categories ?? [], blocked_categories: c.blocked_categories ?? [], max_discount: c.max_discount ?? null, description: c.description, expires_at: c.expires_at });
+                setCoupon({ code: c.code, discount_type: c.discount_type, discount_value: Number(c.discount_value), allowed_categories: c.allowed_categories ?? [], blocked_categories: c.blocked_categories ?? [], max_discount: c.max_discount ?? null, applies_to_product_type: c.applies_to_product_type ?? "all", allow_on_promotional: c.allow_on_promotional ?? false, description: c.description, expires_at: c.expires_at });
                 toast.success(`Cupom ${c.code} aplicado! Os preços com desconto aparecem nos produtos.`);
               }}
             >

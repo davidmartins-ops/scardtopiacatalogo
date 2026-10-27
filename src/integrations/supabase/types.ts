@@ -476,6 +476,7 @@ export type Database = {
       }
       coupons: {
         Row: {
+          allow_on_promotional: boolean
           allowed_categories: string[]
           applies_to_catalog: boolean
           applies_to_product_type: string
@@ -502,6 +503,7 @@ export type Database = {
           uses_count: number
         }
         Insert: {
+          allow_on_promotional?: boolean
           allowed_categories?: string[]
           applies_to_catalog?: boolean
           applies_to_product_type?: string
@@ -528,6 +530,7 @@ export type Database = {
           uses_count?: number
         }
         Update: {
+          allow_on_promotional?: boolean
           allowed_categories?: string[]
           applies_to_catalog?: boolean
           applies_to_product_type?: string
@@ -2047,6 +2050,7 @@ export type Database = {
           _cpf: string
           _lines: Json
           _lock?: boolean
+          _payment_method?: string
           _user_id: string
         }
         Returns: {
@@ -2059,7 +2063,9 @@ export type Database = {
       get_showcase_coupons: {
         Args: never
         Returns: {
+          allow_on_promotional: boolean
           allowed_categories: string[]
+          applies_to_product_type: string
           blocked_categories: string[]
           code: string
           description: string
@@ -2091,7 +2097,13 @@ export type Database = {
         Returns: number
       }
       preview_coupon: {
-        Args: { _code: string; _context?: string; _cpf: string; _lines: Json }
+        Args: {
+          _code: string
+          _context?: string
+          _cpf: string
+          _lines: Json
+          _payment_method?: string
+        }
         Returns: Json
       }
       read_email_batch: {

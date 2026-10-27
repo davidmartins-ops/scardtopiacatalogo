@@ -10,6 +10,8 @@ export interface AppliedCoupon {
   blocked_categories: string[];
   applies_to_product_type?: "all" | "single" | "drop";
   max_discount?: number | null;
+  /** Quando false (padrão), itens já em promoção ficam fora do cupom no PIX. */
+  allow_on_promotional?: boolean;
   description?: string | null;
   expires_at?: string | null;
 }
@@ -18,6 +20,8 @@ export interface CouponLine {
   category: string;
   amount: number;
   product_type?: string | null;
+  /** Desconto promocional do item em %. Maior que zero significa item em promoção. */
+  discount?: number | null;
 }
 
 const KEY = "applied_coupon_v1";
@@ -68,18 +72,42 @@ export const isCategoryEligible = (
   return true;
 };
 
+/** No cartão o desconto promocional não incide, então o cupom continua valendo lá. */
+export const isCardPayment = (method?: string | null) =>
+  ["credit", "debit", "card", "cartao", "cartão"].includes((method ?? "").trim().toLowerCase());
+
+/**
+ * Item já em promoção só entra no cupom quando o cupom permite (allow_on_promotional)
+ * ou quando o pagamento é cartão. O servidor aplica a mesma regra e é a fonte da verdade.
+ */
+export const isPromotionalEligible = (
+  c: Pick<AppliedCoupon, "allow_on_promotional">,
+  promotional?: boolean | null,
+  paymentMethod?: string | null,
+) => !promotional || c.allow_on_promotional === true || isCardPayment(paymentMethod);
+
 /** Mirrors the server rule (server recomputes and is authoritative). */
-export const computeCouponDiscount = (c: AppliedCoupon | null, lines: CouponLine[]) => {
+export const computeCouponDiscount = (c: AppliedCoupon | null, lines: CouponLine[], paymentMethod?: string | null) => {
   if (!c) return 0;
-  const eligible = lines.filter((l) => isCategoryEligible(c, l.category, l.product_type)).reduce((s, l) => s + l.amount, 0);
+  const eligible = lines
+    .filter((l) => isCategoryEligible(c, l.category, l.product_type) && isPromotionalEligible(c, (l.discount ?? 0) > 0, paymentMethod))
+    .reduce((s, l) => s + l.amount, 0);
   if (eligible <= 0) return 0;
   let d = c.discount_type === "percent" ? (eligible * Math.min(c.discount_value, 100)) / 100 : Math.min(c.discount_value, eligible);
   if (c.max_discount != null && c.max_discount > 0) d = Math.min(d, c.max_discount);
   return Math.round(d * 100) / 100;
 };
 
-export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category?: string | null, productType?: string | null) => {
+export const priceWithCoupon = (
+  c: AppliedCoupon | null,
+  price: number,
+  category?: string | null,
+  productType?: string | null,
+  promotional?: boolean | null,
+  paymentMethod?: string | null,
+) => {
   if (!c || !isCategoryEligible(c, category, productType)) return null;
+  if (!isPromotionalEligible(c, promotional, paymentMethod)) return null;
   if (c.discount_type === "percent") {
     let d = (price * Math.min(c.discount_value, 100)) / 100;
     if (c.max_discount != null && c.max_discount > 0) d = Math.min(d, c.max_discount);
@@ -88,9 +116,15 @@ export const priceWithCoupon = (c: AppliedCoupon | null, price: number, category
   return null; // valor fixo vale para o pedido inteiro, não por item
 };
 
-export async function previewCoupon(code: string, cpf: string, lines: CouponLine[], context: "catalog" | "special_order" = "catalog") {
+export async function previewCoupon(
+  code: string,
+  cpf: string,
+  lines: CouponLine[],
+  context: "catalog" | "special_order" = "catalog",
+  paymentMethod?: string | null,
+) {
   const { data, error } = await supabase.rpc("preview_coupon" as never, {
-    _code: code, _cpf: cpf, _lines: lines, _context: context,
+    _code: code, _cpf: cpf, _lines: lines, _context: context, _payment_method: paymentMethod ?? null,
   } as never);
   if (error) return { ok: false as const, error: error.message };
   const d = data as unknown as { ok: boolean; error?: string } & AppliedCoupon & { discount: number };
@@ -107,6 +141,8 @@ export interface ShowcaseCoupon {
   allowed_categories: string[];
   blocked_categories: string[];
   max_discount?: number | null;
+  allow_on_promotional?: boolean;
+  applies_to_product_type?: "all" | "single" | "drop";
 }
 
 export function useShowcaseCoupons() {
