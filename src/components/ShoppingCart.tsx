@@ -18,7 +18,7 @@ import { validateCheckout, isValidCep } from "@/lib/checkout-validation";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coins, Tag } from "lucide-react";
-import { useAppliedCoupon, computeCouponDiscount, previewCoupon, formatCouponValue } from "@/hooks/use-coupon";
+import { useAppliedCoupon, computeCouponDiscount, couponCodeForOrder, previewCoupon, formatCouponValue } from "@/hooks/use-coupon";
 
 export interface CartItem {
   item: InventoryItem;
@@ -348,6 +348,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const couponDiscountFor = (channel: Channel | null) =>
     Math.min(subtotalForChannel(channel), computeCouponDiscount(coupon, couponLinesFor(channel), paymentMethodFor(channel)));
 
+  const couponCodeForChannel = (channel: Channel | null) =>
+    couponCodeForOrder(coupon, couponLinesFor(channel), paymentMethodFor(channel));
+
   const amountForChannel = (channel: Channel | null) =>
     Math.max(0, subtotalForChannel(channel) - couponDiscountFor(channel));
 
@@ -568,7 +571,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
             items: orderItems as any,
             total: cardTotal,
             credits_applied: cardCredits,
-            coupon_code: coupon?.code ?? null,
+            coupon_code: couponCodeForChannel(pendingChannel),
             status: "pending_payment" as any,
             payment_method: (isAutoPix ? "pix" : "credit") as any,
             customer_info: buildCustomerInfo() as any,
@@ -617,7 +620,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       if (onOrderPlaced) {
         const result = await onOrderPlaced(items, subtotalForChannel("whatsapp"), {
           paymentMethod: "whatsapp",
-          couponCode: coupon?.code ?? null,
+          couponCode: couponCodeForChannel("whatsapp"),
           creditsApplied: creditsToApplyFor("whatsapp"),
           customerInfo: buildCustomerInfo(),
           shipping: shippingMeta(),
@@ -642,7 +645,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
   const handleBuyWhatsApp = () => {
     const msg = buildMessage("whatsapp");
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-    if (onOrderPlaced) onOrderPlaced(items, subtotalForChannel("whatsapp"), { paymentMethod: "whatsapp", couponCode: coupon?.code ?? null });
+    if (onOrderPlaced) onOrderPlaced(items, subtotalForChannel("whatsapp"), { paymentMethod: "whatsapp", couponCode: couponCodeForChannel("whatsapp") });
   };
 
   const handlePixSelect = (existingOrderId?: string) => {
@@ -687,7 +690,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
       } else if (onOrderPlaced) {
         const result = await onOrderPlaced(items, pixTotal, {
           paymentMethod: "pix",
-          couponCode: coupon?.code ?? null,
+          couponCode: couponCodeForChannel("pix"),
           receiptUrl: urlData.publicUrl,
           creditsApplied: creditsToApplyFor("pix"),
           customerInfo: buildCustomerInfo(),
@@ -1029,6 +1032,9 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal{isPixChannel(pendingChannel) ? " (PIX)" : ""}</span><span className="font-medium text-foreground">R$ {subtotalForChannel(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
               {coupon && couponDiscountFor(pendingChannel) > 0 && (
                 <div className="flex justify-between text-success"><span>Cupom {coupon.code}</span><span className="font-medium">− R$ {couponDiscountFor(pendingChannel).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+              )}
+              {coupon && !couponCodeForChannel(pendingChannel) && (
+                <p className="text-xs text-muted-foreground">O cupom {coupon.code} não se aplica aos itens nesta forma de pagamento. O pedido seguirá sem cupom.</p>
               )}
               {deliveryMethod === "shipping" && getFreightValue() > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium text-foreground">R$ {getFreightValue().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>

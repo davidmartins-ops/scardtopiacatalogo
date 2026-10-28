@@ -98,6 +98,10 @@ export const computeCouponDiscount = (c: AppliedCoupon | null, lines: CouponLine
   return Math.round(d * 100) / 100;
 };
 
+/** Only submit a coupon when it discounts this payment method; server still validates it. */
+export const couponCodeForOrder = (c: AppliedCoupon | null, lines: CouponLine[], paymentMethod?: string | null): string | null =>
+  computeCouponDiscount(c, lines, paymentMethod) > 0 ? c?.code ?? null : null;
+
 export const priceWithCoupon = (
   c: AppliedCoupon | null,
   price: number,

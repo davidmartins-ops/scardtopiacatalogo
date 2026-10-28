@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computeCouponDiscount,
+  couponCodeForOrder,
   priceWithCoupon,
   isCardPayment,
   isPromotionalEligible,
@@ -27,6 +28,23 @@ const lines: CouponLine[] = [
 ];
 
 describe("cupom x itens já promocionais", () => {
+  it("não envia cupom no PIX quando todos os itens são promocionais", () => {
+    expect(couponCodeForOrder(coupon(), [lines[0]], "pix")).toBeNull();
+  });
+
+  it("envia o mesmo cupom no cartão para itens promocionais", () => {
+    expect(couponCodeForOrder(coupon(), [lines[0]], "credit")).toBe("JEFF3ND");
+  });
+
+  it("mantém o cupom no PIX quando existe item não promocional elegível", () => {
+    expect(couponCodeForOrder(coupon(), lines, "pix")).toBe("JEFF3ND");
+    expect(computeCouponDiscount(coupon(), lines, "pix")).toBe(5);
+  });
+
+  it("mantém o cupom no PIX promocional quando o administrador permite", () => {
+    expect(couponCodeForOrder(coupon({ allow_on_promotional: true }), [lines[0]], "pix")).toBe("JEFF3ND");
+  });
+
   it("no PIX ignora o item em promoção e desconta só do item sem promoção", () => {
     expect(computeCouponDiscount(coupon(), lines, "pix")).toBe(5); // 10% de R$ 50
   });
