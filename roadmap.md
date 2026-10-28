@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Prepare Capacitor Android/iOS base with protected admin entry and local setup instructions.
+- [ ] Verify on an actual phone/emulator and package store releases — requires local Android Studio/Xcode and developer signing accounts; native Google sign-in return must be validated before release.
 - [x] Coupon system (cart, checkout, catalog, encomendas, admin /admin/cupons, JEFF3ND 5%)
 - [x] Prevent floating shortcuts from covering mobile page endings and verify all instances.
 - [x] Lightweight/integrity items 1–6: lazy page loading, compressed logo, recompressed banner, removed unused assets, resized card images only (product page full-size), single fixed daily price-collection cron job.

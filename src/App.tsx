@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import Home from "./pages/Home.tsx";
+import NativeEntry from "@/components/NativeEntry";
 // Pages are code-split: only the screen being visited is downloaded.
 // Home stays eager (first landing screen); everything else loads on navigation.
 const Index = lazy(() => import("./pages/Index.tsx"));
@@ -106,6 +107,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <NativeEntry />
         <ScrollManager />
         <TwoFactorPrompt />
         {/* WCAG 2.4.1 Bypass Blocks */}
