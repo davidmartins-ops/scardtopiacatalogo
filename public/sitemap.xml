@@ -581,6 +581,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMGCTKENFNM</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMGAZRENNFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -597,11 +602,6 @@
   </url>
   <url>
     <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMGCLEENNFNM</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.spencerscardtopia.com.br/catalogo/drop/SECMGCTKENFNM</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
