@@ -8,8 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import Home from "./pages/Home.tsx";
-import { Capacitor } from "@capacitor/core";
-import { nativeStartPath } from "@/lib/native-entry";
+import NativeEntry from "@/components/NativeEntry";
 // Pages are code-split: only the screen being visited is downloaded.
 // Home stays eager (first landing screen); everything else loads on navigation.
 const Index = lazy(() => import("./pages/Index.tsx"));
@@ -108,6 +107,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <NativeEntry />
         <ScrollManager />
         <TwoFactorPrompt />
         {/* WCAG 2.4.1 Bypass Blocks */}
@@ -117,7 +117,7 @@ const App = () => (
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={nativeStartPath(Capacitor.isNativePlatform()) ? <Navigate to="/admin" replace /> : <Home />} />
+              <Route path="/" element={<Home />} />
               <Route path="/admin" element={<AdminRoute><Index /></AdminRoute>} />
               <Route path="/admin/relatorios" element={<AdminRoute><AdminReports /></AdminRoute>} />
               <Route path="/admin/notificacoes" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
