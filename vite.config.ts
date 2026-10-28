@@ -19,6 +19,8 @@ export default defineConfig(({ mode }) => ({
     mcpPlugin(),
   ].filter(Boolean),
   resolve: {
+    // Hooks and the renderer must share one React instance after dependency updates.
+    dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
