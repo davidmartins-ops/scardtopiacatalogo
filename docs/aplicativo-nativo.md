@@ -17,13 +17,13 @@ Android exige Android Studio e seu SDK. iPhone exige um Mac com Xcode. Após cad
 
 ## Estado atual e limites
 
-- A configuração `server` carrega a prévia para testes com atualização ao vivo. Isso não é uma versão pronta para distribuição.
+- O aplicativo carrega as telas incluídas na instalação, sem depender do endereço temporário da prévia. Os dados da loja e o login continuam exigindo internet. Alterações nas telas exigem gerar e sincronizar novamente o aplicativo.
 - Ainda não foram gerados APK/AAB/IPA nem projetos de plataforma neste ambiente.
 - As telas e notificações internas existentes são reaproveitadas. Não foram adicionadas notificações com o aplicativo fechado, acesso nativo à câmera ou funcionamento sem internet.
 - O login Google existente precisa ser testado em aparelho. Antes da distribuição, implementar e validar abertura no navegador do sistema e retorno seguro ao aplicativo, caso necessário; não executar OAuth dentro de um navegador incorporado nem enfraquecer permissões.
 
 ## Antes de publicar nas lojas
 
-Remover o bloco `server` de `capacitor.config.ts`, gerar os arquivos locais e sincronizar. Preparar ícones, assinatura, política de privacidade, contas de desenvolvedor e testar login, salvar produtos, pedidos, cupons e comprovantes no aparelho. Publicar o site não publica o aplicativo nas lojas.
+Gerar os arquivos locais e sincronizar, mantendo a configuração sem bloco `server`. Preparar ícones, assinatura, política de privacidade, contas de desenvolvedor e testar login, salvar produtos, pedidos, cupons e comprovantes no aparelho. Publicar o site não publica o aplicativo nas lojas.
 
 Leitura complementar: [história da comunidade Lovable com Capacitor](https://lovable.dev/blog/supercharge-lovable-chrome-extension) e [documentação Capacitor](https://capacitorjs.com/docs/getting-started).
