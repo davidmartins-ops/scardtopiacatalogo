@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Validate coupons by signed-in customer without requiring CPF, retaining limits and blocks; verify authenticated cart.
+- [x] Validate coupons by signed-in customer without requiring CPF, retaining limits and blocks; verified authenticated mobile cart and 25 tests.
 - [x] Prepare Capacitor Android/iOS base with protected admin entry and local setup instructions.
 - [x] App icon and launch screen generated from the store logo; assets/ sources + `cap:assets` script added.
 - [ ] Verify on an actual phone/emulator and package store releases — requires local Android Studio/Xcode and developer signing accounts; native Google sign-in return must be validated before release.

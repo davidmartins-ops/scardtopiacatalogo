@@ -386,7 +386,7 @@ const ShoppingCart = ({ items, onRemove, onClear, onUpdateQty, onOrderPlaced, fa
         </div>
       )}
       {couponError && <p className="text-[11px] text-destructive">{couponError}</p>}
-      {coupon && <p className="text-[11px] text-muted-foreground">Válido para PIX e cartão. 1 uso por CPF; o desconto é confirmado ao finalizar.</p>}
+      {coupon && <p className="text-[11px] text-muted-foreground">Válido para PIX e cartão, conforme as regras do cupom; o desconto é confirmado ao finalizar.</p>}
       {coupon && !coupon.allow_on_promotional && items.some((ci) => (ci.item.discount ?? 0) > 0) && (
         <p className="text-[11px] text-muted-foreground">Itens em promoção só participam do cupom no pagamento por cartão.</p>
       )}
