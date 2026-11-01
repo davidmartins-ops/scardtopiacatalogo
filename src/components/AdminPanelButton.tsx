@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
@@ -12,18 +12,8 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 const AdminPanelButton = () => {
   const { isAdmin, loading } = useIsAdmin();
 
-  if (loading) {
-    return (
-      <div
-        className="flex items-center gap-1.5 px-2 text-xs text-brand-header-foreground/60"
-        aria-live="polite"
-        data-testid="admin-button-loading"
-      >
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        <span className="hidden sm:inline">Validando permissões…</span>
-      </div>
-    );
-  }
+  // Enquanto valida no servidor, não mostra nada (sem spinner travado no cabeçalho).
+  if (loading) return null;
 
   if (!isAdmin) return null;
 

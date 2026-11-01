@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
  * A chamada tem tempo limite com nova tentativa para redes móveis instáveis.
  */
 const memo = new Map<string, boolean>();
+const inflight = new Map<string, Promise<boolean>>();
 
 const withTimeout = <T,>(p: PromiseLike<T>, ms: number) =>
   Promise.race([
@@ -54,7 +55,9 @@ export const useIsAdmin = () => {
         return;
       }
       if (active) setLoading(true);
-      const ok = await checkRole(userId);
+      let p = inflight.get(userId);
+      if (!p) { p = checkRole(userId).finally(() => inflight.delete(userId)); inflight.set(userId, p); }
+      const ok = await p;
       if (ok) memo.set(userId, true);
       if (active && currentUser === userId) { setIsAdmin(ok); setLoading(false); }
     };
