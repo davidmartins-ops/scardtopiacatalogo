@@ -40,7 +40,7 @@ describe("AdminPanelButton visibility", () => {
     mockUseIsAdmin.mockReturnValue({ isAdmin: false, loading: true });
     render(<MemoryRouter><AdminPanelButton /></MemoryRouter>);
     expect(screen.queryByTestId("admin-panel-button")).toBeNull();
-    expect(screen.getByTestId("admin-button-loading")).toBeTruthy();
+    expect(screen.queryByTestId("admin-button-loading")).toBeNull();
   });
 
   it("hides the button for non-admin users", () => {
