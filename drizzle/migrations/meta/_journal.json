@@ -85,6 +85,13 @@
       "when": 1793131345969,
       "tag": "0011_showcase_coupons_promotional_rule",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793515075321,
+      "tag": "0012_coupon_authenticated_customer_identity",
+      "breakpoints": true
     }
   ]
 }
