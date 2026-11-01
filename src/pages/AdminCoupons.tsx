@@ -198,7 +198,7 @@ const AdminCoupons = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {c.description ? `${c.description} · ` : ""}
-                    Usos: {c.uses_count}{c.max_uses != null ? `/${c.max_uses}` : ""} · {c.per_cpf_limit} por CPF
+                    Usos: {c.uses_count}{c.max_uses != null ? `/${c.max_uses}` : ""} · {c.per_cpf_limit} por cliente
                     {c.starts_at ? ` · de ${new Date(c.starts_at).toLocaleString("pt-BR")}` : ""}
                     {c.expires_at ? ` · até ${new Date(c.expires_at).toLocaleString("pt-BR")}` : ""}
                     {c.min_purchase > 0 ? ` · mínimo ${brl(c.min_purchase)}` : ""}
@@ -248,7 +248,7 @@ const AdminCoupons = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div><Label>Limite total de usos</Label><Input inputMode="numeric" placeholder="Ilimitado" value={form.max_uses} onChange={(e) => set("max_uses", e.target.value.replace(/\D/g, ""))} /></div>
-              <div><Label>Usos por CPF</Label><Input inputMode="numeric" value={form.per_cpf_limit} onChange={(e) => set("per_cpf_limit", e.target.value.replace(/\D/g, ""))} /></div>
+              <div><Label>Usos por cliente</Label><Input inputMode="numeric" value={form.per_cpf_limit} onChange={(e) => set("per_cpf_limit", e.target.value.replace(/\D/g, ""))} /></div>
               <div><Label>Compra mínima (R$)</Label><Input inputMode="decimal" value={form.min_purchase} onChange={(e) => set("min_purchase", e.target.value)} /></div>
             </div>
             <div><Label>Desconto máximo (R$) — vazio = sem limite</Label><Input inputMode="decimal" placeholder="Ex.: 300" value={form.max_discount} onChange={(e) => set("max_discount", e.target.value)} /></div>
