@@ -980,7 +980,19 @@ const ShippingOptionDialog = ({ order, onClose }: { order: any | null; onClose: 
       .then((opts) => {
         opts.sort((a, b) => a.price - b.price);
         setOptions(opts);
-        setSelectedId(opts[0]?.id ?? null);
+        const raw = String(order.shipping_service ?? "");
+        let wanted = Number(raw.split("|")[0]);
+        if (!(wanted > 0)) wanted = Number(ci.shippingService?.id);
+        if (!(wanted > 0)) {
+          const n = String(ci.shippingService?.name ?? addr.shippingMethod ?? raw.split("|")[1] ?? "")
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          wanted = n.includes("sedex") ? 2 : n.includes("mini") ? 17 : n.includes("pac") ? 1 : 0;
+        }
+        const match = opts.find((o) => Number(o.id) === wanted);
+        if (wanted > 0 && !match) {
+          setLoadError("A forma de envio escolhida pelo cliente não está disponível para este CEP agora.");
+        }
+        setSelectedId(match ? match.id : wanted > 0 ? null : opts[0]?.id ?? null);
       })
       .catch((e) => setLoadError((e as Error).message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
