@@ -603,6 +603,13 @@ const AdminOrdersPanel = () => {
                   const labelUrl = (order as any).shipping_label_url as string | null;
                   const sfId = (order as any).superfrete_order_id as string | null;
                   const shippingCost = Number((order as any).shipping_cost ?? 0);
+                  const requestedShipping = (() => {
+                    const raw = String((order as any).shipping_service ?? "");
+                    const fromRaw = raw.includes("|") ? raw.split("|").slice(1).join("|") : "";
+                    const name = String(fromRaw || full.shippingService?.name || addr.shippingMethod || "").trim();
+                    if (!name) return full.deliveryMethod === "pickup" ? "Retirada no local" : "";
+                    return name.length <= 6 ? name.toUpperCase() : name;
+                  })();
                   const hasAddress = !!(street || city || cep);
                   const addressLine = [
                     street && number ? `${street}, ${number}` : street,
@@ -669,6 +676,10 @@ const AdminOrdersPanel = () => {
                             <p className="text-muted-foreground italic">Sem endereço de entrega registrado.</p>
                           )}
                           <div className="pt-1 border-t border-border/40 space-y-1">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="text-muted-foreground">Forma de envio escolhida pelo cliente:</span>
+                              <span className="font-semibold text-foreground">{requestedShipping || "Não informada"}</span>
+                            </div>
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <span className="text-muted-foreground">Etiqueta SuperFrete:</span>
                               {labelUrl ? (
