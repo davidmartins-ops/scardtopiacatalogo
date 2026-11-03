@@ -92,6 +92,13 @@
       "when": 1793515075321,
       "tag": "0012_coupon_authenticated_customer_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793717955813,
+      "tag": "0013_order_shipping_paid",
+      "breakpoints": true
     }
   ]
 }
