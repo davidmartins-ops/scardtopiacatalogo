@@ -1,4 +1,5 @@
 import useSEO from "@/hooks/use-seo";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useOrderDetail, useAdminOrders, type OrderStatus } from "@/hooks/use-orders";
