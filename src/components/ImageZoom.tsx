@@ -1,3 +1,4 @@
+import { imageFramingStyle } from "@/lib/image-framing";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, SearchIcon, X } from "lucide-react";
@@ -83,7 +84,7 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, 
           src={displaySrc}
           alt={alt}
           className={className}
-          style={imagePosition ? { objectPosition: imagePosition } : undefined}
+          style={imagePosition ? imageFramingStyle(imagePosition) : undefined}
           loading="lazy"
           decoding="async"
           onLoad={onLoad}

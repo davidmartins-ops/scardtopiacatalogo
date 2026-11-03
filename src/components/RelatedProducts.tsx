@@ -1,3 +1,4 @@
+import { imageFramingStyle } from "@/lib/image-framing";
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Package } from "lucide-react";
@@ -80,7 +81,7 @@ const RelatedProducts = ({ current }: Props) => {
             <Link key={i.id} to={pathFor(i)} className="glass-card glow-hover rounded-xl overflow-hidden flex flex-col">
               <div className="bg-muted/20 aspect-square overflow-hidden flex items-center justify-center">
                 {i.image_url ? (
-                  <img src={resizedImageUrl(i.image_url, 480)} alt={i.name} loading="lazy" className={`w-full h-full ${isSingle ? "object-contain" : "object-cover"}`} style={{ objectPosition: i.image_position ?? "center" }} />
+                  <img src={resizedImageUrl(i.image_url, 480)} alt={i.name} loading="lazy" className={`w-full h-full ${isSingle ? "object-contain" : "object-cover"}`} style={imageFramingStyle(i.image_position)} />
                 ) : (
                   <Package className="h-8 w-8 text-muted-foreground" />
                 )}
