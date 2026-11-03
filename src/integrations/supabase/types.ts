@@ -813,6 +813,7 @@ export type Database = {
           discount: number
           drop_description: string | null
           id: string
+          image_position: string
           image_url: string | null
           language: string
           name: string
@@ -832,6 +833,7 @@ export type Database = {
           discount?: number
           drop_description?: string | null
           id: string
+          image_position?: string
           image_url?: string | null
           language?: string
           name: string
@@ -851,6 +853,7 @@ export type Database = {
           discount?: number
           drop_description?: string | null
           id?: string
+          image_position?: string
           image_url?: string | null
           language?: string
           name?: string
