@@ -529,3 +529,30 @@ const AdminOrderDetail = () => {
 };
 
 export default AdminOrderDetail;
+
+function ShippingPaidControl({ order }: { order: { id: string; shipping_paid?: boolean; shipping_cost?: number | null; customer_info?: any } }) {
+  const isPickup = order.customer_info?.deliveryMethod === "pickup";
+  const [paid, setPaid] = useState<boolean>(!!order.shipping_paid);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => setPaid(!!order.shipping_paid), [order.shipping_paid]);
+  if (isPickup) return <div className="mt-1">Frete: <Badge variant="secondary">Retirada — sem frete</Badge></div>;
+  const toggle = async () => {
+    setSaving(true);
+    const next = !paid;
+    const { error } = await supabase.from("orders").update({ shipping_paid: next, shipping_paid_at: next ? new Date().toISOString() : null } as any).eq("id", order.id);
+    setSaving(false);
+    if (error) { toast.error("Não foi possível atualizar o frete."); return; }
+    setPaid(next);
+    toast.success(next ? "Frete marcado como pago." : "Frete marcado como não pago.");
+  };
+  const cost = Number(order.shipping_cost ?? 0);
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-2">
+      Frete{cost > 0 ? ` (R$ ${cost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })})` : ""}:
+      <Badge variant={paid ? "default" : "destructive"}>{paid ? "Pago" : "Não pago"}</Badge>
+      <Button size="sm" variant="outline" disabled={saving} onClick={toggle}>
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : paid ? "Marcar como não pago" : "Marcar como pago"}
+      </Button>
+    </div>
+  );
+}
