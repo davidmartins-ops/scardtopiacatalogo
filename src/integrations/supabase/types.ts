@@ -1151,6 +1151,8 @@ export type Database = {
           shipping_label_last_synced_at: string | null
           shipping_label_status: string
           shipping_label_url: string | null
+          shipping_paid: boolean
+          shipping_paid_at: string | null
           shipping_service: string | null
           sla_breach_status: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at: string | null
@@ -1183,6 +1185,8 @@ export type Database = {
           shipping_label_last_synced_at?: string | null
           shipping_label_status?: string
           shipping_label_url?: string | null
+          shipping_paid?: boolean
+          shipping_paid_at?: string | null
           shipping_service?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at?: string | null
@@ -1215,6 +1219,8 @@ export type Database = {
           shipping_label_last_synced_at?: string | null
           shipping_label_status?: string
           shipping_label_url?: string | null
+          shipping_paid?: boolean
+          shipping_paid_at?: string | null
           shipping_service?: string | null
           sla_breach_status?: Database["public"]["Enums"]["order_status"] | null
           sla_breached_at?: string | null

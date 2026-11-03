@@ -676,6 +676,14 @@ const AdminOrdersPanel = () => {
                             <p className="text-muted-foreground italic">Sem endereço de entrega registrado.</p>
                           )}
                           <div className="pt-1 border-t border-border/40 space-y-1">
+                            {full.deliveryMethod !== "pickup" && (
+                              <p>
+                                <span className="text-muted-foreground">Frete: </span>
+                                <span className={(order as any).shipping_paid ? "font-semibold text-primary" : "font-semibold text-destructive"}>
+                                  {(order as any).shipping_paid ? "Pago" : "Não pago"}
+                                </span>
+                              </p>
+                            )}
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <span className="text-muted-foreground">Forma de envio escolhida pelo cliente:</span>
                               <span className="font-semibold text-foreground">{requestedShipping || "Não informada"}</span>
