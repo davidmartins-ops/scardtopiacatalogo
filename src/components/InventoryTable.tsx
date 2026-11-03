@@ -981,7 +981,7 @@ const InventoryTable = ({ data }: Props) => {
 
       {/* Image management dialog */}
       <Dialog open={!!imageDialogItem} onOpenChange={(open) => !open && setImageDialogItem(null)}>
-        <DialogContent className="sm:max-w-sm bg-card border-border">
+        <DialogContent className="sm:max-w-lg bg-card border-border">
           <DialogHeader>
             <DialogTitle className="font-display text-foreground text-base">Imagem — {imageDialogItem?.name}</DialogTitle>
           </DialogHeader>
