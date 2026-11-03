@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadProductImage, deleteProductImage } from "@/lib/storage";
+import { parseImageFraming, serializeImageFraming, imageFramingStyle, MIN_ZOOM, MAX_ZOOM } from "@/lib/image-framing";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -142,26 +143,21 @@ const InventoryTable = ({ data }: Props) => {
   // Enquadramento da foto no card (object-position), ajustado no diálogo de imagem.
   const [posX, setPosX] = useState(50);
   const [posY, setPosY] = useState(50);
+  const [zoom, setZoom] = useState(1);
   const [savingPos, setSavingPos] = useState(false);
 
-  const parseImagePos = (s?: string | null): [number, number] => {
-    if (!s || s === "center") return [50, 50];
-    const m = s.match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
-    if (m) return [Math.round(+m[1]), Math.round(+m[2])];
-    return [50, 50];
-  };
-
   const openImageDialog = (item: InventoryItem) => {
-    const [x, y] = parseImagePos(item.image_position);
-    setPosX(x);
-    setPosY(y);
+    const f = parseImageFraming(item.image_position);
+    setPosX(f.x);
+    setPosY(f.y);
+    setZoom(f.zoom);
     setImageDialogItem(item);
   };
 
   const saveImagePosition = async () => {
     if (!imageDialogItem) return;
     setSavingPos(true);
-    const image_position = posX === 50 && posY === 50 ? "center" : `${posX}% ${posY}%`;
+    const image_position = serializeImageFraming({ x: posX, y: posY, zoom });
     const { error } = await supabase.from("inventory").update({ image_position } as any).eq("id", imageDialogItem.id);
     setSavingPos(false);
     if (error) { toast.error("Erro ao salvar posição da imagem."); return; }
@@ -990,79 +986,96 @@ const InventoryTable = ({ data }: Props) => {
             <DialogTitle className="font-display text-foreground text-base">Imagem — {imageDialogItem?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {imageDialogItem?.image_url ? (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Quadro de exibição do card — arraste a foto para ajustar o enquadramento</Label>
-                <div
-                  role="slider"
-                  aria-label="Posição da imagem no card"
-                  aria-valuetext={`X ${posX}%, Y ${posY}%`}
-                  tabIndex={0}
-                  className={`relative rounded-xl overflow-hidden border border-border bg-muted/20 cursor-crosshair touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-primary mx-auto ${
-                    imageDialogItem.product_type === "single" ? "aspect-[2.5/3.5] max-w-[220px]" : "w-full h-48"
-                  }`}
-                  onKeyDown={(e) => {
-                    const step = e.shiftKey ? 10 : 1;
-                    let handled = true;
-                    if (e.key === "ArrowLeft") setPosX((v) => Math.max(0, v - step));
-                    else if (e.key === "ArrowRight") setPosX((v) => Math.min(100, v + step));
-                    else if (e.key === "ArrowUp") setPosY((v) => Math.max(0, v - step));
-                    else if (e.key === "ArrowDown") setPosY((v) => Math.min(100, v + step));
-                    else if (e.key === "Enter" || e.key === " ") { setPosX(50); setPosY(50); }
-                    else handled = false;
-                    if (handled) e.preventDefault();
-                  }}
-                  onPointerDown={(e) => {
-                    const el = e.currentTarget;
-                    el.focus();
-                    el.setPointerCapture(e.pointerId);
-                    const rect = el.getBoundingClientRect();
-                    const move = (clientX: number, clientY: number) => {
-                      const x = Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
-                      const y = Math.max(0, Math.min(100, Math.round(((clientY - rect.top) / rect.height) * 100)));
-                      setPosX(x); setPosY(y);
-                    };
-                    move(e.clientX, e.clientY);
-                    const onMove = (ev: PointerEvent) => move(ev.clientX, ev.clientY);
-                    const onUp = (ev: PointerEvent) => {
-                      try { el.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
-                      el.removeEventListener("pointermove", onMove);
-                      el.removeEventListener("pointerup", onUp);
-                      el.removeEventListener("pointercancel", onUp);
-                    };
-                    el.addEventListener("pointermove", onMove);
-                    el.addEventListener("pointerup", onUp);
-                    el.addEventListener("pointercancel", onUp);
-                  }}
-                >
-                  <img
-                    src={imageDialogItem.image_url}
-                    alt={imageDialogItem.name}
-                    draggable={false}
-                    className="w-full h-full object-cover pointer-events-none"
-                    style={{ objectPosition: `${posX}% ${posY}%` }}
-                  />
-                  <div
-                    className="absolute w-6 h-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-lg bg-primary/70 pointer-events-none"
-                    style={{ left: `${posX}%`, top: `${posY}%` }}
-                  />
-                  <div className="absolute bottom-1 left-1 text-[10px] font-medium text-white/90 bg-black/40 rounded px-1.5 py-0.5 tabular-nums pointer-events-none">
-                    X {posX}% · Y {posY}%
+            {imageDialogItem?.image_url ? (() => {
+              const isSingleItem = imageDialogItem.product_type === "single";
+              const framing = serializeImageFraming({ x: posX, y: posY, zoom });
+              const frameStyle = imageFramingStyle(framing);
+              const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+                const el = e.currentTarget;
+                el.focus();
+                el.setPointerCapture(e.pointerId);
+                const rect = el.getBoundingClientRect();
+                const move = (clientX: number, clientY: number) => {
+                  setPosX(Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100))));
+                  setPosY(Math.max(0, Math.min(100, Math.round(((clientY - rect.top) / rect.height) * 100))));
+                };
+                move(e.clientX, e.clientY);
+                const onMove = (ev: PointerEvent) => move(ev.clientX, ev.clientY);
+                const onUp = (ev: PointerEvent) => {
+                  try { el.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
+                  el.removeEventListener("pointermove", onMove);
+                  el.removeEventListener("pointerup", onUp);
+                  el.removeEventListener("pointercancel", onUp);
+                };
+                el.addEventListener("pointermove", onMove);
+                el.addEventListener("pointerup", onUp);
+                el.addEventListener("pointercancel", onUp);
+              };
+              const onWheel = (e: React.WheelEvent) => {
+                const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+                setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(z * Math.exp(-dy * 0.0015) * 100) / 100)));
+              };
+              return (
+              <div className="space-y-3">
+                <Label className="text-xs text-muted-foreground">Quadro do card (tamanho real no computador) — arraste para posicionar, use o zoom para aproximar</Label>
+                <div className="flex items-end justify-center gap-4">
+                  <div className="space-y-1 text-center">
+                    <div
+                      role="slider"
+                      aria-label="Posição da imagem no card"
+                      aria-valuetext={`X ${posX}%, Y ${posY}%, zoom ${zoom.toFixed(2)}x`}
+                      tabIndex={0}
+                      className={`relative rounded-xl overflow-hidden border-2 border-primary/60 bg-muted/20 cursor-grab active:cursor-grabbing touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                        isSingleItem ? "w-[180px] aspect-[2.5/3.5]" : "w-[264px] h-48"
+                      }`}
+                      onKeyDown={(e) => {
+                        const step = e.shiftKey ? 10 : 1;
+                        let handled = true;
+                        if (e.key === "ArrowLeft") setPosX((v) => Math.max(0, v - step));
+                        else if (e.key === "ArrowRight") setPosX((v) => Math.min(100, v + step));
+                        else if (e.key === "ArrowUp") setPosY((v) => Math.max(0, v - step));
+                        else if (e.key === "ArrowDown") setPosY((v) => Math.min(100, v + step));
+                        else if (e.key === "+" || e.key === "=") setZoom((z) => Math.min(MAX_ZOOM, +(z + 0.1).toFixed(2)));
+                        else if (e.key === "-") setZoom((z) => Math.max(MIN_ZOOM, +(z - 0.1).toFixed(2)));
+                        else handled = false;
+                        if (handled) e.preventDefault();
+                      }}
+                      onPointerDown={onPointerDown}
+                      onWheel={onWheel}
+                    >
+                      <img src={imageDialogItem.image_url} alt={imageDialogItem.name} draggable={false} className="w-full h-full object-cover pointer-events-none" style={frameStyle} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Computador</p>
                   </div>
+                  {!isSingleItem && (
+                    <div className="space-y-1 text-center">
+                      <div className="relative rounded-lg overflow-hidden border border-border bg-muted/20 w-[156px] h-28 pointer-events-none">
+                        <img src={imageDialogItem.image_url} alt="" className="w-full h-full object-cover" style={frameStyle} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Celular</p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="button" aria-label="Diminuir zoom" className="h-7 w-7 rounded-md border border-border text-sm" onClick={() => setZoom((z) => Math.max(MIN_ZOOM, +(z - 0.1).toFixed(2)))}>−</button>
+                  <input type="range" aria-label="Zoom" min={MIN_ZOOM} max={MAX_ZOOM} step={0.01} value={zoom} onChange={(e) => setZoom(+e.target.value)} className="flex-1 accent-primary" />
+                  <button type="button" aria-label="Aumentar zoom" className="h-7 w-7 rounded-md border border-border text-sm" onClick={() => setZoom((z) => Math.min(MAX_ZOOM, +(z + 0.1).toFixed(2)))}>+</button>
+                  <span className="text-[11px] tabular-nums w-12 text-right">{zoom.toFixed(2)}x</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] text-muted-foreground">Arraste, toque ou use as setas do teclado (Shift = passo 10).</p>
+                  <p className="text-[10px] text-muted-foreground tabular-nums">X {posX}% · Y {posY}% — setas movem, +/− e roda do mouse aproximam.</p>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button type="button" onClick={() => { setPosX(50); setPosY(50); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
-                      Centralizar
+                    <button type="button" onClick={() => { setPosX(50); setPosY(50); setZoom(1); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                      Redefinir
                     </button>
                     <Button size="sm" variant="outline" className="h-7 px-2 text-[11px] gap-1" onClick={saveImagePosition} disabled={savingPos}>
-                      <Check className="h-3 w-3" /> {savingPos ? "Salvando..." : "Salvar posição"}
+                      <Check className="h-3 w-3" /> {savingPos ? "Salvando..." : "Salvar"}
                     </Button>
                   </div>
                 </div>
               </div>
-            ) : (
+              );
+            })() : (
               <div className="rounded-xl border border-dashed border-border bg-muted/10 h-48 flex items-center justify-center">
                 <p className="text-sm text-muted-foreground">Sem imagem</p>
               </div>
