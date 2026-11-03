@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadProductImage, deleteProductImage } from "@/lib/storage";
 import { parseImageFraming, serializeImageFraming, imageFramingStyle, MIN_ZOOM, MAX_ZOOM } from "@/lib/image-framing";
+import { resizedImageUrl } from "@/lib/image-sources";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
