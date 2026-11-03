@@ -991,8 +991,76 @@ const InventoryTable = ({ data }: Props) => {
           </DialogHeader>
           <div className="space-y-4">
             {imageDialogItem?.image_url ? (
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted/20">
-                <img src={imageDialogItem.image_url} alt={imageDialogItem.name} className="w-full h-48 object-cover" />
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Quadro de exibição do card — arraste a foto para ajustar o enquadramento</Label>
+                <div
+                  role="slider"
+                  aria-label="Posição da imagem no card"
+                  aria-valuetext={`X ${posX}%, Y ${posY}%`}
+                  tabIndex={0}
+                  className={`relative rounded-xl overflow-hidden border border-border bg-muted/20 cursor-crosshair touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-primary mx-auto ${
+                    imageDialogItem.product_type === "single" ? "aspect-[2.5/3.5] max-w-[220px]" : "w-full h-48"
+                  }`}
+                  onKeyDown={(e) => {
+                    const step = e.shiftKey ? 10 : 1;
+                    let handled = true;
+                    if (e.key === "ArrowLeft") setPosX((v) => Math.max(0, v - step));
+                    else if (e.key === "ArrowRight") setPosX((v) => Math.min(100, v + step));
+                    else if (e.key === "ArrowUp") setPosY((v) => Math.max(0, v - step));
+                    else if (e.key === "ArrowDown") setPosY((v) => Math.min(100, v + step));
+                    else if (e.key === "Enter" || e.key === " ") { setPosX(50); setPosY(50); }
+                    else handled = false;
+                    if (handled) e.preventDefault();
+                  }}
+                  onPointerDown={(e) => {
+                    const el = e.currentTarget;
+                    el.focus();
+                    el.setPointerCapture(e.pointerId);
+                    const rect = el.getBoundingClientRect();
+                    const move = (clientX: number, clientY: number) => {
+                      const x = Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
+                      const y = Math.max(0, Math.min(100, Math.round(((clientY - rect.top) / rect.height) * 100)));
+                      setPosX(x); setPosY(y);
+                    };
+                    move(e.clientX, e.clientY);
+                    const onMove = (ev: PointerEvent) => move(ev.clientX, ev.clientY);
+                    const onUp = (ev: PointerEvent) => {
+                      try { el.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
+                      el.removeEventListener("pointermove", onMove);
+                      el.removeEventListener("pointerup", onUp);
+                      el.removeEventListener("pointercancel", onUp);
+                    };
+                    el.addEventListener("pointermove", onMove);
+                    el.addEventListener("pointerup", onUp);
+                    el.addEventListener("pointercancel", onUp);
+                  }}
+                >
+                  <img
+                    src={imageDialogItem.image_url}
+                    alt={imageDialogItem.name}
+                    draggable={false}
+                    className="w-full h-full object-cover pointer-events-none"
+                    style={{ objectPosition: `${posX}% ${posY}%` }}
+                  />
+                  <div
+                    className="absolute w-6 h-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-lg bg-primary/70 pointer-events-none"
+                    style={{ left: `${posX}%`, top: `${posY}%` }}
+                  />
+                  <div className="absolute bottom-1 left-1 text-[10px] font-medium text-white/90 bg-black/40 rounded px-1.5 py-0.5 tabular-nums pointer-events-none">
+                    X {posX}% · Y {posY}%
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] text-muted-foreground">Arraste, toque ou use as setas do teclado (Shift = passo 10).</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button type="button" onClick={() => { setPosX(50); setPosY(50); }} className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                      Centralizar
+                    </button>
+                    <Button size="sm" variant="outline" className="h-7 px-2 text-[11px] gap-1" onClick={saveImagePosition} disabled={savingPos}>
+                      <Check className="h-3 w-3" /> {savingPos ? "Salvando..." : "Salvar posição"}
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border bg-muted/10 h-48 flex items-center justify-center">
