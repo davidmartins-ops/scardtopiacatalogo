@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
 
-/** Card photo framing stored in inventory.image_position: "center" | "X% Y%" | "X% Y% @Z" (Z = zoom, 0.5–3; below 1 zooms out). */
+/** Card photo framing stored in inventory.image_position: "center" | "X% Y%" | "X% Y% @Z" (Z = zoom, 1–3). */
 export interface ImageFraming { x: number; y: number; zoom: number }
 
-export const MIN_ZOOM = 0.5;
+export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 3;
 
 export function parseImageFraming(s?: string | null): ImageFraming {
@@ -26,11 +26,6 @@ export function serializeImageFraming({ x, y, zoom }: ImageFraming): string {
 export function imageFramingStyle(s?: string | null): CSSProperties {
   const { x, y, zoom } = parseImageFraming(s);
   const pos = `${x}% ${y}%`;
-  // Below 1x: show the whole photo uncropped (contain), growing toward the card size as zoom approaches 1.
-  if (zoom < 1) {
-    const k = Math.round(zoom * 2 * 100) / 100;
-    return { objectFit: "contain", objectPosition: pos, transform: k === 1 ? undefined : `scale(${k})`, transformOrigin: pos };
-  }
   return zoom === 1
     ? { objectPosition: pos }
     : { objectPosition: pos, transform: `scale(${zoom})`, transformOrigin: pos };
