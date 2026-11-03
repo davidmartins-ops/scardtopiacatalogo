@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
 
-/** Card photo framing stored in inventory.image_position: "center" | "X% Y%" | "X% Y% @Z" (Z = zoom, 1–3). */
+/** Card photo framing stored in inventory.image_position: "center" | "X% Y%" | "X% Y% @Z" (Z = zoom, 0.5–3; below 1 zooms out). */
 export interface ImageFraming { x: number; y: number; zoom: number }
 
-export const MIN_ZOOM = 1;
+export const MIN_ZOOM = 0.5;
 export const MAX_ZOOM = 3;
 
 export function parseImageFraming(s?: string | null): ImageFraming {
