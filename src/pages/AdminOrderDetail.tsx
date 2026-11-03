@@ -311,6 +311,11 @@ const AdminOrderDetail = () => {
               <dt className="text-muted-foreground">Entrega</dt>
               <dd className="font-medium">
                 {String(customer.deliveryMethod ?? "-")}
+                {(() => {
+                  const raw = String((order as any)?.shipping_service ?? "");
+                  const name = (raw.includes("|") ? raw.split("|").slice(1).join("|") : "") || (customer as any).shippingService?.name || (address as any).shippingMethod;
+                  return name ? <div className="mt-1">Forma de envio escolhida: <strong>{String(name).length <= 6 ? String(name).toUpperCase() : String(name)}</strong></div> : null;
+                })()}
                 {Object.keys(address).length > 0 && (
                   <div className="mt-1 text-sm text-muted-foreground font-normal">
                     {Object.entries(address).map(([k, v]) => (

@@ -116,9 +116,19 @@ Deno.serve(async (req) => {
   // Serviço escolhido pelo cliente no checkout (orders.shipping_service = "<id>|<nome>")
   const storedServiceId = (() => {
     const raw = (order as any).shipping_service;
-    if (!raw) return undefined;
-    const id = Number(String(raw).split("|")[0]);
-    return Number.isFinite(id) && id > 0 ? id : undefined;
+    if (raw) {
+      const id = Number(String(raw).split("|")[0]);
+      if (Number.isFinite(id) && id > 0) return id;
+    }
+    const ci = (order as any).customer_info ?? {};
+    const sid = Number(ci?.shippingService?.id);
+    if (Number.isFinite(sid) && sid > 0) return sid;
+    const name = String(ci?.shippingService?.name ?? ci?.address?.shippingMethod ?? String(raw ?? "").split("|")[1] ?? "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (name.includes("sedex")) return 2;
+    if (name.includes("mini")) return 17;
+    if (name.includes("pac")) return 1;
+    return undefined;
   })();
 
   // Regra: serviceId explícito > escolha do cliente > mais barato (fallback)
@@ -160,10 +170,10 @@ Deno.serve(async (req) => {
     const available = opts.some((o: any) => Number(o.id) === chosen);
     if (!chosen || !available) {
       if (chosen && !available) {
-        serviceFallback = true;
-        console.warn("Serviço escolhido indisponível — usando fallback mais barato", {
-          orderId, chosen, fallback: opts[0]?.id,
-        });
+        // Nunca troca a forma de envio escolhida pelo cliente.
+        return new Response(JSON.stringify({
+          error: "A forma de envio escolhida pelo cliente não está disponível para este CEP no momento. A etiqueta não foi gerada.",
+        }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       chosen = opts[0]?.id;
     }
