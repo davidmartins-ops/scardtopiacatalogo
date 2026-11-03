@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadProductImage, deleteProductImage } from "@/lib/storage";
 import { parseImageFraming, serializeImageFraming, imageFramingStyle, MIN_ZOOM, MAX_ZOOM } from "@/lib/image-framing";
+import { resizedImageUrl } from "@/lib/image-sources";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -981,7 +982,7 @@ const InventoryTable = ({ data }: Props) => {
 
       {/* Image management dialog */}
       <Dialog open={!!imageDialogItem} onOpenChange={(open) => !open && setImageDialogItem(null)}>
-        <DialogContent className="sm:max-w-lg bg-card border-border">
+        <DialogContent className="sm:max-w-2xl bg-card border-border">
           <DialogHeader>
             <DialogTitle className="font-display text-foreground text-base">Imagem — {imageDialogItem?.name}</DialogTitle>
           </DialogHeader>
@@ -1017,7 +1018,7 @@ const InventoryTable = ({ data }: Props) => {
               };
               return (
               <div className="space-y-3">
-                <Label className="text-xs text-muted-foreground">Quadro do card (tamanho real no computador) — arraste para posicionar, use o zoom para aproximar</Label>
+                <Label className="text-xs text-muted-foreground">Quadro do card (igual ao catálogo) — arraste para posicionar, use o zoom para aproximar</Label>
                 <div className="flex items-end justify-center gap-4">
                   <div className="space-y-1 text-center">
                     <div
@@ -1026,7 +1027,7 @@ const InventoryTable = ({ data }: Props) => {
                       aria-valuetext={`X ${posX}%, Y ${posY}%, zoom ${zoom.toFixed(2)}x`}
                       tabIndex={0}
                       className={`relative rounded-xl overflow-hidden border-2 border-primary/60 bg-muted/20 cursor-grab active:cursor-grabbing touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                        isSingleItem ? "w-[180px] aspect-[2.5/3.5]" : "w-[264px] h-48"
+                        isSingleItem ? "w-[180px] aspect-[2.5/3.5]" : "w-[330px] h-48"
                       }`}
                       onKeyDown={(e) => {
                         const step = e.shiftKey ? 10 : 1;
@@ -1043,14 +1044,14 @@ const InventoryTable = ({ data }: Props) => {
                       onPointerDown={onPointerDown}
                       onWheel={onWheel}
                     >
-                      <img src={imageDialogItem.image_url} alt={imageDialogItem.name} draggable={false} className="w-full h-full object-cover pointer-events-none" style={frameStyle} />
+                      <img src={resizedImageUrl(imageDialogItem.image_url, 480)} alt={imageDialogItem.name} draggable={false} className="w-full h-full object-cover pointer-events-none" style={frameStyle} />
                     </div>
                     <p className="text-[10px] text-muted-foreground">Computador</p>
                   </div>
                   {!isSingleItem && (
                     <div className="space-y-1 text-center">
-                      <div className="relative rounded-lg overflow-hidden border border-border bg-muted/20 w-[156px] h-28 pointer-events-none">
-                        <img src={imageDialogItem.image_url} alt="" className="w-full h-full object-cover" style={frameStyle} />
+                      <div className="relative rounded-lg overflow-hidden border border-border bg-muted/20 w-[160px] h-28 pointer-events-none">
+                        <img src={resizedImageUrl(imageDialogItem.image_url, 480)} alt="" className="w-full h-full object-cover" style={frameStyle} />
                       </div>
                       <p className="text-[10px] text-muted-foreground">Celular</p>
                     </div>
