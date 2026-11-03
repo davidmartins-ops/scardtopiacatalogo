@@ -139,6 +139,36 @@ const InventoryTable = ({ data }: Props) => {
   };
 
   const [imageDialogItem, setImageDialogItem] = useState<InventoryItem | null>(null);
+  // Enquadramento da foto no card (object-position), ajustado no diálogo de imagem.
+  const [posX, setPosX] = useState(50);
+  const [posY, setPosY] = useState(50);
+  const [savingPos, setSavingPos] = useState(false);
+
+  const parseImagePos = (s?: string | null): [number, number] => {
+    if (!s || s === "center") return [50, 50];
+    const m = s.match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+    if (m) return [Math.round(+m[1]), Math.round(+m[2])];
+    return [50, 50];
+  };
+
+  const openImageDialog = (item: InventoryItem) => {
+    const [x, y] = parseImagePos(item.image_position);
+    setPosX(x);
+    setPosY(y);
+    setImageDialogItem(item);
+  };
+
+  const saveImagePosition = async () => {
+    if (!imageDialogItem) return;
+    setSavingPos(true);
+    const image_position = posX === 50 && posY === 50 ? "center" : `${posX}% ${posY}%`;
+    const { error } = await supabase.from("inventory").update({ image_position } as any).eq("id", imageDialogItem.id);
+    setSavingPos(false);
+    if (error) { toast.error("Erro ao salvar posição da imagem."); return; }
+    toast.success("Posição da imagem atualizada!");
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    setImageDialogItem({ ...imageDialogItem, image_position });
+  };
   const [uploadingImage, setUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -865,7 +895,7 @@ const InventoryTable = ({ data }: Props) => {
                         </td>
                         <td className="px-2 sm:px-3 py-2.5">
                           <div className="flex items-center justify-center gap-1 flex-wrap">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/10" onClick={() => setImageDialogItem(item)} title="Gerenciar imagem">
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/10" onClick={() => openImageDialog(item)} title="Gerenciar imagem">
                               <ImagePlus className="h-3.5 w-3.5" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-blue-400 hover:bg-blue-400/10" onClick={() => { setDescDialogItem(item); setDescValue((item as any).drop_description ?? ""); }} title="Descrição do drop">
