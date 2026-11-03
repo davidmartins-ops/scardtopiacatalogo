@@ -39,5 +39,6 @@ export const resizedImageUrl = (
   if (!src || !src.includes(SUPABASE_PUBLIC)) return src ?? undefined;
   const rendered = src.replace(SUPABASE_PUBLIC, SUPABASE_RENDER);
   const sep = rendered.includes("?") ? "&" : "?";
-  return `${rendered}${sep}width=${width}&quality=75`;
+  // resize=contain keeps the full photo; without it the render endpoint crops to a narrow strip at the original height.
+  return `${rendered}${sep}width=${width}&resize=contain&quality=75`;
 };
