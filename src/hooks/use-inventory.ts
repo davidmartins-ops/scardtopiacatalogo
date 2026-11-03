@@ -54,7 +54,7 @@ export const useInventory = () => {
       try {
         res = await supabase
           .from("inventory")
-          .select("id, name, description, price, price_pix, quantity, category, discount, image_url, product_type, language, condition, status, availability, drop_description")
+          .select("id, name, description, price, price_pix, quantity, category, discount, image_url, image_position, product_type, language, condition, status, availability, drop_description")
           .abortSignal(ctrl.signal);
       } finally {
         clearTimeout(timer);
@@ -82,6 +82,7 @@ export const useInventory = () => {
         status: (item as any).status ?? "none",
         availability: (item as any).availability ?? "pronta_entrega",
         drop_description: (item as any).drop_description ?? "",
+        image_position: (item as any).image_position ?? "center",
       }));
       if (items.length > 0) writeCache(items);
       return items;

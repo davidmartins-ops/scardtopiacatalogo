@@ -19,9 +19,11 @@ interface ImageZoomProps {
   gallery?: ZoomGalleryImage[];
   /** Lighter URL used only for the small inline preview; the zoom still opens `src`. */
   previewSrc?: string;
+  /** CSS object-position for the inline preview frame (e.g. "50% 20%"). */
+  imagePosition?: string;
 }
 
-const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, onError, gallery, previewSrc }: ImageZoomProps) => {
+const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, onError, gallery, previewSrc, imagePosition }: ImageZoomProps) => {
   const [open, setOpen] = useState(false);
   const [viewIndex, setViewIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -81,6 +83,7 @@ const ImageZoom = ({ src, alt, className = "", containerClassName = "", onLoad, 
           src={displaySrc}
           alt={alt}
           className={className}
+          style={imagePosition ? { objectPosition: imagePosition } : undefined}
           loading="lazy"
           decoding="async"
           onLoad={onLoad}

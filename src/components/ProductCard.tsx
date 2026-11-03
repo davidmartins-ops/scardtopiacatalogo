@@ -233,6 +233,7 @@ const ProductCard = ({ item, isSingle, onAddToCart, isFavorite, onToggleFavorite
               alt={item.name}
               className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ${isOutOfStock ? "grayscale" : ""}`}
               containerClassName="w-full h-full"
+              imagePosition={item.image_position ?? "center"}
               gallery={gallery}
             />
           ) : (

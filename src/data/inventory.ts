@@ -8,6 +8,8 @@ export interface InventoryItem {
   category: string;
   image?: string;
   image_url?: string | null;
+  /** Enquadramento da foto no card (CSS object-position), ex.: "50% 20%". */
+  image_position?: string;
   discount?: number;
   product_type?: "single" | "drop";
   language?: string;
